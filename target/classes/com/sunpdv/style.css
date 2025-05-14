@@ -1,0 +1,68 @@
+.root {
+    -fx-background-color: linear-gradient(to bottom right, #006989, #05313e);
+    /* -fx-background-color: #006989; */
+    -fx-font-family: "Segoe UI", sans-serif;
+}
+
+.grid-pane {
+    -fx-hgap: 15;
+    -fx-vgap: 20;
+}
+
+.label {
+    -fx-text-fill: #E7ECEF;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.label-text {
+    -fx-fill: #E7ECEF;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.text-field {
+    -fx-background-color: #E7ECEF;
+    -fx-text-fill: #000000;
+    -fx-font-size: 14px;
+    -fx-padding: 10px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-border-color: transparent;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 1, 0, 0, 1);
+}
+
+.text-field:focused {
+    -fx-border-color: #0008ff;
+    -fx-background-color: #E7ECEF;
+}
+
+.button {
+    -fx-background-color: #FDCA40;
+    -fx-text-fill: #715300;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
+    -fx-padding: 10px 32px;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #cba028;
+    -fx-text-fill: #f9e5af;
+}
+
+.erro-mensager {
+    -fx-font-size: 17px;
+}
+
+.visible {
+    -fx-background-color: #ff0000;
+    -fx-border: 0;
+    -fx-background-radius: 100px;
+}
+
+.visible:hover {
+    -fx-background-color: #cd0101       ;
+}
