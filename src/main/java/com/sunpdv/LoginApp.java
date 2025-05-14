@@ -22,6 +22,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -54,11 +56,8 @@ public class LoginApp extends Application {
         senhaVisivelField.setPrefWidth(280);
         senhaVisivelField.setManaged(false);
         senhaVisivelField.setVisible(false);
-
-        // Sincronizar conteúdo entre os dois campos
         senhaVisivelField.textProperty().bindBidirectional(senhaField.textProperty());
 
-        // Botão olho para mostrar/ocultar senha
         ToggleButton mostrarSenhaBtn = new ToggleButton("👁");
         mostrarSenhaBtn.getStyleClass().add("visible");
         mostrarSenhaBtn.setOnAction(e -> {
@@ -69,22 +68,26 @@ public class LoginApp extends Application {
             senhaVisivelField.setManaged(mostrar);
         });
 
-        // Linha da senha com botão de visibilidade
         HBox senhaBox = new HBox(10, senhaField, senhaVisivelField, mostrarSenhaBtn);
         senhaBox.setAlignment(Pos.CENTER_LEFT);
 
-        // Empacota label + campo de senha
         VBox senhaLinha = new VBox(5, senhaLabel, senhaBox);
         VBox emailLinha = new VBox(5, emailLabel, emailField);
 
         Button loginBtn = new Button("Entrar");
         Label statusLabel = new Label();
 
-        VBox root = new VBox(15, emailLinha, senhaLinha, loginBtn, statusLabel);
-        root.setPadding(new Insets(20));
-        root.setAlignment(Pos.CENTER_LEFT);
+        // Carrega a imagem da logo
+        Image logoImage = new Image(getClass().getResourceAsStream("/img/logo.png"));
+        ImageView logoView = new ImageView(logoImage);
+        logoView.setPreserveRatio(true);
+        logoView.setFitWidth(180);
 
-        Scene scene = new Scene(root, 500, 280);
+        VBox root = new VBox(15, logoView, emailLinha, senhaLinha, loginBtn, statusLabel);
+        root.setPadding(new Insets(20));
+        root.setAlignment(Pos.CENTER);
+
+        Scene scene = new Scene(root, 500, 320);
         scene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
 
         loginBtn.setOnMouseEntered(e -> {
