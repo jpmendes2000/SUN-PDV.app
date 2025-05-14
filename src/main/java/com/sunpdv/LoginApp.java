@@ -71,8 +71,12 @@ public class LoginApp extends Application {
         HBox senhaBox = new HBox(10, senhaField, senhaVisivelField, mostrarSenhaBtn);
         senhaBox.setAlignment(Pos.CENTER_LEFT);
 
-        VBox senhaLinha = new VBox(5, senhaLabel, senhaBox);
         VBox emailLinha = new VBox(5, emailLabel, emailField);
+            emailLinha.setAlignment(Pos.CENTER_LEFT);
+
+        VBox senhaLinha = new VBox(5, senhaLabel, senhaBox);
+            senhaLinha.setAlignment(Pos.CENTER_LEFT);
+
 
         Button loginBtn = new Button("Entrar");
         Label statusLabel = new Label();
@@ -81,13 +85,14 @@ public class LoginApp extends Application {
         Image logoImage = new Image(getClass().getResourceAsStream("/img/logo.png"));
         ImageView logoView = new ImageView(logoImage);
         logoView.setPreserveRatio(true);
-        logoView.setFitWidth(180);
+        logoView.setFitWidth(100);
+        logoView.getStyleClass().add("logo");
 
         VBox root = new VBox(15, logoView, emailLinha, senhaLinha, loginBtn, statusLabel);
         root.setPadding(new Insets(20));
-        root.setAlignment(Pos.CENTER);
+        root.setAlignment(Pos.CENTER_LEFT);
 
-        Scene scene = new Scene(root, 500, 320);
+        Scene scene = new Scene(root, 680, 380);
         scene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
 
         loginBtn.setOnMouseEntered(e -> {
