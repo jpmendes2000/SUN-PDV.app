@@ -1,113 +1,121 @@
-package com.sunpdv;
+    package com.sunpdv;
 
-// Importações para criptografia
-import java.security.MessageDigest; // Classe da biblioteca java.security para gerar hash (SHA-256)
-import java.security.NoSuchAlgorithmException;
-import java.sql.*; // Conjunto de classes para conexão e manipulação de bancos de dados SQL
-import java.util.Base64; // Classe da biblioteca java.util para codificação Base64 (criptografia)
+    import java.security.MessageDigest;
+    import java.security.NoSuchAlgorithmException;
+    import java.sql.Connection;
+    import java.sql.DriverManager;
+    import java.sql.PreparedStatement;
+    import java.sql.ResultSet;
+    import java.util.Base64;
 
-import javax.crypto.Cipher; // Classe da biblioteca javax.crypto usada para criptografar dados com AES
-import javax.crypto.spec.SecretKeySpec; // Define a chave secreta para o algoritmo AES
+    import javax.crypto.Cipher; // Classe da biblioteca javax.crypto usada para criptografar dados com AES
+    import javax.crypto.spec.SecretKeySpec; // Define a chave secreta para o algoritmo AES
 
-// Importações do JavaFX para criação de interface gráfica
-import javafx.animation.ScaleTransition;
-import javafx.application.Application;
-import javafx.concurrent.Task;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
-import javafx.util.Duration;
+    import javafx.animation.KeyFrame;
+    import javafx.animation.ScaleTransition;
+    import javafx.animation.Timeline;
+    import javafx.application.Application;
+    import javafx.concurrent.Task;
+    import javafx.geometry.Insets;
+    import javafx.geometry.Pos;
+    import javafx.scene.Scene;
+    import javafx.scene.control.Button;
+    import javafx.scene.control.Label;
+    import javafx.scene.control.PasswordField;
+    import javafx.scene.control.TextField;
+    import javafx.scene.control.ToggleButton;
+    import javafx.scene.image.Image;
+    import javafx.scene.image.ImageView;
+    import javafx.scene.layout.StackPane;
+    import javafx.scene.layout.VBox;
+    import javafx.stage.Stage;
+    import javafx.util.Duration;
+
+    // ... imports iguais ao original ...
 
 public class LoginApp extends Application {
 
-    // Chave usada para criptografia AES (não recomendada em código-fonte em produção)
     private static final String AES_KEY = "MinhaChaveSuperSegura1234567890!";
-    
-    // Variáveis para controle de tentativas de login
     private int tentativas = 0;
     private long tempoBloqueio = 0;
     private static final int MAX_TENTATIVAS = 6;
     private static final int TEMPO_ESPERA = 120; // segundos
-
-    public static void main(String[] args) {
-        launch(args); // Inicia a aplicação JavaFX
-    }
+    private Timeline contagemRegressiva;
 
     @Override
-    public void start(Stage primaryStage) {
+    public void start(Stage stage) {
 
-        // Label e campo de texto para o e-mail
-        Label emailLabel = new Label("E-mail:");
+        // Campos
         TextField emailField = new TextField();
-        emailField.setPrefWidth(280);
+        emailField.setPromptText("E-mail");
 
-        // Label e campo de senha com ocultação
-        Label senhaLabel = new Label("Senha:");
         PasswordField senhaField = new PasswordField();
-        senhaField.setPrefWidth(280);
+        senhaField.setPromptText("Senha");
 
-        // Campo alternativo para mostrar senha visível (ligado ao mesmo texto do PasswordField)
         TextField senhaVisivelField = new TextField();
-        senhaVisivelField.setPrefWidth(280);
-        senhaVisivelField.setManaged(false); // Não ocupa espaço inicialmente
+        senhaVisivelField.setPromptText("Senha");
+        senhaVisivelField.setManaged(false);
         senhaVisivelField.setVisible(false);
         senhaVisivelField.textProperty().bindBidirectional(senhaField.textProperty());
 
-        // Botão para alternar visibilidade da senha
-        ToggleButton mostrarSenhaBtn = new ToggleButton("👁");
-        mostrarSenhaBtn.getStyleClass().add("visible");
-        mostrarSenhaBtn.setOnAction(e -> {
-            boolean mostrar = mostrarSenhaBtn.isSelected();
+        ToggleButton olhoBtn = new ToggleButton("👁");
+        olhoBtn.getStyleClass().add("olho-btn");
+        olhoBtn.setOnAction(e -> {
+            boolean mostrar = olhoBtn.isSelected();
             senhaField.setVisible(!mostrar);
             senhaField.setManaged(!mostrar);
             senhaVisivelField.setVisible(mostrar);
             senhaVisivelField.setManaged(mostrar);
         });
 
-        // Layout horizontal com campo de senha e botão de visualização
-        HBox senhaBox = new HBox(10, senhaField, senhaVisivelField, mostrarSenhaBtn);
-        senhaBox.setAlignment(Pos.CENTER_LEFT);
+        // Layout da senha
+        StackPane senhaStack = new StackPane();
+        senhaStack.setAlignment(Pos.CENTER_RIGHT);
+        senhaStack.getChildren().addAll(senhaField, senhaVisivelField, olhoBtn);
+        senhaField.prefWidthProperty().bind(emailField.widthProperty());
+        senhaVisivelField.prefWidthProperty().bind(emailField.widthProperty());
 
-        VBox emailLinha = new VBox(5, emailLabel, emailField);
+        VBox senhaLinha = new VBox(senhaStack);
+        VBox emailLinha = new VBox(emailField);
         emailLinha.setAlignment(Pos.CENTER_LEFT);
-
-        VBox senhaLinha = new VBox(5, senhaLabel, senhaBox);
         senhaLinha.setAlignment(Pos.CENTER_LEFT);
 
-        // Botão de login e label para mensagens de status
+        // Botão e status
         Button loginBtn = new Button("Entrar");
+        loginBtn.setDisable(true);
+
         Label statusLabel = new Label();
 
-        // Carrega imagem da logo
-        Image logoImage = new Image(getClass().getResourceAsStream("/img/logo.png"));
-        ImageView logoView = new ImageView(logoImage);
-        logoView.setPreserveRatio(true);
+        // Habilitar botão dinamicamente
+        Runnable verificarCampos = () -> {
+            boolean preenchido = !emailField.getText().trim().isEmpty() &&
+                                !(senhaField.isVisible() ? senhaField.getText() : senhaVisivelField.getText()).trim().isEmpty();
+            loginBtn.setDisable(!preenchido);
+        };
+        emailField.textProperty().addListener((obs, o, n) -> verificarCampos.run());
+        senhaField.textProperty().addListener((obs, o, n) -> verificarCampos.run());
+        senhaVisivelField.textProperty().addListener((obs, o, n) -> verificarCampos.run());
+
+        // Imagem
+        Image logo = new Image(getClass().getResourceAsStream("/img/logo.png"));
+        ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(100);
-        logoView.getStyleClass().add("logo");
+        logoView.setPreserveRatio(true);
 
-        // Layout principal da tela
         VBox root = new VBox(15, logoView, emailLinha, senhaLinha, loginBtn, statusLabel);
+        root.setAlignment(Pos.CENTER);
         root.setPadding(new Insets(20));
-        root.setAlignment(Pos.CENTER_LEFT);
 
-        // Cena da interface e aplicação de CSS externo
         Scene scene = new Scene(root, 680, 380);
-        scene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
-        // Animações de hover no botão de login
+        // Animações
         loginBtn.setOnMouseEntered(e -> {
             ScaleTransition st = new ScaleTransition(Duration.millis(150), loginBtn);
             st.setToX(1.05);
             st.setToY(1.05);
             st.play();
         });
-
         loginBtn.setOnMouseExited(e -> {
             ScaleTransition st = new ScaleTransition(Duration.millis(150), loginBtn);
             st.setToX(1.0);
@@ -115,131 +123,124 @@ public class LoginApp extends Application {
             st.play();
         });
 
-        // Ação do botão de login
+        // Ação do login
         loginBtn.setOnAction(e -> {
             String email = emailField.getText().trim();
             String senha = senhaField.isVisible() ? senhaField.getText() : senhaVisivelField.getText();
 
-            // Verifica se usuário está bloqueado por excesso de tentativas
             if (System.currentTimeMillis() < tempoBloqueio) {
-                long restante = (tempoBloqueio - System.currentTimeMillis()) / 1000;
-                statusLabel.setText("Muitas tentativas. Tente novamente em " + restante + " segundos.");
-                return;
-            }
-
-            // Verifica se campos foram preenchidos
-            if (email.isEmpty() || senha.isEmpty()) {
-                statusLabel.setText("Por favor, preencha todos os campos.");
+                iniciarContagem(statusLabel);
                 return;
             }
 
             loginBtn.setDisable(true);
             statusLabel.setText("Verificando...");
 
-            // Cria tarefa em segundo plano para autenticação
-            Task<String> task = new Task<>() {
+            Task<String> loginTask = new Task<>() {
                 @Override
                 protected String call() {
                     try {
                         return autenticarUsuario(email, senha);
                     } catch (Exception ex) {
                         ex.printStackTrace();
-                        return "Erro inesperado: " + ex.getMessage();
+                        return "Erro: " + ex.getMessage();
                     }
                 }
             };
 
-            // Lida com o retorno da autenticação
-            task.setOnSucceeded(event -> {
-                String resultado = task.getValue();
+            loginTask.setOnSucceeded(event -> {
+                String resultado = loginTask.getValue();
                 if (resultado.startsWith("Bem-vindo")) {
                     tentativas = 0;
                 } else {
                     tentativas++;
                     if (tentativas >= MAX_TENTATIVAS) {
                         tempoBloqueio = System.currentTimeMillis() + (TEMPO_ESPERA * 1000);
-                        resultado = "Muitas tentativas. Tente novamente em 2 minutos.";
+                        iniciarContagem(statusLabel);
+                        return;
                     }
                 }
                 statusLabel.setText(resultado);
-                loginBtn.setDisable(false);
+                verificarCampos.run();
             });
 
-            task.setOnFailed(event -> {
-                statusLabel.setText("Erro ao processar login.");
-                loginBtn.setDisable(false);
+            loginTask.setOnFailed(event -> {
+                statusLabel.setText("Erro de login.");
+                verificarCampos.run(); // ← Correção feita aqui
             });
 
-            new Thread(task).start(); // Inicia a thread da autenticação
+            new Thread(loginTask).start();
         });
 
-        // Configurações da janela principal
-        primaryStage.setTitle("Login - SUN PDV");
-        primaryStage.setScene(scene);
-        primaryStage.setResizable(false);
-        primaryStage.show();
+        stage.setScene(scene);
+        stage.setTitle("Login - SUN PDV");
+        stage.setResizable(false);
+        stage.show();
     }
 
-    // Método para autenticar o usuário no banco de dados Azure SQL
+    private void iniciarContagem(Label statusLabel) {
+        if (contagemRegressiva != null) contagemRegressiva.stop();
+
+        contagemRegressiva = new Timeline(new KeyFrame(Duration.seconds(1), ev -> {
+            long restante = (tempoBloqueio - System.currentTimeMillis()) / 1000;
+            if (restante > 0) {
+                statusLabel.setText("Muitas tentativas. Aguarde " + restante + " segundos.");
+            } else {
+                contagemRegressiva.stop();
+                statusLabel.setText("");
+            }
+        }));
+        contagemRegressiva.setCycleCount(Timeline.INDEFINITE);
+        contagemRegressiva.play();
+    }
+
     private String autenticarUsuario(String email, String senha) throws Exception {
         String url = "jdbc:sqlserver://serverpdv.database.windows.net:1433;"
-                   + "database=SUN_PDVcloud;"
-                   + "user=adminuser@serverpdv;"
-                   + "password=Jp081007!;"
-                   + "encrypt=true;"
-                   + "trustServerCertificate=false;"
-                   + "hostNameInCertificate=*.database.windows.net;"
-                   + "loginTimeout=30;";
+                + "database=SUN_PDVcloud;"
+                + "user=adminuser@serverpdv;"
+                + "password=Tcc708001!;"
+                + "encrypt=true;"
+                + "trustServerCertificate=false;"
+                + "hostNameInCertificate=*.database.windows.net;"
+                + "loginTimeout=30;";
 
-        // Carrega o driver JDBC da Microsoft SQL Server
         Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
 
-        // Criptografa o e-mail com AES e a senha com SHA-256
         String emailCriptografado = criptografarAES(email);
-        String senhaCriptografada = hashSHA256(senha);
+        String senhaHash = hashSHA256(senha);
 
         try (Connection conn = DriverManager.getConnection(url)) {
-            // Consulta para autenticação com email e senha
             String sql = "SELECT l.Nome, c.Cargo, l.ID_Permissao FROM login_sistema l " +
-                         "LEFT JOIN cargo c ON l.ID_Cargo = c.ID_Cargo " +
-                         "WHERE l.Email = ? AND l.Senha = ?";
+                        "LEFT JOIN cargo c ON l.ID_Cargo = c.ID_Cargo " +
+                        "WHERE l.Email = ? AND l.Senha = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, emailCriptografado);
-            stmt.setString(2, senhaCriptografada);
+            stmt.setString(2, senhaHash);
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                int permissao = rs.getInt("ID_Permissao");
-                if (permissao == 2) {
+                if (rs.getInt("ID_Permissao") == 2)
                     return "Acesso negado. Permissão bloqueada.";
-                }
-                String nome = rs.getString("Nome");
-                String cargo = rs.getString("Cargo");
-                return "Bem-vindo, " + nome + " (" + cargo + ")";
+                return "Bem-vindo, " + rs.getString("Nome") + " (" + rs.getString("Cargo") + ")";
             } else {
                 return "E-mail ou senha incorretos.";
             }
         }
     }
 
-    // Método para criptografar texto com AES
     private String criptografarAES(String texto) throws Exception {
-        // AES é um algoritmo de criptografia simétrica
         SecretKeySpec key = new SecretKeySpec(AES_KEY.getBytes(), "AES");
-        Cipher cipher = Cipher.getInstance("AES"); // Usa a biblioteca javax.crypto.Cipher
+        Cipher cipher = Cipher.getInstance("AES");
         cipher.init(Cipher.ENCRYPT_MODE, key);
-        byte[] textoCriptografado = cipher.doFinal(texto.getBytes());
-        return Base64.getEncoder().encodeToString(textoCriptografado); // Codifica o resultado em Base64
+        byte[] criptografado = cipher.doFinal(texto.getBytes());
+        return Base64.getEncoder().encodeToString(criptografado);
     }
 
-    // Método para gerar hash SHA-256 da senha
-    private String hashSHA256(String senha) throws NoSuchAlgorithmException {
-        // SHA-256 é uma função de hash criptográfica unidirecional (java.security.MessageDigest)
+    private String hashSHA256(String texto) throws NoSuchAlgorithmException {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] hash = digest.digest(senha.getBytes());
-        StringBuilder hexString = new StringBuilder();
-        for (byte b : hash)
-            hexString.append(String.format("%02x", b)); // Converte os bytes em hexadecimal
-        return hexString.toString();
+        byte[] hash = digest.digest(texto.getBytes());
+        StringBuilder hex = new StringBuilder();
+        for (byte b : hash) hex.append(String.format("%02x", b));
+        return hex.toString();
     }
 }
