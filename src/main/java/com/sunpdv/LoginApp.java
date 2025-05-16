@@ -37,12 +37,43 @@ public class LoginApp extends Application {
     private int tentativas = 0;
     private long tempoBloqueio = 0;
     private static final int MAX_TENTATIVAS = 6;
-    private static final int TEMPO_ESPERA = 120;
-    private Timeline contagemRegressiva;    
+    private static final int TEMPO_ESPERA = 120; // segundos
+    private Timeline contagemRegressiva;
+
+    // URL do banco de dados local - ajuste conforme seu ambiente
+    private static final String URL = "jdbc:sqlserver://localhost:1433;"
+            + "database=SUN_PDVcloud;"
+            + "user=sa;"
+            + "password=Jp081007!;"
+            + "encrypt=false;"
+            + "trustServerCertificate=true;"
+            + "loginTimeout=30;";
+
+    public static void main(String[] args) {
+        // Testa a conexão antes de iniciar a aplicação JavaFX
+        try {
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+            try (Connection conn = DriverManager.getConnection(URL)) {
+                System.out.println("Conexão com banco local OK!");
+            }
+        } catch (Exception e) {
+            System.err.println("Erro ao conectar no banco:");
+            e.printStackTrace();
+        }
+        launch(args);
+    }
 
     @Override
     public void start(Stage stage) {
+        try {
+            // Carrega driver JDBC (pode ficar aqui ou no main)
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
 
+        // Campos do formulário
         TextField emailField = new TextField();
         emailField.setPromptText("E-mail");
 
@@ -55,7 +86,7 @@ public class LoginApp extends Application {
         senhaVisivelField.setVisible(false);
         senhaVisivelField.textProperty().bindBidirectional(senhaField.textProperty());
 
-        ToggleButton olhoBtn = new ToggleButton("\uD83D\uDC41");
+        ToggleButton olhoBtn = new ToggleButton("👁");
         olhoBtn.getStyleClass().add("olho-btn");
         olhoBtn.setOnAction(e -> {
             boolean mostrar = olhoBtn.isSelected();
@@ -66,11 +97,10 @@ public class LoginApp extends Application {
         });
 
         StackPane senhaStack = new StackPane();
-        senhaStack.setAlignment(Pos.CENTER_LEFT);
+        senhaStack.setAlignment(Pos.CENTER_RIGHT);
+        senhaStack.getChildren().addAll(senhaField, senhaVisivelField, olhoBtn);
         senhaField.prefWidthProperty().bind(emailField.widthProperty());
         senhaVisivelField.prefWidthProperty().bind(emailField.widthProperty());
-        StackPane.setAlignment(olhoBtn, Pos.CENTER_RIGHT);
-        senhaStack.getChildren().addAll(senhaField, senhaVisivelField, olhoBtn);
 
         VBox senhaLinha = new VBox(senhaStack);
         VBox emailLinha = new VBox(emailField);
@@ -95,12 +125,12 @@ public class LoginApp extends Application {
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(100);
         logoView.setPreserveRatio(true);
-        
+
         VBox root = new VBox(15, logoView, emailLinha, senhaLinha, loginBtn, statusLabel);
         root.setAlignment(Pos.CENTER);
         root.setPadding(new Insets(20));
 
-        Scene scene = new Scene(root, 540, 370);
+        Scene scene = new Scene(root, 680, 380);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
         loginBtn.setOnMouseEntered(e -> {
@@ -134,6 +164,7 @@ public class LoginApp extends Application {
                     try {
                         return autenticarUsuario(email, senha);
                     } catch (Exception ex) {
+                        ex.printStackTrace();
                         return "Erro: " + ex.getMessage();
                     }
                 }
@@ -153,11 +184,13 @@ public class LoginApp extends Application {
                 }
                 statusLabel.setText(resultado);
                 verificarCampos.run();
+                loginBtn.setDisable(false);
             });
 
             loginTask.setOnFailed(event -> {
                 statusLabel.setText("Erro de login.");
                 verificarCampos.run();
+                loginBtn.setDisable(false);
             });
 
             new Thread(loginTask).start();
@@ -186,35 +219,27 @@ public class LoginApp extends Application {
     }
 
     private String autenticarUsuario(String email, String senha) throws Exception {
-        String url = "jdbc:sqlserver://serverpdv.database.windows.net:1433;"
-                + "database=SUN_PDVcloud;"
-                + "user=adminuser@serverpdv;"
-                + "password=Tcc708001!;"
-                + "encrypt=true;"
-                + "trustServerCertificate=false;"
-                + "hostNameInCertificate=*.database.windows.net;"
-                + "loginTimeout=30;";
-
-        Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-
+        // Usa a URL já definida na variável estática URL
         String emailCriptografado = criptografarAES(email);
         String senhaHash = hashSHA256(senha);
 
-        try (Connection conn = DriverManager.getConnection(url)) {
+        try (Connection conn = DriverManager.getConnection(URL)) {
             String sql = "SELECT l.Nome, c.Cargo, l.ID_Permissao FROM login_sistema l " +
-                    "LEFT JOIN cargo c ON l.ID_Cargo = c.ID_Cargo " +
-                    "WHERE l.Email = ? AND l.Senha = ?";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, emailCriptografado);
-            stmt.setString(2, senhaHash);
-            ResultSet rs = stmt.executeQuery();
+                         "LEFT JOIN cargo c ON l.ID_Cargo = c.ID_Cargo " +
+                         "WHERE l.Email = ? AND l.Senha = ?";
 
-            if (rs.next()) {
-                if (rs.getInt("ID_Permissao") == 2)
-                    return "Acesso negado. Permissão bloqueada.";
-                return "Bem-vindo, " + rs.getString("Nome") + " (" + rs.getString("Cargo") + ")";
-            } else {
-                return "E-mail ou senha incorretos.";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, emailCriptografado);
+                stmt.setString(2, senhaHash);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        if (rs.getInt("ID_Permissao") == 2)
+                            return "Acesso negado. Permissão bloqueada.";
+                        return "Bem-vindo, " + rs.getString("Nome") + " (" + rs.getString("Cargo") + ")";
+                    } else {
+                        return "E-mail ou senha incorretos.";
+                    }
+                }
             }
         }
     }
@@ -233,9 +258,5 @@ public class LoginApp extends Application {
         StringBuilder hex = new StringBuilder();
         for (byte b : hash) hex.append(String.format("%02x", b));
         return hex.toString();
-    }
-
-    public static void main(String[] args) {
-        launch();
     }
 }

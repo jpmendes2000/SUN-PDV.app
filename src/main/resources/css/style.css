@@ -1,38 +1,38 @@
 .root {
-    /* Define o fundo da aplicação com um gradiente diagonal do canto superior esquerdo para o inferior direito */
+    /* Fundo com gradiente diagonal do azul claro (#006989) para azul escuro (#05313e) */
     -fx-background-color: linear-gradient(to bottom right, #006989, #05313e);
     
-    /* Comentado: alternativa de fundo sólido azul */
+    /* Alternativa de fundo sólido azul (comentado) */
     /* -fx-background-color: #006989; */
 
-    /* Define a fonte padrão da interface */
+    /* Fonte padrão para toda a aplicação */
     -fx-font-family: "Segoe UI", sans-serif;
 }
 
 .grid-pane {
-    /* Define o espaçamento horizontal entre os elementos dentro do GridPane */
+    /* Espaçamento horizontal entre os elementos no GridPane */
     -fx-hgap: 15;
 
-    /* Define o espaçamento vertical entre os elementos dentro do GridPane */
+    /* Espaçamento vertical entre os elementos no GridPane */
     -fx-vgap: 20;
 }
 
 .label {
-    /* Define a cor do texto das labels */
+    /* Cor do texto nas labels */
     -fx-text-fill: #E7ECEF;
 
-    /* Define o tamanho da fonte */
+    /* Tamanho da fonte */
     -fx-font-size: 15px;
 
-    /* Deixa o texto em negrito */
+    /* Texto em negrito */
     -fx-font-weight: bold;
 }
 
 .label-text {
-    /* Define a cor de preenchimento do texto (útil em casos como Text) */
+    /* Cor do texto (usado em Text ou similar) */
     -fx-fill: #E7ECEF;
 
-    /* Tamanho da fonte */
+    /* Fonte um pouco maior que .label */
     -fx-font-size: 16px;
 
     /* Negrito */
@@ -40,7 +40,7 @@
 }
 
 .text-field {
-    /* Cor de fundo do campo de texto */
+    /* Fundo claro para campos de texto */
     -fx-background-color: #E7ECEF;
 
     /* Cor do texto dentro do campo */
@@ -49,86 +49,89 @@
     /* Tamanho da fonte */
     -fx-font-size: 14px;
 
-    /* Espaçamento interno (padding) */
+    /* Espaçamento interno (padding) para conforto visual */
     -fx-padding: 10px;
 
-    /* Bordas arredondadas */
+    /* Bordas arredondadas do campo */
     -fx-border-radius: 8px;
     -fx-background-radius: 8px;
 
-    /* Remove a cor da borda padrão */
+    /* Remove borda padrão */
     -fx-border-color: transparent;
 
-    /* Adiciona uma leve sombra na parte inferior para profundidade */
+    /* Sombra leve para dar profundidade */
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 1, 0, 0, 1);
 }
 
 .text-field:focused {
-    /* Quando o campo estiver em foco (clicado), a borda será azul */
+    /* Quando o campo está focado, borda azul aparece */
     -fx-border-color: #0008ff;
 
-    /* Mantém o fundo claro ao focar */
+    /* Mantém o fundo claro */
     -fx-background-color: #E7ECEF;
 }
 
 .button {
-    /* Cor de fundo do botão (amarelo) */
+    /* Fundo amarelo vibrante */
     -fx-background-color: #FDCA40;
 
-    /* Cor do texto do botão */
+    /* Cor do texto marrom escuro */
     -fx-text-fill: #715300;
 
-    /* Tamanho da fonte */
+    /* Tamanho e peso da fonte */
     -fx-font-size: 15px;
-
-    /* Deixa o texto em negrito */
     -fx-font-weight: bold;
 
-    /* Arredondamento das bordas do botão */
+    /* Bordas arredondadas para o botão */
     -fx-background-radius: 10px;
     -fx-border-radius: 10px;
 
-    /* Espaçamento interno (vertical e horizontal) */
+    /* Padding interno para área clicável confortável */
     -fx-padding: 10px 32px;
 
-    /* Cursor de mão ao passar o mouse (só funciona visualmente em aplicações que suportam isso) */
+    /* Cursor muda para mão ao passar o mouse */
     -fx-cursor: hand;
 }
 
 .button:hover {
-    /* Cor de fundo ao passar o mouse (efeito hover) */
+    /* Cor do fundo quando o mouse está sobre o botão */
     -fx-background-color: #cba028;
 
-    /* Altera a cor do texto ao passar o mouse */
+    /* Cor do texto clara no hover */
     -fx-text-fill: #f9e5af;
 }
 
 .erro-mensager {
-    /* Define o tamanho da fonte para mensagens de erro */
+    /* Fonte maior para mensagens de erro */
     -fx-font-size: 17px;
 }
 
 .visible {
-    /* Cor de fundo vermelha para algo visível (provavelmente uma bolinha de alerta) */
+    /* Fundo vermelho para indicador visível (ex: alerta) */
     -fx-background-color: #ff0000;
 
     /* Remove bordas */
     -fx-border: 0;
 
-    /* Faz com que o elemento fique completamente circular */
+    /* Torna o elemento completamente circular */
     -fx-background-radius: 100px;
 }
 
 .visible:hover {
-    /* Muda o vermelho para um tom mais escuro ao passar o mouse */
+    /* Vermelho mais escuro ao passar o mouse */
     -fx-background-color: #cd0101;
 }
 
-
 .olho-btn {
+    /* Botão olho transparente para mostrar/ocultar senha */
     -fx-background-color: transparent;
+
+    /* Fonte maior para o ícone */
     -fx-font-size: 18px;
+
+    /* Posiciona o botão à esquerda */
     -fx-translate-x: -35px;
+
+    /* Cursor de mão para indicar interatividade */
     -fx-cursor: hand;
 }
-
