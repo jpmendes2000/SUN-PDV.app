@@ -38,7 +38,7 @@ public class LoginApp extends Application {
     private long tempoBloqueio = 0;
     private static final int MAX_TENTATIVAS = 6;
     private static final int TEMPO_ESPERA = 120;
-    private Timeline contagemRegressiva;
+    private Timeline contagemRegressiva;    
 
     @Override
     public void start(Stage stage) {
@@ -95,12 +95,12 @@ public class LoginApp extends Application {
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(100);
         logoView.setPreserveRatio(true);
-
+        
         VBox root = new VBox(15, logoView, emailLinha, senhaLinha, loginBtn, statusLabel);
         root.setAlignment(Pos.CENTER);
         root.setPadding(new Insets(20));
 
-        Scene scene = new Scene(root, 680, 380);
+        Scene scene = new Scene(root, 540, 370);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
         loginBtn.setOnMouseEntered(e -> {
