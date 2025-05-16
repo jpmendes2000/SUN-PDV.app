@@ -1,37 +1,35 @@
-    package com.sunpdv;
+package com.sunpdv;
 
-    import java.security.MessageDigest;
-    import java.security.NoSuchAlgorithmException;
-    import java.sql.Connection;
-    import java.sql.DriverManager;
-    import java.sql.PreparedStatement;
-    import java.sql.ResultSet;
-    import java.util.Base64;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Base64;
 
-    import javax.crypto.Cipher; // Classe da biblioteca javax.crypto usada para criptografar dados com AES
-    import javax.crypto.spec.SecretKeySpec; // Define a chave secreta para o algoritmo AES
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 
-    import javafx.animation.KeyFrame;
-    import javafx.animation.ScaleTransition;
-    import javafx.animation.Timeline;
-    import javafx.application.Application;
-    import javafx.concurrent.Task;
-    import javafx.geometry.Insets;
-    import javafx.geometry.Pos;
-    import javafx.scene.Scene;
-    import javafx.scene.control.Button;
-    import javafx.scene.control.Label;
-    import javafx.scene.control.PasswordField;
-    import javafx.scene.control.TextField;
-    import javafx.scene.control.ToggleButton;
-    import javafx.scene.image.Image;
-    import javafx.scene.image.ImageView;
-    import javafx.scene.layout.StackPane;
-    import javafx.scene.layout.VBox;
-    import javafx.stage.Stage;
-    import javafx.util.Duration;
-
-    // ... imports iguais ao original ...
+import javafx.animation.KeyFrame;
+import javafx.animation.ScaleTransition;
+import javafx.animation.Timeline;
+import javafx.application.Application;
+import javafx.concurrent.Task;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class LoginApp extends Application {
 
@@ -39,13 +37,12 @@ public class LoginApp extends Application {
     private int tentativas = 0;
     private long tempoBloqueio = 0;
     private static final int MAX_TENTATIVAS = 6;
-    private static final int TEMPO_ESPERA = 120; // segundos
+    private static final int TEMPO_ESPERA = 120;
     private Timeline contagemRegressiva;
 
     @Override
     public void start(Stage stage) {
 
-        // Campos
         TextField emailField = new TextField();
         emailField.setPromptText("E-mail");
 
@@ -58,7 +55,7 @@ public class LoginApp extends Application {
         senhaVisivelField.setVisible(false);
         senhaVisivelField.textProperty().bindBidirectional(senhaField.textProperty());
 
-        ToggleButton olhoBtn = new ToggleButton("👁");
+        ToggleButton olhoBtn = new ToggleButton("\uD83D\uDC41");
         olhoBtn.getStyleClass().add("olho-btn");
         olhoBtn.setOnAction(e -> {
             boolean mostrar = olhoBtn.isSelected();
@@ -68,35 +65,32 @@ public class LoginApp extends Application {
             senhaVisivelField.setManaged(mostrar);
         });
 
-        // Layout da senha
         StackPane senhaStack = new StackPane();
-        senhaStack.setAlignment(Pos.CENTER_RIGHT);
-        senhaStack.getChildren().addAll(senhaField, senhaVisivelField, olhoBtn);
+        senhaStack.setAlignment(Pos.CENTER_LEFT);
         senhaField.prefWidthProperty().bind(emailField.widthProperty());
         senhaVisivelField.prefWidthProperty().bind(emailField.widthProperty());
+        StackPane.setAlignment(olhoBtn, Pos.CENTER_RIGHT);
+        senhaStack.getChildren().addAll(senhaField, senhaVisivelField, olhoBtn);
 
         VBox senhaLinha = new VBox(senhaStack);
         VBox emailLinha = new VBox(emailField);
         emailLinha.setAlignment(Pos.CENTER_LEFT);
         senhaLinha.setAlignment(Pos.CENTER_LEFT);
 
-        // Botão e status
         Button loginBtn = new Button("Entrar");
         loginBtn.setDisable(true);
 
         Label statusLabel = new Label();
 
-        // Habilitar botão dinamicamente
         Runnable verificarCampos = () -> {
             boolean preenchido = !emailField.getText().trim().isEmpty() &&
-                                !(senhaField.isVisible() ? senhaField.getText() : senhaVisivelField.getText()).trim().isEmpty();
+                    !(senhaField.isVisible() ? senhaField.getText() : senhaVisivelField.getText()).trim().isEmpty();
             loginBtn.setDisable(!preenchido);
         };
         emailField.textProperty().addListener((obs, o, n) -> verificarCampos.run());
         senhaField.textProperty().addListener((obs, o, n) -> verificarCampos.run());
         senhaVisivelField.textProperty().addListener((obs, o, n) -> verificarCampos.run());
 
-        // Imagem
         Image logo = new Image(getClass().getResourceAsStream("/img/logo.png"));
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(100);
@@ -109,7 +103,6 @@ public class LoginApp extends Application {
         Scene scene = new Scene(root, 680, 380);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
-        // Animações
         loginBtn.setOnMouseEntered(e -> {
             ScaleTransition st = new ScaleTransition(Duration.millis(150), loginBtn);
             st.setToX(1.05);
@@ -123,7 +116,6 @@ public class LoginApp extends Application {
             st.play();
         });
 
-        // Ação do login
         loginBtn.setOnAction(e -> {
             String email = emailField.getText().trim();
             String senha = senhaField.isVisible() ? senhaField.getText() : senhaVisivelField.getText();
@@ -142,7 +134,6 @@ public class LoginApp extends Application {
                     try {
                         return autenticarUsuario(email, senha);
                     } catch (Exception ex) {
-                        ex.printStackTrace();
                         return "Erro: " + ex.getMessage();
                     }
                 }
@@ -166,7 +157,7 @@ public class LoginApp extends Application {
 
             loginTask.setOnFailed(event -> {
                 statusLabel.setText("Erro de login.");
-                verificarCampos.run(); // ← Correção feita aqui
+                verificarCampos.run();
             });
 
             new Thread(loginTask).start();
@@ -211,8 +202,8 @@ public class LoginApp extends Application {
 
         try (Connection conn = DriverManager.getConnection(url)) {
             String sql = "SELECT l.Nome, c.Cargo, l.ID_Permissao FROM login_sistema l " +
-                        "LEFT JOIN cargo c ON l.ID_Cargo = c.ID_Cargo " +
-                        "WHERE l.Email = ? AND l.Senha = ?";
+                    "LEFT JOIN cargo c ON l.ID_Cargo = c.ID_Cargo " +
+                    "WHERE l.Email = ? AND l.Senha = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, emailCriptografado);
             stmt.setString(2, senhaHash);
@@ -242,5 +233,9 @@ public class LoginApp extends Application {
         StringBuilder hex = new StringBuilder();
         for (byte b : hash) hex.append(String.format("%02x", b));
         return hex.toString();
+    }
+
+    public static void main(String[] args) {
+        launch();
     }
 }
