@@ -24,20 +24,20 @@ public class TelaHomeFUN extends Application {
         btnSair.setOnAction(e -> stage.close());
         
         // Configuração do layout principal
-        VBox root = new VBox(15);
-        root.setAlignment(Pos.CENTER);
-        root.setPadding(new Insets(20));
+        VBox root = new VBox(10);
+        root.setAlignment(Pos.BOTTOM_RIGHT);
+        root.setPadding(new Insets(45));
         root.getChildren().addAll(btnVendas, btnSair);
         
         // Configuração da cena
-        Scene scene = new Scene(root, 1920, 1080);
+        Scene scene = new Scene(root, 1000, 600);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
         // Configuração da janela
         stage.setFullScreen(true);
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Painel Administrativo");
-        stage.setResizable(false);
+        stage.setResizable(true);
         stage.show();
     }
 
