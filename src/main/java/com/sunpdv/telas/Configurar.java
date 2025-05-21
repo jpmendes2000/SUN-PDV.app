@@ -55,9 +55,20 @@ public class Configurar {
         btnSair.setPrefWidth(larguraPadrao);
 
         btnVendas.setOnAction(e -> {
-            // Lógica para nova venda
-            System.out.println("Nova venda iniciada");
+            stage.close();
+            new Caixa().show(new Stage());
         });
+
+        btnProdutos.setOnAction(e -> {
+            stage.close();
+            new Produtos().show(new Stage());
+        });
+
+        btnUsuarios.setOnAction(e -> {
+            stage.close();
+            new Usuarios().show(new Stage());
+        });
+
 
 
         btnSair.setOnAction(e -> {

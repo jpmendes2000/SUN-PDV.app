@@ -61,6 +61,21 @@ public class Caixa {
             System.out.println("Nova venda iniciada");
         });
 
+        btnProdutos.setOnAction(e -> {
+            stage.close();
+            new Produtos().show(new Stage());
+        });
+
+        btnUsuarios.setOnAction(e -> {
+            stage.close();
+            new Usuarios().show(new Stage());
+        });
+
+        btnConfigurar.setOnAction(e -> {
+            stage.close();
+            new Configurar().show(new Stage());
+        });
+
 
         btnSair.setOnAction(e -> {
             CustomConfirmationAlert alert = new CustomConfirmationAlert(
