@@ -42,12 +42,14 @@ public class TelaHomeADM {
         Button btnVendas = new Button("Vendas");
         Button btnProdutos = new Button("Gerenciar Produtos");
         Button btnUsuarios = new Button("Gerenciar Usuários");
+        Button btnConfigurar = new Button("Configurações");
         Button btnSair = new Button("Sair do Sistema");
 
         double larguraPadrao = 250;
         btnVendas.setPrefWidth(larguraPadrao);
         btnProdutos.setPrefWidth(larguraPadrao);
         btnUsuarios.setPrefWidth(larguraPadrao);
+        btnConfigurar.setPrefWidth(larguraPadrao);
         btnSair.setPrefWidth(larguraPadrao);
 
         btnSair.setOnAction(e -> {
@@ -55,7 +57,8 @@ public class TelaHomeADM {
         stage.close(); // Fecha a janela atual
         });
 
-        VBox botoesBox = new VBox(15, btnVendas, btnProdutos, btnUsuarios, btnSair);
+
+        VBox botoesBox = new VBox(15, btnVendas, btnProdutos, btnUsuarios, btnConfigurar, btnSair);
         botoesBox.setAlignment(Pos.BOTTOM_RIGHT);
 
         Label mensagemFixa = new Label("Bem-vindo(a), " + nome + " você é " + cargo);
