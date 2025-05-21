@@ -5,39 +5,67 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class TelaHomeADM extends Application {
-    
-    @Override 
+
+    @Override
     public void start(Stage stage) {
-        
-        // Botões do menu
+        // Imagem logo
+        Image logo = new Image(getClass().getResourceAsStream("/img/logo.png"));
+        ImageView logoView = new ImageView(logo);
+        logoView.setFitWidth(120);
+        logoView.setPreserveRatio(true);
+
+        // VBox com a logo no canto superior esquerdo
+        VBox logoBox = new VBox(logoView);
+        logoBox.setPadding(new Insets(20));
+        logoBox.setAlignment(Pos.TOP_LEFT);
+
+        // Botões
         Button btnVendas = new Button("Vendas");
         Button btnProdutos = new Button("Gerenciar Produtos");
         Button btnUsuarios = new Button("Gerenciar Usuários");
         Button btnSair = new Button("Sair do Sistema");
-        
-        // Ações dos botões (exemplo)
+
+        double larguraPadrao = 250;
+        btnVendas.setPrefWidth(larguraPadrao);
+        btnProdutos.setPrefWidth(larguraPadrao);
+        btnUsuarios.setPrefWidth(larguraPadrao);
+        btnSair.setPrefWidth(larguraPadrao);
+
         btnSair.setOnAction(e -> stage.close());
-        
-        // Configuração do layout principal
-        VBox root = new VBox(15);
-        root.setAlignment(Pos.CENTER);
-        root.setPadding(new Insets(20));
-        root.getChildren().addAll(btnVendas, btnProdutos, btnUsuarios, btnSair);
-        
-        // Configuração da cena
-        Scene scene = new Scene(root, 1920, 1080);
+
+        // VBox com os botões no canto inferior direito
+        VBox botoesBox = new VBox(15, btnVendas, btnProdutos, btnUsuarios, btnSair);
+        botoesBox.setPadding(new Insets(40));
+        botoesBox.setAlignment(Pos.BOTTOM_RIGHT);
+
+        // Pane para alinhar os botões no canto inferior direito
+        StackPane botoesPane = new StackPane(botoesBox);
+        StackPane.setAlignment(botoesBox, Pos.BOTTOM_RIGHT);
+
+        // Pane para alinhar a logo no canto superior esquerdo
+        StackPane logoPane = new StackPane(logoBox);
+        StackPane.setAlignment(logoBox, Pos.TOP_LEFT);
+
+        // Container principal com logo e botões sobrepostos
+        StackPane principal = new StackPane();
+        principal.getChildren().addAll(logoPane, botoesPane);
+
+        // Cena e estilo
+        Scene scene = new Scene(principal, 1000, 600);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
-        // Configuração da janela
-        stage.setFullScreen(true);
+        // Janela
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Painel Administrativo");
-        stage.setResizable(false);
+        stage.setResizable(true);
+        stage.setFullScreen(true);
         stage.show();
     }
 
