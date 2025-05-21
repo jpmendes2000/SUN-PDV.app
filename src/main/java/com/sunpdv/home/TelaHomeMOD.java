@@ -1,31 +1,38 @@
 package com.sunpdv.home;
 
-import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
-public class TelaHomeMOD extends Application {
+public class TelaHomeMOD {
 
-    @Override
-    public void start(Stage stage) {
-        // Imagem logo
+    private String nome;
+    private String cargo;
+
+    public TelaHomeMOD(String nome, String cargo) {
+        this.nome = nome;
+        this.cargo = cargo;
+    }
+
+    public void mostrar() {
+        Stage stage = new Stage();
+
         Image logo = new Image(getClass().getResourceAsStream("/img/logo.png"));
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(120);
         logoView.setPreserveRatio(true);
 
-        // VBox com a logo no canto superior esquerdo
-        VBox logoBox = new VBox(logoView);
-        logoBox.setPadding(new Insets(20));
-        logoBox.setAlignment(Pos.TOP_LEFT);
+        VBox topBox = new VBox(10, logoView);
+        topBox.setPadding(new Insets(20));
+        topBox.setAlignment(Pos.TOP_LEFT);
 
-        // Botões
+        // Botões da tela MOD (vendas, gerenciar produtos, sair)
         Button btnVendas = new Button("Vendas");
         Button btnProdutos = new Button("Gerenciar Produtos");
         Button btnSair = new Button("Sair do Sistema");
@@ -37,36 +44,32 @@ public class TelaHomeMOD extends Application {
 
         btnSair.setOnAction(e -> stage.close());
 
-        // VBox com os botões no canto inferior direito
         VBox botoesBox = new VBox(15, btnVendas, btnProdutos, btnSair);
-        botoesBox.setPadding(new Insets(40));
         botoesBox.setAlignment(Pos.BOTTOM_RIGHT);
 
-        // Pane para alinhar os botões no canto inferior direito
-        StackPane botoesPane = new StackPane(botoesBox);
-        StackPane.setAlignment(botoesBox, Pos.BOTTOM_RIGHT);
+        Label mensagemFixa = new Label("Bem-vindo(a), " + nome + " você é " + cargo);
+        mensagemFixa.getStyleClass().add("mensagem-bemvindo");
 
-        // Pane para alinhar a logo no canto superior esquerdo
-        StackPane logoPane = new StackPane(logoBox);
-        StackPane.setAlignment(logoBox, Pos.TOP_LEFT);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        // Container principal com logo e botões sobrepostos
-        StackPane principal = new StackPane();
-        principal.getChildren().addAll(logoPane, botoesPane);
+        HBox bottomBox = new HBox();
+        bottomBox.setPadding(new Insets(0, 15, 10, 30));
+        bottomBox.setSpacing(20);
+        bottomBox.setAlignment(Pos.BOTTOM_RIGHT);
+        bottomBox.getChildren().addAll(mensagemFixa, spacer, botoesBox);
 
-        // Cena e estilo
-        Scene scene = new Scene(principal, 1000, 600);
+        BorderPane layout = new BorderPane();
+        layout.setTop(topBox);
+        layout.setBottom(bottomBox);
+
+        Scene scene = new Scene(layout, 1000, 600);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
-        // Janela
         stage.setScene(scene);
-        stage.setTitle("SUN PDV - Painel Administrativo");
+        stage.setTitle("SUN PDV - Painel Moderador");
         stage.setResizable(true);
         stage.setFullScreen(true);
         stage.show();
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 }

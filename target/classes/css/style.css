@@ -135,3 +135,16 @@
     /* Cursor de mão para indicar interatividade */
     -fx-cursor: hand;
 }
+
+.mensagem-bemvindo {
+    -fx-font-size: 37px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #FDCA40;
+    -fx-padding: 8 12 8 12;
+    -fx-background-radius: 8;
+}
+
+
+
+
+
