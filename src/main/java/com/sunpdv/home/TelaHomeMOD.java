@@ -1,4 +1,4 @@
-package com.sunpdv.telas;
+package com.sunpdv.home;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -10,7 +10,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
-public class TelaHomeADM extends Application {
+public class TelaHomeMOD extends Application {
 
     @Override
     public void start(Stage stage) {
@@ -28,19 +28,17 @@ public class TelaHomeADM extends Application {
         // Botões
         Button btnVendas = new Button("Vendas");
         Button btnProdutos = new Button("Gerenciar Produtos");
-        Button btnUsuarios = new Button("Gerenciar Usuários");
         Button btnSair = new Button("Sair do Sistema");
 
         double larguraPadrao = 250;
         btnVendas.setPrefWidth(larguraPadrao);
         btnProdutos.setPrefWidth(larguraPadrao);
-        btnUsuarios.setPrefWidth(larguraPadrao);
         btnSair.setPrefWidth(larguraPadrao);
 
         btnSair.setOnAction(e -> stage.close());
 
         // VBox com os botões no canto inferior direito
-        VBox botoesBox = new VBox(15, btnVendas, btnProdutos, btnUsuarios, btnSair);
+        VBox botoesBox = new VBox(15, btnVendas, btnProdutos, btnSair);
         botoesBox.setPadding(new Insets(40));
         botoesBox.setAlignment(Pos.BOTTOM_RIGHT);
 
