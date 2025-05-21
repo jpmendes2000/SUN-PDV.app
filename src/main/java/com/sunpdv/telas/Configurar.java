@@ -17,9 +17,12 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-public class Caixa {
+public class Configurar {
 
-    // Classe interna para criar um Alert de confirmação com estilo CSS
+    /**
+     * Classe interna para criar uma caixa de confirmação customizada
+     * com estilo CSS aplicado.
+     */
     private static class CustomConfirmationAlert extends Alert {
         public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
             super(AlertType.CONFIRMATION);
@@ -27,7 +30,8 @@ public class Caixa {
             this.setTitle(title);
             this.setHeaderText(header);
             this.setContentText(content);
-            // Adiciona o CSS ao Alert
+            
+            // Aplica o estilo CSS à janela de diálogo
             Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
             stage.getScene().getStylesheets().add(
                 getClass().getResource("/css/style.css").toExternalForm()
@@ -35,37 +39,31 @@ public class Caixa {
         }
     }
 
-    // Método principal que exibe a tela Caixa
+    /**
+     * Método principal que exibe a tela de Configurações.
+     */
     public void show(Stage stage) {
-
-        // Carrega o logo
+        // Configuração da logo
         Image logo = new Image(getClass().getResourceAsStream("/img/logo.png"));
         ImageView logoView = new ImageView(logo);
-        logoView.setFitWidth(130);
-        logoView.setPreserveRatio(true);
+        logoView.setFitWidth(130); // Define a largura
+        logoView.setPreserveRatio(true); // Mantém a proporção da imagem
 
-        // Caixa do logo alinhada ao topo
+        // Coloca a logo em um VBox para alinhar
         VBox logoBox = new VBox(logoView);
         logoBox.setPadding(new Insets(20));
         logoBox.setAlignment(Pos.TOP_LEFT);
 
-        // Botões da tela
-        Button btnNovaVenda = new Button("Nova Venda");
+        // Botões principais
         Button btnVoltarHome = new Button("Home");
         Button btnSair = new Button("Sair do Sistema");
 
         // Define largura padrão para os botões
         double larguraPadrao = 250;
-        btnNovaVenda.setPrefWidth(larguraPadrao);
         btnVoltarHome.setPrefWidth(larguraPadrao);
         btnSair.setPrefWidth(larguraPadrao);
 
-        // Ação de iniciar nova venda
-        btnNovaVenda.setOnAction(e -> {
-            System.out.println("Nova venda iniciada");
-        });
-
-        // Ação de voltar à tela principal (ADM, MOD ou FUN)
+         // Ação de voltar à tela principal (ADM, MOD ou FUN)
         btnVoltarHome.setOnAction(e -> {
             try {
                 String cargo = AutenticarUser.getCargo();
@@ -78,7 +76,7 @@ public class Caixa {
                     case "Moderador":
                         new TelaHomeMOD(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar(stage);
                         break;
-                    case "Funcionario":
+                    case "Funcionário":
                         new TelaHomeFUN(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar(stage);
                         break;
                     default:
@@ -94,7 +92,7 @@ public class Caixa {
             }
         });
 
-        // Ação de sair do sistema
+        // Ação do botão Sair do Sistema
         btnSair.setOnAction(e -> {
             CustomConfirmationAlert alert = new CustomConfirmationAlert(
                 stage,
@@ -105,27 +103,27 @@ public class Caixa {
 
             alert.showAndWait().ifPresent(response -> {
                 if (response == ButtonType.OK) {
-                    stage.close();
+                    stage.close(); // Fecha o aplicativo
                 }
             });
         });
 
-        // Caixa com os botões alinhada no centro inferior
-        VBox botoesBox = new VBox(15, btnNovaVenda, btnVoltarHome, btnSair);
+        // Layout dos botões
+        VBox botoesBox = new VBox(15, btnVoltarHome, btnSair);
         botoesBox.setPadding(new Insets(40));
         botoesBox.setAlignment(Pos.BOTTOM_RIGHT);
 
-        // Layout principal com logo e botões
+        // Layout principal
         StackPane principal = new StackPane();
         principal.getChildren().addAll(logoBox, botoesBox);
         StackPane.setAlignment(logoBox, Pos.TOP_LEFT);
         StackPane.setAlignment(botoesBox, Pos.CENTER);
 
-        // Cena com tamanho padrão e CSS
+        // Configuração da cena
         Scene scene = new Scene(principal, 1000, 600);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
-        // Configura o Stage principal
+        // Configuração da janela
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Módulo de Caixa");
         stage.setFullScreen(true);

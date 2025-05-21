@@ -1,13 +1,22 @@
 package com.sunpdv.home;
 
+import com.sunpdv.AutenticarUser;
+import com.sunpdv.telas.Caixa;
+import com.sunpdv.telas.Produtos;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 public class TelaHomeMOD {
@@ -15,14 +24,38 @@ public class TelaHomeMOD {
     private String nome;
     private String cargo;
 
+    // Construtor com nome e cargo do usuário
     public TelaHomeMOD(String nome, String cargo) {
         this.nome = nome;
         this.cargo = cargo;
     }
 
-    public void mostrar() {
-        Stage stage = new Stage();
+    // Classe interna para alertas de confirmação com estilo
+    private static class CustomConfirmationAlert extends Alert {
+        public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
+            super(AlertType.CONFIRMATION);
+            this.initOwner(owner);
+            this.setTitle(title);
+            this.setHeaderText(header);
+            this.setContentText(content);
+            Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
+            stage.getScene().getStylesheets().add(
+                getClass().getResource("/css/style.css").toExternalForm()
+            );
+        }
+    }
 
+    // Exibe a tela principal do moderador
+    public void mostrar(Stage stage) {
+
+        // Maximiza janela na tela do usuário
+        Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+        stage.setX(screenBounds.getMinX());
+        stage.setY(screenBounds.getMinY());
+        stage.setWidth(screenBounds.getWidth());
+        stage.setHeight(screenBounds.getHeight());
+
+        // Logo
         Image logo = new Image(getClass().getResourceAsStream("/img/logo.png"));
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(120);
@@ -32,44 +65,66 @@ public class TelaHomeMOD {
         topBox.setPadding(new Insets(20));
         topBox.setAlignment(Pos.TOP_LEFT);
 
-        // Botões da tela MOD (vendas, gerenciar produtos, sair)
+        // Botões para moderador (menos opções que ADM)
         Button btnVendas = new Button("Vendas");
         Button btnProdutos = new Button("Gerenciar Produtos");
         Button btnSair = new Button("Sair do Sistema");
 
         double larguraPadrao = 250;
-        btnVendas.setPrefWidth(larguraPadrao);
-        btnProdutos.setPrefWidth(larguraPadrao);
-        btnSair.setPrefWidth(larguraPadrao);
+        for (Button btn : new Button[]{btnVendas, btnProdutos, btnSair}) {
+            btn.setPrefWidth(larguraPadrao);
+        }
 
-        btnSair.setOnAction(e -> stage.close());
+        // Define ações dos botões
+        btnVendas.setOnAction(e -> new Caixa().show(stage));
+        btnProdutos.setOnAction(e -> new Produtos().show(stage));
 
+        // Botão sair exibe alerta de confirmação
+        btnSair.setOnAction(e -> {
+            CustomConfirmationAlert alert = new CustomConfirmationAlert(
+                stage,
+                "Confirmação de Saída",
+                "Deseja realmente sair do sistema?",
+                ""
+            );
+            alert.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.OK) {
+                    AutenticarUser.limparDados();
+                    stage.close();
+                }
+            });
+        });
+
+        // Caixa vertical com botões
         VBox botoesBox = new VBox(15, btnVendas, btnProdutos, btnSair);
         botoesBox.setAlignment(Pos.BOTTOM_RIGHT);
+        botoesBox.setPadding(new Insets(40));
 
+        // Label de boas-vindas
         Label mensagemFixa = new Label("Bem-vindo(a), " + nome + " você é " + cargo);
         mensagemFixa.getStyleClass().add("mensagem-bemvindo");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        HBox bottomBox = new HBox();
+        // Barra inferior com mensagem e botões
+        HBox bottomBox = new HBox(20, mensagemFixa, spacer, botoesBox);
         bottomBox.setPadding(new Insets(0, 15, 10, 30));
-        bottomBox.setSpacing(20);
         bottomBox.setAlignment(Pos.BOTTOM_RIGHT);
-        bottomBox.getChildren().addAll(mensagemFixa, spacer, botoesBox);
 
+        // Layout principal
         BorderPane layout = new BorderPane();
         layout.setTop(topBox);
         layout.setBottom(bottomBox);
 
+        // Cena com estilo CSS
         Scene scene = new Scene(layout, 1000, 600);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
+        // Configura e mostra a janela
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Painel Moderador");
         stage.setResizable(true);
-        stage.setFullScreen(true);
         stage.show();
     }
 }

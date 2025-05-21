@@ -181,13 +181,13 @@ public class LoginApp extends Application {
                     try {
                         switch (AutenticarUser.getCargo()) {
                             case "Administrador":
-                                new TelaHomeADM(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar();
+                                new TelaHomeADM(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar(stage);
                                 break;
                             case "Moderador":
-                                new TelaHomeMOD(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar();
+                                new TelaHomeMOD(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar(stage);
                                 break;
                             case "Funcionario":
-                                new TelaHomeFUN(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar();
+                                new TelaHomeFUN(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar(stage);
                                 break;
                             default:
                                 statusLabel.setText("Cargo não reconhecido: " + AutenticarUser.getCargo());
