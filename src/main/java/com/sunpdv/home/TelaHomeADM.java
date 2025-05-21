@@ -1,6 +1,7 @@
 package com.sunpdv.home;
 
 import com.sunpdv.telas.Caixa;
+import com.sunpdv.telas.Configurar;
 import com.sunpdv.telas.Produtos;
 import com.sunpdv.telas.Usuarios;
 
@@ -53,12 +54,14 @@ public class TelaHomeADM extends Application {
         Button btnVendas = new Button("Vendas");
         Button btnProdutos = new Button("Gerenciar Produtos");
         Button btnUsuarios = new Button("Gerenciar Usuários");
+        Button btnConfigurar = new Button("Configurações");
         Button btnSair = new Button("Sair do Sistema");
 
         double larguraPadrao = 250;
         btnVendas.setPrefWidth(larguraPadrao);
         btnProdutos.setPrefWidth(larguraPadrao);
         btnUsuarios.setPrefWidth(larguraPadrao);
+        btnConfigurar.setPrefWidth(larguraPadrao);
         btnSair.setPrefWidth(larguraPadrao);
 
         // Ação do botão Vendas
@@ -75,6 +78,11 @@ public class TelaHomeADM extends Application {
         btnUsuarios.setOnAction(e -> {
             primaryStage.close();
             new Usuarios().show(new Stage());
+        });
+
+        btnConfigurar.setOnAction(e -> {
+            primaryStage.close();
+            new Configurar().show(new Stage());
         });
 
         // Ação do botão Sair
@@ -94,7 +102,7 @@ public class TelaHomeADM extends Application {
         });
 
         // VBox com os botões no canto inferior direito
-        VBox botoesBox = new VBox(15, btnVendas, btnProdutos, btnUsuarios, btnSair);
+        VBox botoesBox = new VBox(15, btnVendas, btnProdutos, btnUsuarios, btnConfigurar, btnSair);
         botoesBox.setPadding(new Insets(40));
         botoesBox.setAlignment(Pos.BOTTOM_RIGHT);
 

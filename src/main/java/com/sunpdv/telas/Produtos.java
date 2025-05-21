@@ -7,10 +7,13 @@ import javafx.stage.Stage;
 public class Produtos {
     public void show(Stage stage) {
         VBox root = new VBox();
-        // Adicione componentes da tela de produtos aqui
+        // Adicione componentes da tela de caixa aqui
         Scene scene = new Scene(root, 800, 600);
+            scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
         stage.setScene(scene);
-        stage.setTitle("Gerenciamento de Produtos");
+        stage.setTitle("Caixa");
+        stage.setFullScreen(true);
+        stage.setResizable(true);
         stage.show();
     }
 }

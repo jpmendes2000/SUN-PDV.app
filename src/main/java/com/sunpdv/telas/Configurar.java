@@ -4,7 +4,7 @@ import javafx.scene.Scene;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-public class Usuarios {
+public class Configurar {
     public void show(Stage stage) {
         VBox root = new VBox();
         // Adicione componentes da tela de caixa aqui
