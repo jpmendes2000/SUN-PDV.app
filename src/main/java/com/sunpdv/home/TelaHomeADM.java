@@ -4,7 +4,9 @@ import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
@@ -12,6 +14,23 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class TelaHomeADM extends Application {
+
+    // Classe interna para o Alert customizado
+    private static class CustomConfirmationAlert extends Alert {
+        public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
+            super(AlertType.CONFIRMATION);
+            this.initOwner(owner);
+            this.setTitle(title);
+            this.setHeaderText(header);
+            this.setContentText(content);
+            
+            // Aplica o CSS
+            Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
+            stage.getScene().getStylesheets().add(
+                getClass().getResource("/css/style.css").toExternalForm()
+            );
+        }
+    }
 
     @Override
     public void start(Stage stage) {
@@ -38,7 +57,20 @@ public class TelaHomeADM extends Application {
         btnUsuarios.setPrefWidth(larguraPadrao);
         btnSair.setPrefWidth(larguraPadrao);
 
-        btnSair.setOnAction(e -> stage.close());
+        btnSair.setOnAction(e -> {
+            CustomConfirmationAlert alert = new CustomConfirmationAlert(
+                stage,
+                "Confirmação de Saída",
+                "Deseja realmente sair do sistema ?",
+                ""
+            );
+            
+            alert.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.OK) {
+                    stage.close();
+                }
+            });
+        });
 
         // VBox com os botões no canto inferior direito
         VBox botoesBox = new VBox(15, btnVendas, btnProdutos, btnUsuarios, btnSair);
