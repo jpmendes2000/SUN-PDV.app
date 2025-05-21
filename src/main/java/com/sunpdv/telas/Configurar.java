@@ -12,7 +12,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-public class Produtos {
+public class Configurar {
     
     private static class CustomConfirmationAlert extends Alert {
         public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
@@ -41,18 +41,16 @@ public class Produtos {
         logoBox.setAlignment(Pos.TOP_LEFT);
 
         // Configuração dos botões
-        Button btnAddProd = new Button("Adcionar Produto");
         Button btnVendas = new Button("Vendas");
+        Button btnProdutos = new Button("Gerenciar Produtos");
         Button btnUsuarios = new Button("Gerenciar Usuários");
-        Button btnConfigurar = new Button("Configurações");
         Button btnVoltarHome = new Button("Voltar a Home");
         Button btnSair = new Button("Sair do Sistema");
 
         double larguraPadrao = 250;
-        btnAddProd.setPrefWidth(larguraPadrao);
-        btnVendas.setPrefWidth(larguraPadrao); 
+        btnVendas.setPrefWidth(larguraPadrao);
+        btnProdutos.setPrefWidth(larguraPadrao);
         btnUsuarios.setPrefWidth(larguraPadrao);
-        btnConfigurar.setPrefWidth(larguraPadrao);
         btnVoltarHome.setPrefWidth(larguraPadrao);
         btnSair.setPrefWidth(larguraPadrao);
 
@@ -61,15 +59,16 @@ public class Produtos {
             new Caixa().show(new Stage());
         });
 
+        btnProdutos.setOnAction(e -> {
+            stage.close();
+            new Produtos().show(new Stage());
+        });
+
         btnUsuarios.setOnAction(e -> {
             stage.close();
             new Usuarios().show(new Stage());
         });
 
-        btnConfigurar.setOnAction(e -> {
-            stage.close();
-            new Configurar().show(new Stage());
-        });
 
 
         btnSair.setOnAction(e -> {
@@ -88,7 +87,7 @@ public class Produtos {
         });
 
         // Layout dos botões
-        VBox botoesBox = new VBox(15, btnAddProd, btnVendas, btnUsuarios, btnConfigurar, btnVoltarHome, btnSair);
+        VBox botoesBox = new VBox(15, btnVendas, btnProdutos, btnUsuarios, btnVoltarHome, btnSair);
         botoesBox.setPadding(new Insets(40));
         botoesBox.setAlignment(Pos.BOTTOM_RIGHT);
 

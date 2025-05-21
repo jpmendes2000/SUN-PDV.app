@@ -136,6 +136,7 @@
     -fx-cursor: hand;
 }
 
+<<<<<<< HEAD
 .mensagem-bemvindo {
     -fx-font-size: 37px;
     -fx-font-weight: bold;
@@ -148,3 +149,52 @@
 
 
 
+=======
+
+/* Estilos para o Alert (pop-up de confirmação) */
+.dialog-pane {
+    -fx-background-color: linear-gradient(to right, #006989, #05313e);
+    -fx-border-color: #FDCA40;
+    -fx-background-radius: 8px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0, 0, 0);
+
+    -fx-min-width: 470px;
+    -fx-min-height: 205px;
+    -fx-pref-width: 470px;
+    -fx-pref-height: 205px;
+}
+
+.dialog-pane .header-panel {
+    -fx-background-color: linear-gradient(to right, #006989, #05313e);
+}
+
+.dialog-pane .content {
+    -fx-font-size: 19px;
+    -fx-text-fill: #E7ECEF;
+    -fx-font-weight: bold;
+}
+
+.dialog-pane .header-panel  {
+    -fx-font-size: 19px;
+    -fx-text-fill: #FDCA40;
+    -fx-font-weight: bold;
+}
+
+.dialog-pane .button-bar {
+    -fx-background-color: #FDCA40;
+    -fx-text-fill: #715300;
+    -fx-font-weight: bold;
+    -fx-padding: 8px 20px;
+    -fx-font-size: 14px;
+}
+
+.dialog-pane .button-bar {
+    -fx-background-color: #cba028;
+    -fx-text-fill: #f9e5af;
+}
+
+/* Estilo para o ícone de alerta (opcional) */
+.dialog-pane .alert.alert.confirmation .graphic-container .graphic {
+    -fx-fill: #FDCA40;
+}
+>>>>>>> main
