@@ -9,9 +9,9 @@ module com.sunpdv {
     opens com.sunpdv to javafx.fxml;
     
     // Permissões para a tela HomeADM
-    opens com.sunpdv.telas to javafx.graphics, javafx.fxml;
+    opens com.sunpdv.home to javafx.graphics, javafx.fxml;
     
     // Exportações
     exports com.sunpdv;
-    exports com.sunpdv.telas;  // Adicionado para permitir acesso do JavaFX
+    exports com.sunpdv.home;  // Adicionado para permitir acesso do JavaFX
 }
