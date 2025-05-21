@@ -1,5 +1,9 @@
 package com.sunpdv.home;
 
+import com.sunpdv.telas.Caixa;
+import com.sunpdv.telas.Produtos;
+import com.sunpdv.telas.Usuarios;
+
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -33,7 +37,7 @@ public class TelaHomeADM extends Application {
     }
 
     @Override
-    public void start(Stage stage) {
+    public void start(Stage primaryStage) {
         // Imagem logo
         Image logo = new Image(getClass().getResourceAsStream("/img/logo.png"));
         ImageView logoView = new ImageView(logo);
@@ -57,17 +61,34 @@ public class TelaHomeADM extends Application {
         btnUsuarios.setPrefWidth(larguraPadrao);
         btnSair.setPrefWidth(larguraPadrao);
 
+        // Ação do botão Vendas
+        btnVendas.setOnAction(e -> {
+            primaryStage.close();
+            new Caixa().show(new Stage());
+        });
+
+        btnProdutos.setOnAction(e -> {
+            primaryStage.close();
+            new Produtos().show(new Stage());
+        });
+
+        btnUsuarios.setOnAction(e -> {
+            primaryStage.close();
+            new Usuarios().show(new Stage());
+        });
+
+        // Ação do botão Sair
         btnSair.setOnAction(e -> {
             CustomConfirmationAlert alert = new CustomConfirmationAlert(
-                stage,
+                primaryStage,
                 "Confirmação de Saída",
-                "Deseja realmente sair do sistema ?",
+                "Deseja realmente sair do sistema?",
                 ""
             );
             
             alert.showAndWait().ifPresent(response -> {
                 if (response == ButtonType.OK) {
-                    stage.close();
+                    primaryStage.close();
                 }
             });
         });
@@ -94,11 +115,11 @@ public class TelaHomeADM extends Application {
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
         // Janela
-        stage.setScene(scene);
-        stage.setTitle("SUN PDV - Painel Administrativo");
-        stage.setResizable(true);
-        stage.setFullScreen(true);
-        stage.show();
+        primaryStage.setScene(scene);
+        primaryStage.setTitle("SUN PDV - Painel Administrativo");
+        primaryStage.setResizable(true);
+        primaryStage.setFullScreen(true);
+        primaryStage.show();
     }
 
     public static void main(String[] args) {
