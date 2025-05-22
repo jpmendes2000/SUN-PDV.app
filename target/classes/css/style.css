@@ -163,7 +163,7 @@
 
 .dialog-pane .content {
     -fx-font-size: 19px;
-    -fx-text-fill: #E7ECEF;
+    -fx-text-fill: #000000;
     -fx-font-weight: bold;
 }
 
@@ -183,13 +183,23 @@
 
 .dialog-pane .button-bar {
     -fx-background-color: #cba028;
-    -fx-text-fill: #f9e5af;
+    -fx-text-fill: #000000;
 }
 
-/* Estilo para o ícone de alerta (opcional) */
-.dialog-pane .alert.alert.confirmation .graphic-container .graphic {
-    -fx-fill: #FDCA40;
+/* Estilo para todas as células da tabela */
+.table-cell {
+    -fx-text-fill: #2c3e50; /* Cor do texto - azul escuro */
+    -fx-font-size: 14px;
 }
 
+/* Estilo para cabeçalhos das colunas */
+.column-header {
+    -fx-background-color: #3498db; /* Azul */
+    -fx-text-fill: white; /* Texto branco */
+    -fx-font-weight: bold;
+}
 
-
+/* Estilo para linhas selecionadas */
+.table-row-cell:selected .table-cell {
+    -fx-text-fill: white; /* Texto branco quando selecionado */
+}
