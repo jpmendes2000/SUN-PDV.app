@@ -47,7 +47,7 @@ public class LoginApp extends Application {
     private static final String URL = "jdbc:sqlserver://localhost:1433;"
             + "database=SUN_PDVlocal;"
             + "user=sa;"
-            + "password=Jp081007!;"
+            + "password=Senha@1234;"
             + "encrypt=false;"
             + "trustServerCertificate=true;"
             + "loginTimeout=30;";
@@ -87,14 +87,31 @@ public class LoginApp extends Application {
 
         senhaVisivelField.textProperty().bindBidirectional(senhaField.textProperty());
 
-        ToggleButton olhoBtn = new ToggleButton("👁");
+        // Criação do ToggleButton com ícone
+        ToggleButton olhoBtn = new ToggleButton();
         olhoBtn.getStyleClass().add("olho-btn");
+        olhoBtn.setStyle("-fx-background-color: transparent; -fx-padding: 0;");
+
+        // Caminhos dos ícones (você pode converter para path relativo se quiser usar como resource)
+        String caminhoVisivel = "file:/home/jpmendes/Documentos/SUN-PDV.app/src/main/resources/img/icon/visibilidade.png";
+        String caminhoNaoVisivel = "file:/home/jpmendes/Documentos/SUN-PDV.app/src/main/resources/img/icon/not-visibilidade.png";
+
+        // ImageView que será trocado
+        ImageView olhoIcon = new ImageView(new Image(caminhoNaoVisivel));
+        olhoIcon.setFitWidth(27);
+        olhoIcon.setFitHeight(27);
+        olhoBtn.setGraphic(olhoIcon);
+
+        // Ação do botão
         olhoBtn.setOnAction(e -> {
             boolean mostrar = olhoBtn.isSelected();
+
             senhaField.setVisible(!mostrar);
             senhaField.setManaged(!mostrar);
             senhaVisivelField.setVisible(mostrar);
             senhaVisivelField.setManaged(mostrar);
+
+            olhoIcon.setImage(new Image(mostrar ? caminhoVisivel : caminhoNaoVisivel));
         });
 
         StackPane senhaStack = new StackPane();
