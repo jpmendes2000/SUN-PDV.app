@@ -95,7 +95,7 @@
 
 .button:hover {
     /* Cor do fundo quando o mouse está sobre o botão */
-    -fx-background-color: #cba028;
+    -fx-background-color: #b18714;
 
     /* Cor do texto clara no hover */
     -fx-text-fill: #f9e5af;
@@ -174,7 +174,7 @@
 }
 
 .dialog-pane .button-bar {
-    -fx-background-color: #FDCA40;
+    -fx-background-color: #000000;
     -fx-text-fill: #715300;
     -fx-font-weight: bold;
     -fx-padding: 8px 20px;
