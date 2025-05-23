@@ -76,14 +76,14 @@ public class Produtos {
         // Configuração da tabela
         table = new TableView<>();
         table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
-        table.setPrefSize(825, 500);
+        table.setPrefSize(875, 800);
         table.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
         table.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
 
         // Colunas da tabela
         TableColumn<Produto, String> colNome = new TableColumn<>("Nome");
         colNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
-        colNome.setPrefWidth(400);
+        colNome.setPrefWidth(420);
 
         TableColumn<Produto, String> colCodBarras = new TableColumn<>("Código de Barras");
         colCodBarras.setCellValueFactory(new PropertyValueFactory<>("codBarras"));
@@ -91,7 +91,7 @@ public class Produtos {
 
         TableColumn<Produto, Double> colPreco = new TableColumn<>("Preço (R$)");
         colPreco.setCellValueFactory(new PropertyValueFactory<>("preco"));
-        colPreco.setPrefWidth(153);
+        colPreco.setPrefWidth(183);
 
         table.getColumns().addAll(colNome, colCodBarras, colPreco);
 
@@ -102,7 +102,7 @@ public class Produtos {
         btnAdd.setOnAction(e -> abrirFormularioProduto(null));
         btnEditar.setOnAction(e -> {
             Produto selecionado = table.getSelectionModel().getSelectedItem();
-            if (selecionado != null) {
+                        if (selecionado != null) {
                 abrirFormularioProduto(selecionado);
             } else {
                 alerta("Selecione um produto para editar.");

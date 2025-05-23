@@ -194,7 +194,7 @@
 
 /* Estilo para cabeçalhos das colunas */
 .column-header {
-    -fx-background-color: #3498db; /* Azul */
+    -fx-background-color: #006989; /* Azul */
     -fx-text-fill: white; /* Texto branco */
     -fx-font-weight: bold;
 }
@@ -206,7 +206,7 @@
 /* Estilo para linhas selecionadas */
 .table-row-cell:selected .table-cell {
     -fx-text-fill: white; /* Texto branco quando selecionado */
-    -fx-background-color: #9696ac;
+    -fx-background-color: #006989;
 }
 
 .app-fxml {
