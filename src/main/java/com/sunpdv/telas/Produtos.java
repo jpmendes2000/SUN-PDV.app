@@ -43,13 +43,13 @@ public class Produtos {
     public void show(Stage stage) {
 
         // Carregando a logo
-        Image logo = new Image(getClass().getResourceAsStream("/img/logo.png"));
+        Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(130);
         logoView.setPreserveRatio(true);
 
         // Carregando a imagem do título (produto.png)
-        Image tituloImagem = new Image(getClass().getResourceAsStream("/img/produto.png"));
+        Image tituloImagem = new Image(getClass().getResourceAsStream("/img/logo/produto.png"));
         ImageView tituloView = new ImageView(tituloImagem);
         tituloView.setPreserveRatio(true);
         tituloView.setFitHeight(200); // Ajuste conforme desejado

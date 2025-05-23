@@ -60,7 +60,7 @@ public class TelaHomeADM {
         stage.setHeight(screenBounds.getHeight());
 
         // Carrega o logo da aplicação
-        Image logo = new Image(getClass().getResourceAsStream("/img/logo.png"));
+        Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(120);
         logoView.setPreserveRatio(true);

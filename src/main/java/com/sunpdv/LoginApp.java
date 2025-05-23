@@ -124,7 +124,7 @@ public class LoginApp extends Application {
         senhaField.textProperty().addListener((obs, o, n) -> verificarCampos.run());
         senhaVisivelField.textProperty().addListener((obs, o, n) -> verificarCampos.run());
 
-        Image logo = new Image(getClass().getResourceAsStream("/img/logo.png"));
+        Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(100);
         logoView.setPreserveRatio(true);
