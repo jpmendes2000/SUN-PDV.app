@@ -203,3 +203,29 @@
 .table-row-cell:selected .table-cell {
     -fx-text-fill: white; /* Texto branco quando selecionado */
 }
+
+.app-fxml {
+    -fx-text-fill: #000000;
+}
+
+
+/* Adicione isso ao seu arquivo style.css */
+.table-view {
+    -fx-background-radius: 15;  /* Raio das bordas */
+    -fx-border-radius: 15;      /* Raio da borda */
+    -fx-border-color: #cccccc;  /* Cor da borda */
+    -fx-border-width: 1px;      /* Largura da borda */
+    -fx-background-insets: 0;   /* Remove espaçamento interno */
+    -fx-padding: 10;           /* Espaçamento interno */
+}
+
+/* Opcional: arredondar as bordas do cabeçalho */
+.table-view .column-header-background {
+    -fx-background-radius: 15 15 0 0;
+    -fx-background-insets: 0 0 0 0;
+}
+
+/* Opcional: arredondar as bordas inferiores */
+.table-view .scroll-bar * {
+    -fx-background-radius: 0 0 15 15;
+}
