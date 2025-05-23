@@ -1,5 +1,7 @@
 package com.sunpdv.model;
 
+import java.text.DecimalFormat;
+
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -34,4 +36,5 @@ public class Produto {
     public SimpleStringProperty nomeProperty() { return nome; }
     public SimpleStringProperty codBarrasProperty() { return codBarras; }
     public SimpleDoubleProperty precoProperty() { return preco; }
+
 }
