@@ -1,20 +1,18 @@
 module com.sunpdv {
+    // Requisitos básicos
     requires javafx.controls;
     requires javafx.fxml;
-    requires javafx.graphics;  // Adicionado explicitamente
+    requires javafx.graphics;
     requires java.sql;
-    // requires mssql.jdbc;  // Mantido comentado caso precise no futuro
     
-    // Permissões para FXML (se aplicável)
+    // Abre pacotes necessários para o JavaFX
     opens com.sunpdv to javafx.fxml;
-    
-    // Permissões para a tela HomeADM
-    opens com.sunpdv.home to javafx.graphics, javafx.fxml;
+    opens com.sunpdv.model to javafx.base, javafx.fxml;
+    opens com.sunpdv.home to javafx.fxml;
     
     // Exportações
     exports com.sunpdv;
-    exports com.sunpdv.home;  // Adicionado para permitir acesso do JavaFX
-    exports com.sunpdv.model;
+    exports com.sunpdv.home;
+    exports com.sunpdv.model;  // Adicionado para permitir reflexão
 
-    opens com.sunpdv.model to javafx.base;
 }

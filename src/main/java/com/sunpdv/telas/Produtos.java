@@ -23,6 +23,7 @@ import javafx.stage.Stage;
 
 import java.security.PublicKey;
 import java.sql.*;
+import java.text.DecimalFormat;
 
 public class Produtos {
 
@@ -34,7 +35,7 @@ public class Produtos {
     private Connection getConnection() throws SQLException {
         String url = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=true;trustServerCertificate=true";
         String user = "sa";
-        String password = "Senha@1234";
+        String password = "Jp081007!";
         return DriverManager.getConnection(url, user, password);
     }
 
@@ -90,8 +91,13 @@ public class Produtos {
         colCodBarras.setCellValueFactory(new PropertyValueFactory<>("codBarras"));
         colCodBarras.setPrefWidth(250);
 
-        TableColumn<Produto, Double> colPreco = new TableColumn<>("Preço (R$)");
-        colPreco.setCellValueFactory(new PropertyValueFactory<>("preco"));
+        //coluna de preços com formatação
+        TableColumn<Produto, String> colPreco = new TableColumn<>("Preço (R$)");
+        colPreco.setCellValueFactory(cellData -> {
+            Double preco = cellData.getValue().getPreco();
+            DecimalFormat df = new DecimalFormat("#,##0.00");
+            return new javafx.beans.property.SimpleStringProperty(df.format(preco));
+        });
         colPreco.setPrefWidth(183);
 
         table.getColumns().addAll(colNome, colCodBarras, colPreco);
@@ -103,7 +109,7 @@ public class Produtos {
         btnAdd.setOnAction(e -> abrirFormularioProduto(null));
         btnEditar.setOnAction(e -> {
             Produto selecionado = table.getSelectionModel().getSelectedItem();
-            if (selecionado != null) {
+                        if (selecionado != null) {
                 abrirFormularioProduto(selecionado);
             } else {
                 alerta("Selecione um produto para editar.");
@@ -240,7 +246,9 @@ public class Produtos {
         if (produto != null) {
             tfNome.setText(produto.getNome());
             tfCodBarras.setText(produto.getCodBarras());
-            tfPreco.setText(String.valueOf(produto.getPreco()));
+            DecimalFormat df = new DecimalFormat("#,##0.00");
+            tfPreco.setText(df.format(produto.getPreco()));
+
         }
 
         // Botões do formulário
@@ -261,7 +269,7 @@ public class Produtos {
 
             double preco;
             try {
-                preco = Double.parseDouble(precoStr);
+            preco = Double.parseDouble(precoStr.replace(",", "."));
             } catch (NumberFormatException ex) {
                 alerta("Preço inválido!");
                 return;
