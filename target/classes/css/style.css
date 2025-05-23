@@ -72,26 +72,18 @@
 }
 
 .button {
-    /* Fundo amarelo vibrante */
+    -fx-font-size: 14px;
+    -fx-content-display: LEFT;
+    -fx-alignment: CENTER_LEFT;
+    -fx-graphic-text-gap: 10px;
+    -fx-padding: 10px 20px;
+    -fx-pref-height: 40px;
     -fx-background-color: #FDCA40;
-
-    /* Cor do texto marrom escuro */
-    -fx-text-fill: #715300;
-
-    /* Tamanho e peso da fonte */
-    -fx-font-size: 15px;
-    -fx-font-weight: bold;
-
-    /* Bordas arredondadas para o botão */
-    -fx-background-radius: 10px;
-    -fx-border-radius: 10px;
-
-    /* Padding interno para área clicável confortável */
-    -fx-padding: 10px 32px;
-
-    /* Cursor muda para mão ao passar o mouse */
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
     -fx-cursor: hand;
 }
+
 
 .button:hover {
     /* Cor do fundo quando o mouse está sobre o botão */

@@ -1,4 +1,4 @@
-<h1 align="center">☀️ sun-pdv</h1>
+<img src="src/main/resources/img/logo/logo.png" />
 
 <p align="center">
   <strong>Sistema de Ponto de Venda (PDV)</strong><br>
