@@ -47,7 +47,7 @@ public class LoginApp extends Application {
     private static final String URL = "jdbc:sqlserver://localhost:1433;"
             + "database=SUN_PDVlocal;"
             + "user=sa;"
-            + "password=Senha@1234;"
+            + "password=Jp081007!;"
             + "encrypt=false;"
             + "trustServerCertificate=true;"
             + "loginTimeout=30;";
