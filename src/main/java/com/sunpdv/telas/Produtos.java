@@ -35,7 +35,7 @@ public class Produtos {
     private Connection getConnection() throws SQLException {
         String url = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=true;trustServerCertificate=true";
         String user = "sa";
-        String password = "Senha@1234";
+        String password = "Jp081007!";
         return DriverManager.getConnection(url, user, password);
     }
 
@@ -95,7 +95,7 @@ public class Produtos {
         TableColumn<Produto, String> colPreco = new TableColumn<>("Preço (R$)");
         colPreco.setCellValueFactory(cellData -> {
             Double preco = cellData.getValue().getPreco();
-            DecimalFormat df = new DecimalFormat("#,##0.00");
+            DecimalFormat df = new DecimalFormat("#,##0.00 R$");
             return new javafx.beans.property.SimpleStringProperty(df.format(preco));
         });
         colPreco.setPrefWidth(183);
