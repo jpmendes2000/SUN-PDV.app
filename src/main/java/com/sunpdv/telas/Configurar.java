@@ -44,7 +44,7 @@ public class Configurar {
      */
     public void show(Stage stage) {
         // Configuração da logo
-        Image logo = new Image(getClass().getResourceAsStream("/img/logo.png"));
+        Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(130); // Define a largura
         logoView.setPreserveRatio(true); // Mantém a proporção da imagem
