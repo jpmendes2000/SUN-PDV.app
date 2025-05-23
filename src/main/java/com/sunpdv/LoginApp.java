@@ -93,8 +93,9 @@ public class LoginApp extends Application {
         olhoBtn.setStyle("-fx-background-color: transparent; -fx-padding: 0;");
 
         // Caminhos dos ícones (você pode converter para path relativo se quiser usar como resource)
-        String caminhoVisivel = "file:/home/jpmendes/Documentos/SUN-PDV.app/src/main/resources/img/icon/visibilidade.png";
-        String caminhoNaoVisivel = "file:/home/jpmendes/Documentos/SUN-PDV.app/src/main/resources/img/icon/not-visibilidade.png";
+        String caminhoVisivel = getClass().getResource("/img/icon/visibilidade.png").toExternalForm();
+        String caminhoNaoVisivel = getClass().getResource("/img/icon/not-visibilidade.png").toExternalForm();
+
 
         // ImageView que será trocado
         ImageView olhoIcon = new ImageView(new Image(caminhoNaoVisivel));

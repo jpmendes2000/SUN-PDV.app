@@ -95,7 +95,7 @@ public class Produtos {
         TableColumn<Produto, String> colPreco = new TableColumn<>("Preço (R$)");
         colPreco.setCellValueFactory(cellData -> {
             Double preco = cellData.getValue().getPreco();
-            DecimalFormat df = new DecimalFormat("#,##0.00");
+            DecimalFormat df = new DecimalFormat("#,##0.00 R$");
             return new javafx.beans.property.SimpleStringProperty(df.format(preco));
         });
         colPreco.setPrefWidth(183);

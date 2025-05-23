@@ -39,7 +39,7 @@ public class Caixa {
     public void show(Stage stage) {
 
         // Carrega o logo
-        Image logo = new Image(getClass().getResourceAsStream("/img/logo.png"));
+        Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(130);
         logoView.setPreserveRatio(true);
