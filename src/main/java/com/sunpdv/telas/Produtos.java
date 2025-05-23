@@ -21,6 +21,7 @@ import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.security.PublicKey;
 import java.sql.*;
 
 public class Produtos {
@@ -33,7 +34,7 @@ public class Produtos {
     private Connection getConnection() throws SQLException {
         String url = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=true;trustServerCertificate=true";
         String user = "sa";
-        String password = "Jp081007!";
+        String password = "Senha@1234";
         return DriverManager.getConnection(url, user, password);
     }
 
@@ -76,14 +77,14 @@ public class Produtos {
         // Configuração da tabela
         table = new TableView<>();
         table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
-        table.setPrefSize(825, 500);
+        table.setPrefSize(875, 800);
         table.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
         table.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
 
         // Colunas da tabela
         TableColumn<Produto, String> colNome = new TableColumn<>("Nome");
         colNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
-        colNome.setPrefWidth(400);
+        colNome.setPrefWidth(420);
 
         TableColumn<Produto, String> colCodBarras = new TableColumn<>("Código de Barras");
         colCodBarras.setCellValueFactory(new PropertyValueFactory<>("codBarras"));
@@ -91,7 +92,7 @@ public class Produtos {
 
         TableColumn<Produto, Double> colPreco = new TableColumn<>("Preço (R$)");
         colPreco.setCellValueFactory(new PropertyValueFactory<>("preco"));
-        colPreco.setPrefWidth(153);
+        colPreco.setPrefWidth(183);
 
         table.getColumns().addAll(colNome, colCodBarras, colPreco);
 
@@ -189,10 +190,11 @@ public class Produtos {
     }
 
     // Método para carregar produtos do banco na tabela
-    private void carregarProdutos() {
+    public void carregarProdutos() {
         listaProdutos = FXCollections.observableArrayList();
         String sql = "SELECT ID_Produto, Nome, Cod_Barras, Preco FROM produtos ORDER BY Nome";
         System.out.println("Executando consulta: " + sql);
+        
         try (Connection con = getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {

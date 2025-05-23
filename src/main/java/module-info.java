@@ -14,4 +14,7 @@ module com.sunpdv {
     // Exportações
     exports com.sunpdv;
     exports com.sunpdv.home;  // Adicionado para permitir acesso do JavaFX
+    exports com.sunpdv.model;
+
+    opens com.sunpdv.model to javafx.base;
 }

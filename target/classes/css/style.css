@@ -194,9 +194,10 @@
 
 /* Estilo para cabeçalhos das colunas */
 .column-header {
-    -fx-background-color: #3498db; /* Azul */
+    -fx-background-color: #006989; /* Azul */
     -fx-text-fill: white; /* Texto branco */
     -fx-font-weight: bold;
+    -fx-background-radius: 13 13 0 0;
 }
 
 .table-row-cell{
@@ -206,7 +207,7 @@
 /* Estilo para linhas selecionadas */
 .table-row-cell:selected .table-cell {
     -fx-text-fill: white; /* Texto branco quando selecionado */
-    -fx-background-color: #9696ac;
+    -fx-background-color: #006989;
 }
 
 .app-fxml {
@@ -217,9 +218,7 @@
 /* Adicione isso ao seu arquivo style.css */
 .table-view {
     -fx-background-radius: 15;  /* Raio das bordas */
-    -fx-border-radius: 15;      /* Raio da borda */
-    -fx-border-color: #cccccc;  /* Cor da borda */
-    -fx-border-width: 1px;      /* Largura da borda */
+    -fx-border-radius: 15 15 0 0;      /* Raio da borda */
     -fx-background-insets: 0;   /* Remove espaçamento interno */
     -fx-padding: 10;           /* Espaçamento interno */
 }
@@ -237,6 +236,4 @@
 
 .table {
     -fx-background-radius: 10; 
-    -fx-border-radius: 10; 
-    -fx-border-color: #d3d3d3;
 }
