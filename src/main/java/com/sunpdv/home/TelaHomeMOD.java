@@ -65,10 +65,22 @@ public class TelaHomeMOD {
         topBox.setPadding(new Insets(20));
         topBox.setAlignment(Pos.TOP_LEFT);
 
+        ImageView iconVendas = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/carrinho-de-compras.png")));
+        iconVendas.setFitWidth(32);
+        iconVendas.setFitHeight(32);
+
+        ImageView iconProdutos = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/lista.png")));
+        iconProdutos.setFitWidth(32);
+        iconProdutos.setFitHeight(32);
+
+        ImageView iconSair = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/fechar.png")));
+        iconSair.setFitWidth(32);
+        iconSair.setFitHeight(32);
+
         // Botões para moderador (menos opções que ADM)
-        Button btnVendas = new Button("Vendas");
-        Button btnProdutos = new Button("Gerenciar Produtos");
-        Button btnSair = new Button("Sair do Sistema");
+        Button btnVendas = new Button("Vendas", iconVendas);
+        Button btnProdutos = new Button("Gerenciar Produtos", iconProdutos);
+        Button btnSair = new Button("Sair do Sistema", iconSair);
 
         double larguraPadrao = 250;
         for (Button btn : new Button[]{btnVendas, btnProdutos, btnSair}) {

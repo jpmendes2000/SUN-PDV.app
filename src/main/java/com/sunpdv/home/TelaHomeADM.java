@@ -65,24 +65,24 @@ public class TelaHomeADM {
 
         // Ícones para os botões
         ImageView iconVendas = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/carrinho-de-compras.png")));
-        iconVendas.setFitWidth(30);
-        iconVendas.setFitHeight(30);
+        iconVendas.setFitWidth(32);
+        iconVendas.setFitHeight(32);
 
         ImageView iconProdutos = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/lista.png")));
-        iconProdutos.setFitWidth(30);
-        iconProdutos.setFitHeight(30);
+        iconProdutos.setFitWidth(32);
+        iconProdutos.setFitHeight(32);
 
         ImageView iconUsuarios = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/grupo.png")));
-        iconUsuarios.setFitWidth(30);
-        iconUsuarios.setFitHeight(30);
+        iconUsuarios.setFitWidth(32);
+        iconUsuarios.setFitHeight(32);
 
         ImageView iconConfig = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/definicoes.png")));
-        iconConfig.setFitWidth(30);
-        iconConfig.setFitHeight(30);
+        iconConfig.setFitWidth(32);
+        iconConfig.setFitHeight(32);
 
         ImageView iconSair = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/fechar.png")));
-        iconSair.setFitWidth(30);
-        iconSair.setFitHeight(30);
+        iconSair.setFitWidth(32);
+        iconSair.setFitHeight(32);
 
         // Botões com ícones
         Button btnVendas = new Button("Vendas", iconVendas);

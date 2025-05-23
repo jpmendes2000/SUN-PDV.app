@@ -64,9 +64,17 @@ public class TelaHomeFUN {
         topBox.setPadding(new Insets(20));
         topBox.setAlignment(Pos.TOP_LEFT);
 
+        ImageView iconVendas = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/carrinho-de-compras.png")));
+        iconVendas.setFitWidth(32);
+        iconVendas.setFitHeight(32);
+
+        ImageView iconSair = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/fechar.png")));
+        iconSair.setFitWidth(32);
+        iconSair.setFitHeight(32);
+
         // Botões para funcionário (mais limitado)
-        Button btnVendas = new Button("Vendas");
-        Button btnSair = new Button("Sair do Sistema");
+        Button btnVendas = new Button("Vendas", iconVendas);
+        Button btnSair = new Button("Sair do Sistema", iconSair);
 
         double larguraPadrao = 250;
         for (Button btn : new Button[]{btnVendas, btnSair}) {
