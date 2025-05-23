@@ -32,6 +32,7 @@ public class Produtos {
     private ObservableList<Produto> listaProdutos;
     private TextField campoPesquisa;
     private Label lblMensagemSucesso;
+    private Produto produtoSelecionado;
 
     private Connection getConnection() throws SQLException {
         String url = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=true;trustServerCertificate=true";
@@ -65,17 +66,36 @@ public class Produtos {
         campoPesquisa.setPrefWidth(400);
         campoPesquisa.textProperty().addListener((obs, oldVal, newVal) -> filtrarProdutos(newVal));
 
-        // --- Botão adicionar com imagem "+" ---
-        Image imgMais = new Image(getClass().getResourceAsStream("/img/icon/lista.png")); // Ajuste para seu arquivo + 
-        ImageView iconMais = new ImageView(imgMais);
-        iconMais.setFitWidth(20);
-        iconMais.setFitHeight(20);
-
-        Button btnAdd = new Button("", iconMais);
+        // --- Botão adicionar com imagem ---
+        Image imgAdd = new Image(getClass().getResourceAsStream("/img/icon/lista.png"));
+        ImageView iconAdd = new ImageView(imgAdd);
+        iconAdd.setFitWidth(20);
+        iconAdd.setFitHeight(20);
+        Button btnAdd = new Button("", iconAdd);
         btnAdd.setTooltip(new Tooltip("Adicionar Produto"));
         btnAdd.setPrefSize(40, 40);
 
-         // --- Box título + mensagem sucesso lado a lado ---
+        // --- Botão editar com imagem ---
+        Image imgEdit = new Image(getClass().getResourceAsStream("/img/icon/lapis.png"));
+        ImageView iconEdit = new ImageView(imgEdit);
+        iconEdit.setFitWidth(20);
+        iconEdit.setFitHeight(20);
+        Button btnEdit = new Button("", iconEdit);
+        btnEdit.setTooltip(new Tooltip("Editar Produto"));
+        btnEdit.setPrefSize(40, 40);
+        btnEdit.setDisable(true); // Inicialmente desabilitado
+
+        // --- Botão apagar com imagem ---
+        Image imgDelete = new Image(getClass().getResourceAsStream("/img/icon/fechar.png"));
+        ImageView iconDelete = new ImageView(imgDelete);
+        iconDelete.setFitWidth(20);
+        iconDelete.setFitHeight(20);
+        Button btnDelete = new Button("", iconDelete);
+        btnDelete.setTooltip(new Tooltip("Apagar Produto"));
+        btnDelete.setPrefSize(40, 40);
+        btnDelete.setDisable(true); // Inicialmente desabilitado
+
+        // --- Box título + mensagem sucesso lado a lado ---
         HBox tituloMensagemBox = new HBox(10, tituloView, lblMensagemSucesso);
         tituloMensagemBox.setAlignment(Pos.CENTER_LEFT);
 
@@ -84,13 +104,13 @@ public class Produtos {
         logoTituloBox.setAlignment(Pos.CENTER_LEFT);
         logoTituloBox.setPadding(new Insets(10, 10, 5, 10));
 
-        // --- Box pesquisa e botão adicionar lado a lado ---
-        HBox pesquisaAddBox = new HBox(10, campoPesquisa, btnAdd);
-        pesquisaAddBox.setAlignment(Pos.CENTER_LEFT);
-        pesquisaAddBox.setPadding(new Insets(5, 0, 15, 10));
+        // --- Box pesquisa e botões de ação lado a lado ---
+        HBox pesquisaAcoesBox = new HBox(10, campoPesquisa, btnAdd, btnEdit, btnDelete);
+        pesquisaAcoesBox.setAlignment(Pos.CENTER_LEFT);
+        pesquisaAcoesBox.setPadding(new Insets(5, 0, 15, 10));
 
-        // --- VBox topo contendo logoTituloBox + pesquisaAddBox (vertical) ---
-        VBox topoBox = new VBox(5, logoTituloBox, pesquisaAddBox);
+        // --- VBox topo contendo logoTituloBox + pesquisaAcoesBox (vertical) ---
+        VBox topoBox = new VBox(5, logoTituloBox, pesquisaAcoesBox);
         topoBox.setPadding(new Insets(0));
         topoBox.setAlignment(Pos.TOP_LEFT);
 
@@ -110,8 +130,8 @@ public class Produtos {
 
         // --- TableView ---
         table = new TableView<>();
-        table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
-        table.setPrefSize(980, 600);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setPrefWidth(800);
 
         // Colunas
         TableColumn<Produto, String> colNome = new TableColumn<>("Nome");
@@ -120,7 +140,7 @@ public class Produtos {
 
         TableColumn<Produto, String> colCodBarras = new TableColumn<>("Código de Barras");
         colCodBarras.setCellValueFactory(new PropertyValueFactory<>("codBarras"));
-        colCodBarras.setPrefWidth(300);
+        colCodBarras.setPrefWidth(250);
 
         TableColumn<Produto, String> colPreco = new TableColumn<>("Preço (R$)");
         colPreco.setCellValueFactory(cell -> {
@@ -128,58 +148,39 @@ public class Produtos {
             DecimalFormat df = new DecimalFormat("R$ #,##0.00");
             return new SimpleStringProperty(df.format(preco));
         });
-        colPreco.setPrefWidth(140);
+        colPreco.setPrefWidth(150);
 
-        TableColumn<Produto, Void> colAcoes = new TableColumn<>("Ações");
-        colAcoes.setPrefWidth(120);
-        colAcoes.setCellFactory(col -> new TableCell<>() {
-            private final Button btnEditar = new Button();
-            private final Button btnApagar = new Button();
-            private final HBox box = new HBox(8);
+        table.getColumns().addAll(colNome, colCodBarras, colPreco);
 
-            {
-                // Ícones editar e apagar
-                ImageView ivEditar = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/lapis.png")));
-                ivEditar.setFitWidth(18);
-                ivEditar.setFitHeight(18);
-                btnEditar.setGraphic(ivEditar);
-                btnEditar.setTooltip(new Tooltip("Editar Produto"));
-                btnEditar.setStyle("-fx-background-color: transparent;");
-
-                ImageView ivApagar = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/fechar.png")));
-                ivApagar.setFitWidth(18);
-                ivApagar.setFitHeight(18);
-                btnApagar.setGraphic(ivApagar);
-                btnApagar.setTooltip(new Tooltip("Apagar Produto"));
-                btnApagar.setStyle("-fx-background-color: transparent;");
-
-                box.getChildren().addAll(btnEditar, btnApagar);
-                box.setAlignment(Pos.CENTER);
-
-                btnEditar.setOnAction(e -> {
-                    Produto p = getTableView().getItems().get(getIndex());
-                    abrirFormularioProduto(p);
-                });
-
-                btnApagar.setOnAction(e -> {
-                    Produto p = getTableView().getItems().get(getIndex());
-                    apagarProduto(p);
-                });
-            }
-
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                setGraphic(empty ? null : box);
+        // Listener para seleção na tabela
+        table.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            if (newSelection != null) {
+                produtoSelecionado = newSelection;
+                btnEdit.setDisable(false);
+                btnDelete.setDisable(false);
+            } else {
+                produtoSelecionado = null;
+                btnEdit.setDisable(true);
+                btnDelete.setDisable(true);
             }
         });
-
-        table.getColumns().addAll(colNome, colCodBarras, colPreco, colAcoes);
 
         carregarProdutos();
 
         // --- Eventos dos botões ---
         btnAdd.setOnAction(e -> abrirFormularioProduto(null));
+        
+        btnEdit.setOnAction(e -> {
+            if (produtoSelecionado != null) {
+                abrirFormularioProduto(produtoSelecionado);
+            }
+        });
+        
+        btnDelete.setOnAction(e -> {
+            if (produtoSelecionado != null) {
+                apagarProduto(produtoSelecionado);
+            }
+        });
 
         btnVoltar.setOnAction(e -> {
             try {
@@ -221,7 +222,12 @@ public class Produtos {
         // --- Layout principal ---
         BorderPane root = new BorderPane();
         root.setTop(topoBox);
-        root.setCenter(table);
+        
+        // Adicionando a tabela em um StackPane para centralizar
+        StackPane tableContainer = new StackPane(table);
+        tableContainer.setPadding(new Insets(0, 10, 10, 10));
+        root.setCenter(tableContainer);
+        
         root.setRight(boxBotoes);
         root.setPadding(new Insets(10));
         root.getStyleClass().add("produtos");
@@ -282,7 +288,6 @@ public class Produtos {
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.setTitle(produto == null ? "Adicionar Produto" : "Editar Produto");
 
-        // Layout simples para exemplo, aqui você deve implementar seu formulário real
         VBox box = new VBox(10);
         box.setPadding(new Insets(15));
 
@@ -323,10 +328,8 @@ public class Produtos {
             }
 
             if (produto == null) {
-                // Inserir novo produto
                 inserirProduto(new Produto(0, nome, codBarras, preco));
             } else {
-                // Atualizar produto
                 produto.setNome(nome);
                 produto.setCodBarras(codBarras);
                 produto.setPreco(preco);
