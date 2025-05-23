@@ -188,8 +188,8 @@
 
 /* Estilo para todas as células da tabela */
 .table-cell {
-    -fx-text-fill: #2c3e50; /* Cor do texto - azul escuro */
-    -fx-font-size: 14px;
+    -fx-text-fill: #000000; /* Cor do texto */
+    -fx-font-size: 20px;
 }
 
 /* Estilo para cabeçalhos das colunas */
@@ -199,9 +199,14 @@
     -fx-font-weight: bold;
 }
 
+.table-row-cell{
+    -fx-text-fill: #000000;
+}
+
 /* Estilo para linhas selecionadas */
 .table-row-cell:selected .table-cell {
     -fx-text-fill: white; /* Texto branco quando selecionado */
+    -fx-background-color: #9696ac;
 }
 
 .app-fxml {
@@ -228,4 +233,10 @@
 /* Opcional: arredondar as bordas inferiores */
 .table-view .scroll-bar * {
     -fx-background-radius: 0 0 15 15;
+}
+
+.table {
+    -fx-background-radius: 10; 
+    -fx-border-radius: 10; 
+    -fx-border-color: #d3d3d3;
 }

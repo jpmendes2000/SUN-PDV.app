@@ -25,40 +25,47 @@ import java.sql.*;
 
 public class Produtos {
 
-    // Componentes da interface
-    private TableView<Produto> table;  // Tabela para exibir os produtos
-    private ObservableList<Produto> listaProdutos;  // Lista observável de produtos
+    // Tabela e lista de produtos
+    private TableView<Produto> table;
+    private ObservableList<Produto> listaProdutos;
 
-    // Método para estabelecer conexão com o banco de dados
+    // Método para conexão com o banco de dados
     private Connection getConnection() throws SQLException {
-        // Configuração da conexão JDBC
         String url = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=true;trustServerCertificate=true";
-        String user = "sa";    
-        String password = "Jp081007!";    
+        String user = "sa";
+        String password = "Jp081007!";
         return DriverManager.getConnection(url, user, password);
     }
 
-    // Método principal que exibe a tela de produtos
+    // Método principal para mostrar a tela
     public void show(Stage stage) {
-        // Configuração do logo da aplicação
+
+        // Carregando a logo
         Image logo = new Image(getClass().getResourceAsStream("/img/logo.png"));
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(130);
         logoView.setPreserveRatio(true);
-        
-        // Container para o logo
-        VBox logoBox = new VBox(logoView);
-        logoBox.setPadding(new Insets(20));
-        logoBox.setAlignment(Pos.BOTTOM_LEFT);
 
-        // Criação e configuração dos botões da interface
+        // Carregando a imagem do título (produto.png)
+        Image tituloImagem = new Image(getClass().getResourceAsStream("/img/produto.png"));
+        ImageView tituloView = new ImageView(tituloImagem);
+        tituloView.setPreserveRatio(true);
+        tituloView.setFitHeight(200); // Ajuste conforme desejado
+
+        // Colocando logo e título lado a lado no topo
+        HBox topoBox = new HBox(20, logoView, tituloView); // 20 é espaçamento entre as imagens
+        topoBox.setAlignment(Pos.CENTER_LEFT);
+        topoBox.setPadding(new Insets(10, 20, 10, 20));
+
+
+        // Criando botões
         Button btnAdd = new Button("Adicionar");
         Button btnEditar = new Button("Editar Produto");
         Button btnApagar = new Button("Apagar Produto");
         Button btnVoltar = new Button("Home");
         Button btnSair = new Button("Sair do Sistema");
 
-        // Configuração de largura padrão para os botões
+        // Ajuste de largura dos botões
         double larguraPadrao = 200;
         btnAdd.setPrefWidth(larguraPadrao);
         btnEditar.setPrefWidth(larguraPadrao);
@@ -66,24 +73,14 @@ public class Produtos {
         btnVoltar.setPrefWidth(larguraPadrao);
         btnSair.setPrefWidth(larguraPadrao);
 
-        /* 
-         * CONFIGURAÇÃO DA TABLEVIEW (TABELA DE PRODUTOS)
-         * 
-         * - Define o estilo básico da tabela
-         * - Configura política de redimensionamento das colunas
-         * - Define tamanhos preferenciais, mínimos e máximos
-         */
-        // Configuração da TableView com bordas arredondadas
+        // Configuração da tabela
         table = new TableView<>();
         table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
-        table.setPrefSize(1600, 500);
+        table.setPrefSize(825, 500);
         table.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
         table.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
 
-        // Aplica estilo CSS para bordas arredondadas
-        table.setStyle("-fx-background-radius: 10; -fx-border-radius: 10; -fx-border-color: #d3d3d3;");
-
-        // Configuração das colunas da tabela
+        // Colunas da tabela
         TableColumn<Produto, String> colNome = new TableColumn<>("Nome");
         colNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
         colNome.setPrefWidth(400);
@@ -94,39 +91,15 @@ public class Produtos {
 
         TableColumn<Produto, Double> colPreco = new TableColumn<>("Preço (R$)");
         colPreco.setCellValueFactory(new PropertyValueFactory<>("preco"));
-        colPreco.setPrefWidth(150);
+        colPreco.setPrefWidth(153);
 
         table.getColumns().addAll(colNome, colCodBarras, colPreco);
 
-        // 1. Reduzir o padding do BorderPane principal
-        BorderPane root = new BorderPane();
-        root.setPadding(new Insets(2));  // Reduzido drasticamente
-
-        // 2. Criar um container VBox sem espaçamento
-        VBox tableContainer = new VBox();
-        tableContainer.setSpacing(0);
-        tableContainer.setPadding(new Insets(0));
-        tableContainer.getChildren().add(table);
-
-        // 3. Configurar ScrollPane sem margens
-        ScrollPane scrollPane = new ScrollPane(tableContainer);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setPadding(new Insets(0));  // Sem padding interno
-        scrollPane.setStyle("-fx-background: transparent;");
-
-        // 4. Aplicar ao BorderPane com margens mínimas
-        root.setCenter(scrollPane);
-        BorderPane.setMargin(scrollPane, new Insets(20, 5, 5, 5));  // Margem superior mínima (2px)
-
-        // Carrega os produtos do banco de dados
+        // Carrega os dados na tabela
         carregarProdutos();
 
-        // Configuração dos eventos dos botões:
-
-        // Botão Adicionar - Abre formulário para novo produto
+        // Ações dos botões
         btnAdd.setOnAction(e -> abrirFormularioProduto(null));
-
-        // Botão Editar - Abre formulário com produto selecionado
         btnEditar.setOnAction(e -> {
             Produto selecionado = table.getSelectionModel().getSelectedItem();
             if (selecionado != null) {
@@ -135,8 +108,6 @@ public class Produtos {
                 alerta("Selecione um produto para editar.");
             }
         });
-
-        // Botão Apagar - Remove produto selecionado
         btnApagar.setOnAction(e -> {
             Produto selecionado = table.getSelectionModel().getSelectedItem();
             if (selecionado != null) {
@@ -146,7 +117,6 @@ public class Produtos {
             }
         });
 
-        // Botão Voltar - Retorna à tela inicial conforme o cargo do usuário
         btnVoltar.setOnAction(e -> {
             try {
                 String cargo = AutenticarUser.getCargo();
@@ -169,7 +139,6 @@ public class Produtos {
             }
         });
 
-        // Botão Sair - Fecha a aplicação com confirmação
         btnSair.setOnAction(e -> {
             Alert alert = new Alert(AlertType.CONFIRMATION);
             alert.setTitle("Confirmação de Saída");
@@ -182,25 +151,36 @@ public class Produtos {
             });
         });
 
-        // Container para os botões (lado direito da tela)
+        // Layout dos botões
         VBox botoes = new VBox(10, btnAdd, btnEditar, btnApagar, btnVoltar, btnSair);
         botoes.setPadding(new Insets(10));
         botoes.setAlignment(Pos.BOTTOM_LEFT);
 
-        // Layout final da interface
+        // Container da tabela, alinhada no canto superior esquerdo
+        VBox tabelaContainer = new VBox(table);
+        tabelaContainer.setAlignment(Pos.TOP_LEFT);
+        tabelaContainer.setPadding(new Insets(35)); // menos padding para não criar muito espaço
+
+        // Layout principal
         BorderPane layout = new BorderPane();
-        layout.setTop(logoBox);
-        layout.setCenter(table);
+
+        // Topo com logo e imagem título
+        layout.setTop(topoBox);
+
+        // Tabela no centro e botões à direita
+        layout.setCenter(tabelaContainer);
         layout.setRight(botoes);
-        BorderPane.setMargin(table, new Insets(10));
+
+        // Ajuste de margem para os botões
         BorderPane.setMargin(botoes, new Insets(20));
+
+        // Estilo CSS
         layout.getStyleClass().add("produtos");
 
-        // Configuração da cena principal
+        // Cena e configurações do stage
         Scene scene = new Scene(layout, 1000, 600);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
-        // Configuração da janela principal
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Módulo de Produtos");
         stage.setFullScreen(true);
@@ -208,12 +188,11 @@ public class Produtos {
         stage.show();
     }
 
-    // Método para carregar produtos do banco de dados
+    // Método para carregar produtos do banco na tabela
     private void carregarProdutos() {
         listaProdutos = FXCollections.observableArrayList();
         String sql = "SELECT ID_Produto, Nome, Cod_Barras, Preco FROM produtos ORDER BY Nome";
-        System.out.println("Executando consulta: " + sql); // Log da consulta
-        
+        System.out.println("Executando consulta: " + sql);
         try (Connection con = getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -227,10 +206,10 @@ public class Produtos {
                         rs.getString("Cod_Barras"),
                         rs.getDouble("Preco")
                 );
-                System.out.println("Produto encontrado: " + p.getNome()); // Log dos produtos
+                System.out.println("Produto encontrado: " + p.getNome());
                 listaProdutos.add(p);
             }
-            System.out.println("Total de produtos carregados: " + count); // Log do total
+            System.out.println("Total de produtos carregados: " + count);
             table.setItems(listaProdutos);
             table.refresh();
         } catch (SQLException e) {
@@ -239,13 +218,13 @@ public class Produtos {
         }
     }
 
-    // Método para abrir formulário de edição/cadastro de produto
+    // Abre o formulário para adicionar ou editar produto
     private void abrirFormularioProduto(Produto produto) {
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.setTitle(produto == null ? "Adicionar Produto" : "Editar Produto");
 
-        // Componentes do formulário
+        // Campos do formulário
         Label lblNome = new Label("Nome:");
         TextField tfNome = new TextField();
         tfNome.getStyleClass().add("text-fill-tbl");
@@ -255,7 +234,7 @@ public class Produtos {
         Label lblPreco = new Label("Preço (R$):");
         TextField tfPreco = new TextField();
 
-        // Preenche campos se estiver editando
+        // Se for edição, preencher os campos
         if (produto != null) {
             tfNome.setText(produto.getNome());
             tfCodBarras.setText(produto.getCodBarras());
@@ -266,19 +245,18 @@ public class Produtos {
         Button btnSalvar = new Button("Salvar");
         Button btnCancelar = new Button("Cancelar");
 
-        // Evento do botão Salvar
+        // Ação do botão salvar
         btnSalvar.setOnAction(e -> {
             String nome = tfNome.getText().trim();
             String codBarras = tfCodBarras.getText().trim();
             String precoStr = tfPreco.getText().trim();
 
-            // Validação dos campos
+            // Validação
             if (nome.isEmpty() || codBarras.isEmpty() || precoStr.isEmpty()) {
                 alerta("Preencha todos os campos!");
                 return;
             }
 
-            // Conversão do preço
             double preco;
             try {
                 preco = Double.parseDouble(precoStr);
@@ -287,15 +265,12 @@ public class Produtos {
                 return;
             }
 
-            // Lógica para inserção ou atualização
             if (produto == null) {
-                // Inserir novo produto
                 if (inserirProduto(new Produto(0, nome, codBarras, preco))) {
                     carregarProdutos();
                     dialog.close();
                 }
             } else {
-                // Atualizar produto existente
                 produto.setNome(nome);
                 produto.setCodBarras(codBarras);
                 produto.setPreco(preco);
@@ -306,7 +281,7 @@ public class Produtos {
             }
         });
 
-        // Evento do botão Cancelar
+        // Ação do botão cancelar
         btnCancelar.setOnAction(e -> dialog.close());
 
         // Layout do formulário
@@ -324,13 +299,12 @@ public class Produtos {
         grid.add(botoes, 1, 3);
         botoes.setAlignment(Pos.CENTER_RIGHT);
 
-        // Configuração da cena do diálogo
         Scene scene = new Scene(grid);
         dialog.setScene(scene);
         dialog.showAndWait();
     }
 
-    // Método para inserir novo produto no banco de dados
+    // Insere novo produto no banco
     private boolean inserirProduto(Produto p) {
         String sql = "INSERT INTO produtos (Nome, Cod_Barras, Preco) VALUES (?, ?, ?)";
         try (Connection con = getConnection();
@@ -348,7 +322,7 @@ public class Produtos {
         }
     }
 
-    // Método para atualizar produto existente no banco de dados
+    // Atualiza produto no banco
     private boolean atualizarProduto(Produto p) {
         String sql = "UPDATE produtos SET Nome = ?, Cod_Barras = ?, Preco = ? WHERE ID_Produto = ?";
         try (Connection con = getConnection();
@@ -365,11 +339,10 @@ public class Produtos {
             alerta("Erro ao atualizar produto: " + e.getMessage());
             return false;
         }
-    } 
+    }
 
-    // Método para apagar produto do banco de dados
+    // Apaga produto
     private void apagarProduto(Produto p) {
-        // Diálogo de confirmação
         Alert confirm = new Alert(AlertType.CONFIRMATION);
         confirm.setTitle("Confirmação");
         confirm.setHeaderText("Deseja realmente apagar o produto '" + p.getNome() + "'?");
@@ -390,7 +363,7 @@ public class Produtos {
         });
     }
 
-    // Método auxiliar para exibir mensagens de alerta
+    // Método utilitário para mostrar alertas
     private void alerta(String mensagem) {
         Alert alert = new Alert(AlertType.INFORMATION);
         alert.setTitle("Informação");
