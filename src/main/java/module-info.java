@@ -14,4 +14,5 @@ module com.sunpdv {
     exports com.sunpdv;
     exports com.sunpdv.home;
     exports com.sunpdv.model;  // Adicionado para permitir reflexão
+
 }

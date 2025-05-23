@@ -21,6 +21,7 @@ import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.security.PublicKey;
 import java.sql.*;
 
 public class Produtos {
@@ -33,7 +34,7 @@ public class Produtos {
     private Connection getConnection() throws SQLException {
         String url = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=true;trustServerCertificate=true";
         String user = "sa";
-        String password = "Jp081007!";
+        String password = "Senha@1234";
         return DriverManager.getConnection(url, user, password);
     }
 
@@ -189,10 +190,11 @@ public class Produtos {
     }
 
     // Método para carregar produtos do banco na tabela
-    private void carregarProdutos() {
+    public void carregarProdutos() {
         listaProdutos = FXCollections.observableArrayList();
         String sql = "SELECT ID_Produto, Nome, Cod_Barras, Preco FROM produtos ORDER BY Nome";
         System.out.println("Executando consulta: " + sql);
+        
         try (Connection con = getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
