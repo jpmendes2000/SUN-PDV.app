@@ -170,10 +170,10 @@ public class Produtos {
         iconSair.setFitHeight(32);
 
         Button btnVoltar = new Button("Home", iconHome);
-        btnVoltar.setPrefWidth(150);
+        btnVoltar.setPrefWidth(250);
         
         Button btnSair = new Button("Sair do Sistema", iconSair);
-        btnSair.setPrefWidth(150);
+        btnSair.setPrefWidth(250);
 
         VBox rightButtonsBox = new VBox(15, btnVoltar, btnSair);
         rightButtonsBox.setAlignment(Pos.BOTTOM_RIGHT);
