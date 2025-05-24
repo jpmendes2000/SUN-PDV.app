@@ -90,7 +90,7 @@ public class LoginApp extends Application {
         // Criação do ToggleButton com ícone
         ToggleButton olhoBtn = new ToggleButton();
         olhoBtn.getStyleClass().add("olho-btn");
-        olhoBtn.setStyle("-fx-background-color: transparent; -fx-padding: 0;");
+        olhoBtn.setStyle("-fx-background-color: transparent; -fx-padding: 5 5 5 5;");
 
         // Caminhos dos ícones (você pode converter para path relativo se quiser usar como resource)
         String caminhoVisivel = getClass().getResource("/img/icon/visibilidade.png").toExternalForm();

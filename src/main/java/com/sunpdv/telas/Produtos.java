@@ -35,85 +35,58 @@ public class Produtos {
     private Label lblMensagemSucesso;
     private Produto produtoSelecionado;
 
+    private static final String DB_URL = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=true;trustServerCertificate=true";
+    private static final String DB_USER = "sa";
+    private static final String DB_PASSWORD = "Senha@1234";
+
     private Connection getConnection() throws SQLException {
-        String url = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=true;trustServerCertificate=true";
-        String user = "sa";
-        String password = "Senha@1234";
-        return DriverManager.getConnection(url, user, password);
+        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
     }
 
     public void show(Stage stage) {
-        // --- Configuração do Layout Principal ---
+        // Configuração do Layout Principal
         GridPane mainGrid = new GridPane();
         mainGrid.setHgap(20);
         mainGrid.setVgap(10);
         mainGrid.setPadding(new Insets(15));
         
-        // Configuração das colunas (60% para tabela, 40% para espaço vazio/botões)
         ColumnConstraints colEsquerda = new ColumnConstraints();
         colEsquerda.setPercentWidth(60);
         ColumnConstraints colDireita = new ColumnConstraints();
         colDireita.setPercentWidth(40);
         mainGrid.getColumnConstraints().addAll(colEsquerda, colDireita);
 
-        // Configuração das linhas
         RowConstraints rowTopo = new RowConstraints();
         rowTopo.setPrefHeight(190);
         RowConstraints rowConteudo = new RowConstraints();
         rowConteudo.setVgrow(Priority.ALWAYS);
         mainGrid.getRowConstraints().addAll(rowTopo, rowConteudo);
 
-        // --- Topo (ocupa as duas colunas) ---
-        // Imagem logo
+        // Topo (ocupa as duas colunas)
         Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(130);
         logoView.setPreserveRatio(true);
 
-        // Imagem título
         Image tituloImagem = new Image(getClass().getResourceAsStream("/img/logo/produto.png"));
         ImageView tituloView = new ImageView(tituloImagem);
         tituloView.setPreserveRatio(true);
         tituloView.setFitHeight(120);
 
-        // Label mensagem sucesso
         lblMensagemSucesso = new Label();
         lblMensagemSucesso.getStyleClass().add("mensagem-sucesso");
         lblMensagemSucesso.setVisible(false);
 
-        // Campo pesquisa
         campoPesquisa = new TextField();
         campoPesquisa.setPromptText("Pesquisar produto...");
         campoPesquisa.setPrefWidth(400);
         campoPesquisa.textProperty().addListener((obs, oldVal, newVal) -> filtrarProdutos(newVal));
 
-        // Botão adicionar
-        Image imgAdd = new Image(getClass().getResourceAsStream("/img/icon/lista.png"));
-        ImageView iconAdd = new ImageView(imgAdd);
-        iconAdd.setFitWidth(20);
-        iconAdd.setFitHeight(20);
-        Button btnAdd = new Button("", iconAdd);
-        btnAdd.setTooltip(new Tooltip("Adicionar Produto"));
-        btnAdd.setPrefSize(40, 40);
-
-        // Botão editar
-        Image imgEdit = new Image(getClass().getResourceAsStream("/img/icon/lapis.png"));
-        ImageView iconEdit = new ImageView(imgEdit);
-        iconEdit.setFitWidth(20);
-        iconEdit.setFitHeight(20);
-        Button btnEdit = new Button("", iconEdit);
-        btnEdit.setTooltip(new Tooltip("Editar Produto"));
-        btnEdit.setPrefSize(40, 40);
+        Button btnAdd = criarBotaoAcao("/img/icon/lista.png", "Adicionar Produto");
+        Button btnEdit = criarBotaoAcao("/img/icon/lapis.png", "Editar Produto");
+        Button btnDelete = criarBotaoAcao("/img/icon/fechar.png", "Apagar Produto");
+        
         btnEdit.setDisable(true);
-
-        // Botão apagar
-        Image imgDelete = new Image(getClass().getResourceAsStream("/img/icon/fechar.png"));
-        ImageView iconDelete = new ImageView(imgDelete);
-        iconDelete.setFitWidth(20);
-        iconDelete.setFitHeight(20);
-        Button btnDelete = new Button("", iconDelete);
-        btnDelete.setTooltip(new Tooltip("Apagar Produto"));
-        btnDelete.setPrefSize(40, 40);
         btnDelete.setDisable(true);
 
         // Organização do topo
@@ -131,11 +104,12 @@ public class Produtos {
         VBox topoBox = new VBox(5, logoTituloBox, pesquisaAcoesBox);
         mainGrid.add(topoBox, 0, 0, 2, 1);
 
-        // --- Tabela (coluna esquerda) ---
+        // Tabela (coluna esquerda)
         table = new TableView<>();
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.getStyleClass().add("table-view");
 
-        // Colunas
+        // Configuração das colunas
         TableColumn<Produto, String> colNome = new TableColumn<>("Nome");
         colNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
         colNome.setPrefWidth(400);
@@ -153,76 +127,77 @@ public class Produtos {
         colPreco.setPrefWidth(50);
 
         table.getColumns().addAll(colNome, colCodBarras, colPreco);
-        
+
         // Adiciona a tabela em um ScrollPane
         ScrollPane scrollTable = new ScrollPane(table);
         scrollTable.setFitToWidth(true);
         scrollTable.setFitToHeight(true);
         mainGrid.add(scrollTable, 0, 1);
 
-        // --- Botões Home e Sair (coluna direita, inferior) ---
-        ImageView iconHome = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/casa.png")));
-        iconHome.setFitWidth(32);
-        iconHome.setFitHeight(32);
-
-        ImageView iconSair = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/fechar.png")));
-        iconSair.setFitWidth(32);
-        iconSair.setFitHeight(32);
-
-        Button btnVoltar = new Button("Home", iconHome);
-        btnVoltar.setPrefWidth(250);
-        
-        Button btnSair = new Button("Sair do Sistema", iconSair);
-        btnSair.setPrefWidth(250);
+        // Botões Home e Sair (coluna direita, inferior)
+        Button btnVoltar = criarBotaoGrande("Home", "/img/icon/casa.png");
+        Button btnSair = criarBotaoGrande("Sair do Sistema", "/img/icon/fechar.png");
 
         VBox rightButtonsBox = new VBox(15, btnVoltar, btnSair);
         rightButtonsBox.setAlignment(Pos.BOTTOM_RIGHT);
         rightButtonsBox.setPadding(new Insets(0, 20, 20, 0));
         mainGrid.add(rightButtonsBox, 1, 1);
 
-        // --- Carregar dados e configurar eventos ---
+        // Carregar dados e configurar eventos
         carregarProdutos();
 
-        // Listener para seleção na tabela
         table.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-            if (newSelection != null) {
-                produtoSelecionado = newSelection;
-                btnEdit.setDisable(false);
-                btnDelete.setDisable(false);
-            } else {
-                produtoSelecionado = null;
-                btnEdit.setDisable(true);
-                btnDelete.setDisable(true);
-            }
+            produtoSelecionado = newSelection;
+            btnEdit.setDisable(newSelection == null);
+            btnDelete.setDisable(newSelection == null);
         });
 
-        // Eventos dos botões
         btnAdd.setOnAction(e -> abrirFormularioProduto(null));
-        
         btnEdit.setOnAction(e -> {
             if (produtoSelecionado != null) {
                 abrirFormularioProduto(produtoSelecionado);
             }
         });
-        
         btnDelete.setOnAction(e -> {
             if (produtoSelecionado != null) {
-                apagarProduto(produtoSelecionado);
+                apagarProduto(produtoSelecionado);  
             }
         });
 
         btnVoltar.setOnAction(e -> voltarParaHome(stage));
         btnSair.setOnAction(e -> confirmarSaida(stage));
 
-        // --- Cena e Stage ---
+        // Cena e Stage
         Scene scene = new Scene(mainGrid, 1100, 700);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Módulo de Produtos");
-        stage.setFullScreen(false);
-        stage.setResizable(true);
+        stage.setMinWidth(800);
+        stage.setMinHeight(600);
         stage.show();
+    }
+
+    private Button criarBotaoAcao(String caminhoIcone, String tooltip) {
+        Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
+        ImageView icon = new ImageView(img);
+        icon.setFitWidth(20);
+        icon.setFitHeight(20);
+        
+        Button btn = new Button("", icon);
+        btn.setTooltip(new Tooltip(tooltip));
+        btn.setPrefSize(40, 40);
+        return btn;
+    }
+
+    private Button criarBotaoGrande(String texto, String caminhoIcone) {
+        ImageView icon = new ImageView(new Image(getClass().getResourceAsStream(caminhoIcone)));
+        icon.setFitWidth(32);
+        icon.setFitHeight(32);
+        
+        Button btn = new Button(texto, icon);
+        btn.setPrefWidth(250);
+        return btn;
     }
 
     private void carregarProdutos() {
@@ -234,33 +209,30 @@ public class Produtos {
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                Produto p = new Produto(
-                        rs.getInt("ID_Produto"),
-                        rs.getString("Nome"),
-                        rs.getString("Cod_Barras"),
-                        rs.getDouble("Preco")
-                );
-                listaProdutos.add(p);
+                listaProdutos.add(new Produto(
+                    rs.getInt("ID_Produto"),
+                    rs.getString("Nome"),
+                    rs.getString("Cod_Barras"),
+                    rs.getDouble("Preco")
+                ));
             }
             table.setItems(listaProdutos);
         } catch (SQLException e) {
-            e.printStackTrace();
-            alerta("Erro ao carregar produtos do banco: " + e.getMessage());
+            mostrarAlertaErro("Erro ao carregar produtos", "Erro ao carregar produtos do banco: " + e.getMessage());
         }
     }
 
     private void filtrarProdutos(String filtro) {
-        if (listaProdutos == null || filtro == null) return;
-
-        ObservableList<Produto> filtrados = FXCollections.observableArrayList();
-        String filtroLower = filtro.toLowerCase();
-
-        for (Produto p : listaProdutos) {
-            if (p.getNome().toLowerCase().contains(filtroLower)
-                    || p.getCodBarras().toLowerCase().contains(filtroLower)) {
-                filtrados.add(p);
-            }
+        if (listaProdutos == null || filtro == null || filtro.isEmpty()) {
+            table.setItems(listaProdutos);
+            return;
         }
+
+        String filtroLower = filtro.toLowerCase();
+        ObservableList<Produto> filtrados = listaProdutos.filtered(p -> 
+            p.getNome().toLowerCase().contains(filtroLower) || 
+            p.getCodBarras().toLowerCase().contains(filtroLower)
+        );
         table.setItems(filtrados);
     }
 
@@ -269,66 +241,32 @@ public class Produtos {
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.setTitle(produto == null ? "Adicionar Produto" : "Editar Produto");
 
-        VBox box = new VBox(15);
-        box.setPadding(new Insets(20));
-
         TextField txtNome = new TextField();
         txtNome.setPromptText("Nome do Produto");
+        txtNome.setPrefWidth(250);
 
         TextField txtCodBarras = new TextField();
         txtCodBarras.setPromptText("Código de Barras");
+        txtCodBarras.setPrefWidth(250);
 
         TextField txtPreco = new TextField();
-        txtPreco.setPromptText("Preço");
+        txtPreco.setPromptText("Preço (R$)");
+        txtPreco.setPrefWidth(250);
 
         if (produto != null) {
             txtNome.setText(produto.getNome());
             txtCodBarras.setText(produto.getCodBarras());
-            txtPreco.setText(String.valueOf(produto.getPreco()));
+            txtPreco.setText(String.format("%.2f", produto.getPreco()));
         }
 
         Button btnSalvar = new Button("Salvar");
         btnSalvar.setDefaultButton(true);
+        btnSalvar.setOnAction(e -> salvarProduto(produto, txtNome, txtCodBarras, txtPreco, dialog));
 
-        btnSalvar.setOnAction(e -> {
-            String nome = txtNome.getText().trim();
-            String codBarras = txtCodBarras.getText().trim();
-            String precoStr = txtPreco.getText().trim();
-
-            if (nome.isEmpty() || codBarras.isEmpty() || precoStr.isEmpty()) {
-                alerta("Preencha todos os campos.");
-                return;
-            }
-
-            double preco;
-            try {
-                preco = Double.parseDouble(precoStr.replace(",", "."));
-            } catch (NumberFormatException ex) {
-                alerta("Preço inválido. Use números com ponto ou vírgula decimal.");
-                return;
-            }
-
-            // Validar se produto já existe
-            int idProduto = produto != null ? produto.getId() : 0;
-            if (validarProdutoExistente(nome, codBarras, idProduto)) {
-                return;
-            }
-
-            if (produto == null) {
-                inserirProduto(new Produto(0, nome, codBarras, preco));
-            } else {
-                produto.setNome(nome);
-                produto.setCodBarras(codBarras);
-                produto.setPreco(preco);
-                atualizarProduto(produto);
-            }
-            dialog.close();
-        });
-
-        // Layout do formulário
         GridPane formGrid = new GridPane();
         formGrid.setHgap(10);
         formGrid.setVgap(10);
+        formGrid.setPadding(new Insets(10));
         
         formGrid.add(new Label("Nome:"), 0, 0);
         formGrid.add(txtNome, 1, 0);
@@ -338,10 +276,49 @@ public class Produtos {
         formGrid.add(txtPreco, 1, 2);
         formGrid.add(btnSalvar, 1, 3);
 
-        box.getChildren().add(formGrid);
-        Scene scene = new Scene(box, 350, 200);
+        Scene scene = new Scene(formGrid);
+        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
         dialog.setScene(scene);
         dialog.showAndWait();
+    }
+
+    private void salvarProduto(Produto produto, TextField txtNome, TextField txtCodBarras, 
+                             TextField txtPreco, Stage dialog) {
+        String nome = txtNome.getText().trim();
+        String codBarras = txtCodBarras.getText().trim();
+        String precoStr = txtPreco.getText().trim();
+
+        if (nome.isEmpty() || codBarras.isEmpty() || precoStr.isEmpty()) {
+            mostrarAlertaErro("Campos obrigatórios", "Preencha todos os campos.");
+            return;
+        }
+
+        double preco;
+        try {
+            preco = Double.parseDouble(precoStr.replace(",", "."));
+            if (preco <= 0) {
+                mostrarAlertaErro("Preço inválido", "O preço deve ser maior que zero.");
+                return;
+            }
+        } catch (NumberFormatException ex) {
+            mostrarAlertaErro("Preço inválido", "Use números com ponto ou vírgula decimal.");
+            return;
+        }
+
+        int idProduto = produto != null ? produto.getId() : 0;
+        if (validarProdutoExistente(nome, codBarras, idProduto)) {
+            return;
+        }
+
+        if (produto == null) {
+            inserirProduto(new Produto(0, nome, codBarras, preco));
+        } else {
+            produto.setNome(nome);
+            produto.setCodBarras(codBarras);
+            produto.setPreco(preco);
+            atualizarProduto(produto);
+        }
+        dialog.close();
     }
 
     private boolean validarProdutoExistente(String nome, String codBarras, int idProduto) {
@@ -369,11 +346,11 @@ public class Produtos {
                         mensagem = "Já existe um produto com este código de barras!";
                     }
                     
-                    // Alerta personalizado
                     Alert alert = new Alert(AlertType.WARNING);
                     alert.setTitle("Produto Existente");
                     alert.setHeaderText("Conflito ao salvar produto");
                     alert.setContentText(mensagem);
+                    alert.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
                     
                     ButtonType btnIrParaProduto = new ButtonType("Ir para o Produto", ButtonBar.ButtonData.OTHER);
                     ButtonType btnFechar = new ButtonType("Fechar", ButtonBar.ButtonData.CANCEL_CLOSE);
@@ -381,23 +358,25 @@ public class Produtos {
                     
                     Optional<ButtonType> result = alert.showAndWait();
                     if (result.isPresent() && result.get() == btnIrParaProduto) {
-                        // Selecionar o produto existente na tabela
-                        for (Produto p : listaProdutos) {
-                            if (p.getId() == idExistente) {
-                                table.getSelectionModel().select(p);
-                                table.scrollTo(p);
-                                break;
-                            }
-                        }
+                        selecionarProdutoNaTabela(idExistente);
                     }
                     return true;
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
-            alerta("Erro ao validar produto: " + e.getMessage());
+            mostrarAlertaErro("Erro de validação", "Erro ao validar produto: " + e.getMessage());
         }
         return false;
+    }
+
+    private void selecionarProdutoNaTabela(int idProduto) {
+        for (Produto p : listaProdutos) {
+            if (p.getId() == idProduto) {
+                table.getSelectionModel().select(p);
+                table.scrollTo(p);
+                break;
+            }
+        }
     }
 
     private void inserirProduto(Produto produto) {
@@ -419,11 +398,10 @@ public class Produtos {
                     }
                 }
             } else {
-                alerta("Erro ao adicionar produto.");
+                mostrarAlertaErro("Erro ao adicionar", "Erro ao adicionar produto.");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
-            alerta("Erro ao adicionar produto: " + e.getMessage());
+            mostrarAlertaErro("Erro no banco de dados", "Erro ao adicionar produto: " + e.getMessage());
         }
     }
 
@@ -439,18 +417,16 @@ public class Produtos {
             
             int rows = ps.executeUpdate();
             if (rows > 0) {
-                // Atualiza o item na lista
                 int index = listaProdutos.indexOf(produto);
                 if (index >= 0) {
                     listaProdutos.set(index, produto);
                 }
                 mostrarMensagemSucesso("Produto atualizado com sucesso!");
             } else {
-                alerta("Erro ao atualizar produto.");
+                mostrarAlertaErro("Erro ao atualizar", "Erro ao atualizar produto.");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
-            alerta("Erro ao atualizar produto: " + e.getMessage());
+            mostrarAlertaErro("Erro no banco de dados", "Erro ao atualizar produto: " + e.getMessage());
         }
     }
 
@@ -459,6 +435,7 @@ public class Produtos {
         confirm.setTitle("Confirmação");
         confirm.setHeaderText("Deseja apagar o produto: " + produto.getNome() + "?");
         confirm.setContentText("Esta ação não pode ser desfeita.");
+        confirm.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
         
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
@@ -472,11 +449,10 @@ public class Produtos {
                     listaProdutos.remove(produto);
                     mostrarMensagemSucesso("Produto apagado com sucesso!");
                 } else {
-                    alerta("Erro ao apagar produto.");
+                    mostrarAlertaErro("Erro ao apagar", "Erro ao apagar produto.");
                 }
             } catch (SQLException e) {
-                e.printStackTrace();
-                alerta("Erro ao apagar produto: " + e.getMessage());
+                mostrarAlertaErro("Erro no banco de dados", "Erro ao apagar produto: " + e.getMessage());
             }
         }
     }
@@ -495,11 +471,10 @@ public class Produtos {
                     new TelaHomeFUN(AutenticarUser.getNome(), cargo).mostrar(stage);
                     break;
                 default:
-                    alerta("Cargo não reconhecido: " + cargo);
+                    mostrarAlertaErro("Cargo inválido", "Cargo não reconhecido: " + cargo);
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
-            alerta("Erro ao retornar para a tela principal.");
+            mostrarAlertaErro("Erro de navegação", "Erro ao retornar para a tela principal.");
         }
     }
 
@@ -507,7 +482,7 @@ public class Produtos {
         Alert alert = new Alert(AlertType.CONFIRMATION);
         alert.setTitle("Confirmação de Saída");
         alert.setHeaderText("Deseja realmente sair do sistema?");
-        alert.initOwner(stage);
+        alert.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
         
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
@@ -524,11 +499,12 @@ public class Produtos {
         pause.play();
     }
 
-    private void alerta(String mensagem) {
+    private void mostrarAlertaErro(String titulo, String mensagem) {
         Alert alert = new Alert(AlertType.ERROR);
-        alert.setTitle("Erro");
+        alert.setTitle(titulo);
         alert.setHeaderText(null);
         alert.setContentText(mensagem);
+        alert.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
         alert.showAndWait();
     }
 }

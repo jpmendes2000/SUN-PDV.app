@@ -1,231 +1,175 @@
+/* ESTILOS GERAIS */
 .root {
-    /* Fundo com gradiente diagonal do azul claro (#006989) para azul escuro (#05313e) */
-    -fx-background-color: linear-gradient(to bottom right, #006989, #05313e);
-    
-    /* Alternativa de fundo sólido azul (comentado) */
-    /* -fx-background-color: #006989; */
-
-    /* Fonte padrão para toda a aplicação */
-    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-font-family: 'Segoe UI', Arial, sans-serif;
+    -fx-base: #006989;
+    -fx-background-color: linear-gradient(to bottom right, #006989, #0c5b74, #1c414d); /* Fundo com gradiente suave */
 }
 
-.grid-pane {
-    /* Espaçamento horizontal entre os elementos no GridPane */
-    -fx-hgap: 15;
-
-    /* Espaçamento vertical entre os elementos no GridPane */
-    -fx-vgap: 20;
-}
-
-.label {
-    /* Cor do texto nas labels */
-    -fx-text-fill: #E7ECEF;
-
-    /* Tamanho da fonte */
-    -fx-font-size: 15px;
-
-    /* Texto em negrito */
-    -fx-font-weight: bold;
-}
-
-.label-text {
-    /* Cor do texto (usado em Text ou similar) */
-    -fx-fill: #E7ECEF;
-
-    /* Fonte um pouco maior que .label */
-    -fx-font-size: 16px;
-
-    /* Negrito */
-    -fx-font-weight: bold;
-}
-
-.text-field {
-    /* Fundo claro para campos de texto */
-    -fx-background-color: #E7ECEF;
-
-    /* Cor do texto dentro do campo */
-    -fx-text-fill: #000000;
-
-    /* Tamanho da fonte */
-    -fx-font-size: 14px;
-
-    /* Espaçamento interno (padding) para conforto visual */
-    -fx-padding: 10px;
-
-    /* Bordas arredondadas do campo */
-    -fx-border-radius: 8px;
-    -fx-background-radius: 8px;
-
-    /* Remove borda padrão */
-    -fx-border-color: transparent;
-
-    /* Sombra leve para dar profundidade */
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 1, 0, 0, 1);
-}
-
-.text-field:focused {
-    /* Quando o campo está focado, borda azul aparece */
-    -fx-border-color: #0008ff;
-
-    /* Mantém o fundo claro */
-    -fx-background-color: #E7ECEF;
-}
-
-.button {
-    -fx-font-size: 14px;
-    -fx-content-display: LEFT;
-    -fx-alignment: CENTER_LEFT;
-    -fx-graphic-text-gap: 10px;
-    -fx-padding: 10px 20px;
-    -fx-pref-height: 40px;
-    -fx-background-color: #FDCA40;
-    -fx-border-radius: 8px;
-    -fx-background-radius: 8px;
-    -fx-cursor: hand;
-}
-
-
-.button:hover {
-    /* Cor do fundo quando o mouse está sobre o botão */
-    -fx-background-color: #b18714;
-
-    /* Cor do texto clara no hover */
-    -fx-text-fill: #f9e5af;
-}
-
-.erro-mensager {
-    /* Fonte maior para mensagens de erro */
-    -fx-font-size: 17px;
-}
-
-.visible {
-    /* Fundo vermelho para indicador visível (ex: alerta) */
-    -fx-background-color: #ff0000;
-
-    /* Remove bordas */
-    -fx-border: 0;
-
-    /* Torna o elemento completamente circular */
-    -fx-background-radius: 100px;
-}
-
-.visible:hover {
-    /* Vermelho mais escuro ao passar o mouse */
-    -fx-background-color: #cd0101;
-}
-
-.olho-btn {
-    /* Botão olho transparente para mostrar/ocultar senha */
-    -fx-background-color: transparent;
-
-    /* Fonte maior para o ícone */
-    -fx-font-size: 18px;
-
-    /* Posiciona o botão à esquerda */
-    -fx-translate-x: -35px;
-
-    /* Cursor de mão para indicar interatividade */
-    -fx-cursor: hand;
-}
-
-.mensagem-bemvindo {
-    -fx-font-size: 37px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #FDCA40;
-    -fx-padding: 8 12 8 12;
-    -fx-background-radius: 8;
-}
-
-/* Estilos para o Alert (pop-up de confirmação) */
-.dialog-pane {
-    -fx-background-color: linear-gradient(to right, #006989, #05313e);
-    -fx-border-color: #FDCA40;
-    -fx-background-radius: 8px;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0, 0, 0);
-
-    -fx-min-width: 470px;
-    -fx-min-height: 205px;
-    -fx-pref-width: 470px;
-    -fx-pref-height: 205px;
-}
-
-.dialog-pane .header-panel {
-    -fx-background-color: linear-gradient(to right, #006989, #05313e);
-}
-
-.dialog-pane .content {
-    -fx-font-size: 19px;
-    -fx-text-fill: #000000;
-    -fx-font-weight: bold;
-}
-
-.dialog-pane .header-panel  {
-    -fx-font-size: 19px;
-    -fx-text-fill: #FDCA40;
-    -fx-font-weight: bold;
-}
-
-.dialog-pane .button-bar {
-    -fx-background-color: #000000;
-    -fx-text-fill: #715300;
-    -fx-font-weight: bold;
-    -fx-padding: 8px 20px;
-    -fx-font-size: 14px;
-}
-
-.dialog-pane .button-bar {
-    -fx-background-color: #cba028;
-    -fx-text-fill: #000000;
-}
-
-/* Estilo para todas as células da tabela */
-.table-cell {
-    -fx-text-fill: #000000; /* Cor do texto */
-    -fx-font-size: 20px;
-}
-
-/* Estilo para cabeçalhos das colunas */
-.column-header {
-    -fx-background-color: #006989; /* Azul */
-    -fx-text-fill: white; /* Texto branco */
-    -fx-font-weight: bold;
-    -fx-background-radius: 13 13 0 0;
-}
-
-.table-row-cell{
-    -fx-text-fill: #000000;
-}
-
-/* Estilo para linhas selecionadas */
-.table-row-cell:selected .table-cell {
-    -fx-text-fill: white; /* Texto branco quando selecionado */
-    -fx-background-color: #006989;
-}
-
-.app-fxml {
-    -fx-text-fill: #000000;
-}
-
-
-/* Adicione isso ao seu arquivo style.css */
+/* ESTILOS PARA TABELA */
 .table-view {
-    -fx-background-radius: 15;  /* Raio das bordas */
-    -fx-border-radius: 15 15 0 0;      /* Raio da borda */
-    -fx-background-insets: 0;   /* Remove espaçamento interno */
-    -fx-padding: 10;           /* Espaçamento interno */
+    -fx-background-radius: 15;
+    -fx-border-radius: 15 15 0 0;
+    -fx-border-color: #006989;
+    -fx-background-insets: 0;
+    -fx-background-color: transparent;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0); /* Sombra sutil */
 }
 
-/* Opcional: arredondar as bordas do cabeçalho */
+/* Cabeçalho da tabela */
 .table-view .column-header-background {
     -fx-background-radius: 15 15 0 0;
     -fx-background-insets: 0 0 0 0;
+    -fx-background-color: linear-gradient(to bottom, #006989, #05313e);
 }
 
-/* Opcional: arredondar as bordas inferiores */
-.table-view .scroll-bar * {
-    -fx-background-radius: 0 0 15 15;
+/* Colunas do cabeçalho */
+.column-header {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 16px; /* Tamanho aumentado */
+    -fx-alignment: CENTER;
+    -fx-padding: 12px; /* Espaçamento aumentado */
 }
 
-.table {
-    -fx-background-radius: 10; 
+/* Linhas pares (branco) */
+.table-row-cell:even {
+    -fx-background-color: white;
+    -fx-text-fill: #000000; /* Texto preto */
+}
+
+/* Linhas ímpares (cinza claro) */
+.table-row-cell:odd {
+    -fx-background-color: #f8f8f8; /* Cinza mais claro */
+    -fx-text-fill: #000000; /* Texto preto */
+}
+
+/* Linha selecionada */
+.table-row-cell:selected {
+    -fx-background-color: #006989;
+    -fx-text-fill: white;
+}
+
+/* Células da tabela */
+.table-cell {
+    -fx-border-width: 0;
+    -fx-padding: 12px; /* Espaçamento aumentado */
+    -fx-alignment: CENTER_LEFT;
+    -fx-font-size: 14px; /* Tamanho aumentado */
+    -fx-font-weight: bold; /* Texto em negrito */
+    -fx-text-fill: inherit;
+}
+
+/* Barra de rolagem */
+.scroll-bar:horizontal,
+.scroll-bar:vertical {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar:horizontal .thumb,
+.scroll-bar:vertical .thumb {
+    -fx-background-color: #006989;
+    -fx-background-radius: 5em;
+}
+
+/* ESTILOS PARA BOTÕES - AUMENTADOS E ESTILIZADOS */
+.button {
+    -fx-background-radius: 15; /* Bordas mais arredondadas */
+-fx-alignment: CENTER_LEFT; /* Alinhamento à esquerda */
+    -fx-content-display: LEFT; /* Garante que o conteúdo fique à esquerda */
+    -fx-text-alignment: LEFT; 
+    -fx-padding: 12 0 12 25; 
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-background-color: linear-gradient(to bottom, #c09727, #e8b923); 
+    -fx-text-fill: #2a2a2a; /* Texto escuro */
+    -fx-font-size: 15px; /* Tamanho aumentado */
+    -fx-effect: dropshadow(three-pass-box, #00000033, 5, 0, 0, 1); /* Sombra */
+    -fx-min-width: 120px; /* Largura mínima */
+}
+
+.button:hover {
+    -fx-background-color: linear-gradient(to bottom, #c5a332, #eec341); /* Gradiente mais claro ao passar mouse */
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2); /* Sombra mais forte */
+}
+
+/* ESTILOS PARA CAMPOS DE TEXTO - FUNDO BRANCO E TEXTO PRETO */
+.text-field {
+    -fx-background-radius: 10;
+    -fx-padding: 12;
+    -fx-font-size: 15px; /* Tamanho aumentado */
+    -fx-background-color: white;
+    -fx-text-fill: black; /* Texto preto */
+    -fx-font-weight: normal;
+    -fx-border-color: #d3d3d3;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+}
+
+.text-field:focused {
+    -fx-border-color: #006989;
+    -fx-border-radius: 10;
+    -fx-border-width: 2;
+    -fx-effect: innershadow(three-pass-box, rgba(0,105,137,0.2), 5, 0, 0, 0);
+}
+
+/* ESTILOS PARA MENSAGENS */
+.mensagem-sucesso {
+    -fx-text-fill: #d0d315;
+    -fx-font-weight: bold;
+    -fx-font-size: 15px; /* Tamanho aumentado */
+    -fx-effect: dropshadow(one-pass-box, rgba(46,125,50,0.3), 0, 0, 0, 1);
+}
+
+/* ESTILOS PARA DIÁLOGOS/ALERTAS */
+.alert {
+    -fx-font-size: 14px;
+    -fx-background-color: white;
+}
+
+.alert .header-panel {
+    -fx-background-color: linear-gradient(to bottom, #006989, #0288d1);
+}
+
+.alert .header-panel .label {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 16px; /* Tamanho aumentado */
+}
+
+.dialog-pane {
+    -fx-background-color: white;
+    -fx-border-color: #006989;
+    -fx-border-width: 2;
+    -fx-border-radius: 5;
+}
+
+.dialog-pane .button {
+    -fx-background-color: linear-gradient(to bottom, #006989, #0288d1);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+/* ESTILOS PARA LABELS */
+.label {
+    -fx-font-size: 15px; /* Tamanho aumentado */
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: bold; /* Texto em negrito */
+}
+
+/* ESTILOS PARA SCROLL PANE */
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+/* EFEITO PARA TODOS OS PANELS */
+.pane {
+    -fx-background-color: linear-gradient(to bottom right, #f5f7fa, #c3cfe2);
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
 }
