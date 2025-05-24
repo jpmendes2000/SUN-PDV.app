@@ -185,6 +185,13 @@ public class Produtos {
         icon.setFitHeight(20);
         
         Button btn = new Button("", icon);
+        btn.getStyleClass().add("acao"); // Adiciona a classe CSS
+        
+        // Adiciona classe extra para o botão de deletar
+        if (tooltip.toLowerCase().contains("apagar")) {
+            btn.getStyleClass().add("delete");
+        }
+        
         btn.setTooltip(new Tooltip(tooltip));
         btn.setPrefSize(40, 40);
         return btn;
