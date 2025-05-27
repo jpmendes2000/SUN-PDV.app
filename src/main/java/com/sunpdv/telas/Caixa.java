@@ -113,7 +113,7 @@ public class Caixa {
         // Caixa com os botões alinhada no centro inferior
         VBox botoesBox = new VBox(15, btnNovaVenda, btnVoltarHome, btnSair);
         botoesBox.setPadding(new Insets(40));
-        botoesBox.setAlignment(Pos.BOTTOM_RIGHT);
+        botoesBox.setAlignment(Pos.BOTTOM_LEFT);
 
         // Layout principal com logo e botões
         StackPane principal = new StackPane();

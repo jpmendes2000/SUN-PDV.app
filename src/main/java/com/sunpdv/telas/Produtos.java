@@ -37,7 +37,7 @@ public class Produtos {
 
     private static final String DB_URL = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=true;trustServerCertificate=true";
     private static final String DB_USER = "sa";
-    private static final String DB_PASSWORD = "Senha@1234";
+    private static final String DB_PASSWORD = "Jp081007!";
 
     private Connection getConnection() throws SQLException {
         return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
@@ -51,9 +51,9 @@ public class Produtos {
         mainGrid.setPadding(new Insets(15));
         
         ColumnConstraints colEsquerda = new ColumnConstraints();
-        colEsquerda.setPercentWidth(60);
+        colEsquerda.setPercentWidth(40);
         ColumnConstraints colDireita = new ColumnConstraints();
-        colDireita.setPercentWidth(40);
+        colDireita.setPercentWidth(60);
         mainGrid.getColumnConstraints().addAll(colEsquerda, colDireita);
 
         RowConstraints rowTopo = new RowConstraints();
@@ -97,9 +97,9 @@ public class Produtos {
         logoTituloBox.setAlignment(Pos.CENTER_LEFT);
         logoTituloBox.setPadding(new Insets(10, 10, 5, 10));
 
-        HBox pesquisaAcoesBox = new HBox(10, campoPesquisa, btnAdd, btnEdit, btnDelete);
-        pesquisaAcoesBox.setAlignment(Pos.CENTER_LEFT);
-        pesquisaAcoesBox.setPadding(new Insets(5, 0, 15, 10));
+        HBox pesquisaAcoesBox = new HBox(12, campoPesquisa, btnAdd, btnEdit, btnDelete);
+        pesquisaAcoesBox.setAlignment(Pos.CENTER_RIGHT);
+        pesquisaAcoesBox.setPadding(new Insets(5, 565, 15, 10));
 
         VBox topoBox = new VBox(5, logoTituloBox, pesquisaAcoesBox);
         mainGrid.add(topoBox, 0, 0, 2, 1);
@@ -132,16 +132,16 @@ public class Produtos {
         ScrollPane scrollTable = new ScrollPane(table);
         scrollTable.setFitToWidth(true);
         scrollTable.setFitToHeight(true);
-        mainGrid.add(scrollTable, 0, 1);
+        mainGrid.add(scrollTable, 1, 1);
 
         // Botões Home e Sair (coluna direita, inferior)
         Button btnVoltar = criarBotaoGrande("Home", "/img/icon/casa.png");
         Button btnSair = criarBotaoGrande("Sair do Sistema", "/img/icon/fechar.png");
 
         VBox rightButtonsBox = new VBox(15, btnVoltar, btnSair);
-        rightButtonsBox.setAlignment(Pos.BOTTOM_RIGHT);
+        rightButtonsBox.setAlignment(Pos.BOTTOM_LEFT);
         rightButtonsBox.setPadding(new Insets(0, 20, 20, 0));
-        mainGrid.add(rightButtonsBox, 1, 1);
+        mainGrid.add(rightButtonsBox, 0, 1);
 
         // Carregar dados e configurar eventos
         carregarProdutos();

@@ -109,19 +109,17 @@ public class TelaHomeMOD {
 
         // Caixa vertical com botões
         VBox botoesBox = new VBox(15, btnVendas, btnProdutos, btnSair);
-        botoesBox.setAlignment(Pos.BOTTOM_RIGHT);
-        botoesBox.setPadding(new Insets(40));
+        botoesBox.setAlignment(Pos.BOTTOM_LEFT);
+        botoesBox.setPadding(new Insets(0, 0, 6, 6)); 
 
-        // Label de boas-vindas
         Label mensagemFixa = new Label("Bem-vindo(a), " + nome + " você é " + cargo);
         mensagemFixa.getStyleClass().add("mensagem-bemvindo");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        // Barra inferior com mensagem e botões
-        HBox bottomBox = new HBox(20, mensagemFixa, spacer, botoesBox);
-        bottomBox.setPadding(new Insets(0, 15, 10, 30));
+        HBox bottomBox = new HBox(20, botoesBox, spacer, mensagemFixa);
+        bottomBox.setPadding(new Insets(0, 30, 10, 15));
         bottomBox.setAlignment(Pos.BOTTOM_RIGHT);
 
         // Layout principal
