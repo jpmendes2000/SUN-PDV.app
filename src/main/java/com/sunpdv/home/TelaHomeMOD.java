@@ -65,10 +65,22 @@ public class TelaHomeMOD {
         topBox.setPadding(new Insets(20));
         topBox.setAlignment(Pos.TOP_LEFT);
 
+        ImageView iconVendas = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/carrinho-de-compras.png")));
+        iconVendas.setFitWidth(32);
+        iconVendas.setFitHeight(32);
+
+        ImageView iconProdutos = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/lista.png")));
+        iconProdutos.setFitWidth(32);
+        iconProdutos.setFitHeight(32);
+
+        ImageView iconSair = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/fechar.png")));
+        iconSair.setFitWidth(32);
+        iconSair.setFitHeight(32);
+
         // Botões para moderador (menos opções que ADM)
-        Button btnVendas = new Button("Vendas");
-        Button btnProdutos = new Button("Gerenciar Produtos");
-        Button btnSair = new Button("Sair do Sistema");
+        Button btnVendas = new Button("Vendas", iconVendas);
+        Button btnProdutos = new Button("Gerenciar Produtos", iconProdutos);
+        Button btnSair = new Button("Sair do Sistema", iconSair);
 
         double larguraPadrao = 250;
         for (Button btn : new Button[]{btnVendas, btnProdutos, btnSair}) {
@@ -97,19 +109,17 @@ public class TelaHomeMOD {
 
         // Caixa vertical com botões
         VBox botoesBox = new VBox(15, btnVendas, btnProdutos, btnSair);
-        botoesBox.setAlignment(Pos.BOTTOM_RIGHT);
-        botoesBox.setPadding(new Insets(40));
+        botoesBox.setAlignment(Pos.BOTTOM_LEFT);
+        botoesBox.setPadding(new Insets(0, 0, 6, 6)); 
 
-        // Label de boas-vindas
         Label mensagemFixa = new Label("Bem-vindo(a), " + nome + " você é " + cargo);
         mensagemFixa.getStyleClass().add("mensagem-bemvindo");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        // Barra inferior com mensagem e botões
-        HBox bottomBox = new HBox(20, mensagemFixa, spacer, botoesBox);
-        bottomBox.setPadding(new Insets(0, 15, 10, 30));
+        HBox bottomBox = new HBox(20, botoesBox, spacer, mensagemFixa);
+        bottomBox.setPadding(new Insets(0, 30, 10, 15));
         bottomBox.setAlignment(Pos.BOTTOM_RIGHT);
 
         // Layout principal

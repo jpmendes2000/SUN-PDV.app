@@ -97,7 +97,7 @@ public class Usuarios {
         // VBox com os botões empilhados verticalmente no canto inferior direito
         VBox botoesBox = new VBox(15, btnVoltar, btnSair);
         botoesBox.setPadding(new Insets(35));
-        botoesBox.setAlignment(Pos.BOTTOM_RIGHT);
+        botoesBox.setAlignment(Pos.BOTTOM_LEFT);
 
         // Layout principal usando StackPane para posicionar logo e botões
         StackPane root = new StackPane();

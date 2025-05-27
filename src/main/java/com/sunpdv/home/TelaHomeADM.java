@@ -65,24 +65,24 @@ public class TelaHomeADM {
 
         // Ícones para os botões
         ImageView iconVendas = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/carrinho-de-compras.png")));
-        iconVendas.setFitWidth(30);
-        iconVendas.setFitHeight(30);
+        iconVendas.setFitWidth(32);
+        iconVendas.setFitHeight(32);
 
         ImageView iconProdutos = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/lista.png")));
-        iconProdutos.setFitWidth(30);
-        iconProdutos.setFitHeight(30);
+        iconProdutos.setFitWidth(32);
+        iconProdutos.setFitHeight(32);
 
         ImageView iconUsuarios = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/grupo.png")));
-        iconUsuarios.setFitWidth(30);
-        iconUsuarios.setFitHeight(30);
+        iconUsuarios.setFitWidth(32);
+        iconUsuarios.setFitHeight(32);
 
         ImageView iconConfig = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/definicoes.png")));
-        iconConfig.setFitWidth(30);
-        iconConfig.setFitHeight(30);
+        iconConfig.setFitWidth(32);
+        iconConfig.setFitHeight(32);
 
         ImageView iconSair = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/fechar.png")));
-        iconSair.setFitWidth(30);
-        iconSair.setFitHeight(30);
+        iconSair.setFitWidth(32);
+        iconSair.setFitHeight(32);
 
         // Botões com ícones
         Button btnVendas = new Button("Vendas", iconVendas);
@@ -119,8 +119,9 @@ public class TelaHomeADM {
         });
 
         VBox botoesBox = new VBox(15, btnVendas, btnProdutos, btnUsuarios, btnConfigurar, btnSair);
-        botoesBox.setAlignment(Pos.BOTTOM_RIGHT);
-        botoesBox.setPadding(new Insets(40));
+        botoesBox.setAlignment(Pos.BOTTOM_LEFT);
+        botoesBox.setPadding(new Insets(0, 0, 6, 6)); 
+
 
         Label mensagemFixa = new Label("Bem-vindo(a), " + nome + " você é " + cargo);
         mensagemFixa.getStyleClass().add("mensagem-bemvindo");
@@ -128,8 +129,8 @@ public class TelaHomeADM {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        HBox bottomBox = new HBox(20, mensagemFixa, spacer, botoesBox);
-        bottomBox.setPadding(new Insets(0, 15, 10, 30));
+        HBox bottomBox = new HBox(20, botoesBox, spacer, mensagemFixa);
+        bottomBox.setPadding(new Insets(0, 30, 10, 15));
         bottomBox.setAlignment(Pos.BOTTOM_RIGHT);
 
         BorderPane layout = new BorderPane();

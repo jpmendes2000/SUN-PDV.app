@@ -1,12 +1,13 @@
 package com.sunpdv.telas;
 
-// Importações necessárias
 import com.sunpdv.AutenticarUser;
 import com.sunpdv.home.TelaHomeADM;
 import com.sunpdv.home.TelaHomeFUN;
 import com.sunpdv.home.TelaHomeMOD;
 import com.sunpdv.model.Produto;
 
+import javafx.animation.PauseTransition;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -20,365 +21,501 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
-import java.security.PublicKey;
 import java.sql.*;
 import java.text.DecimalFormat;
+import java.util.Optional;
 
 public class Produtos {
 
-    // Tabela e lista de produtos
     private TableView<Produto> table;
     private ObservableList<Produto> listaProdutos;
+    private TextField campoPesquisa;
+    private Label lblMensagemSucesso;
+    private Produto produtoSelecionado;
 
-    // Método para conexão com o banco de dados
+    private static final String DB_URL = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=true;trustServerCertificate=true";
+    private static final String DB_USER = "sa";
+    private static final String DB_PASSWORD = "Jp081007!";
+
     private Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
         String url = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=true;trustServerCertificate=true";
         String user = "sa";
         String password = "Jp081007!";
         return DriverManager.getConnection(url, user, password);
     }
 
-    // Método principal para mostrar a tela
     public void show(Stage stage) {
+        // Configuração do Layout Principal
+        GridPane mainGrid = new GridPane();
+        mainGrid.setHgap(20);
+        mainGrid.setVgap(10);
+        mainGrid.setPadding(new Insets(15));
+        
+        ColumnConstraints colEsquerda = new ColumnConstraints();
+        colEsquerda.setPercentWidth(40);
+        ColumnConstraints colDireita = new ColumnConstraints();
+        colDireita.setPercentWidth(60);
+        mainGrid.getColumnConstraints().addAll(colEsquerda, colDireita);
 
-        // Carregando a logo
+        RowConstraints rowTopo = new RowConstraints();
+        rowTopo.setPrefHeight(190);
+        RowConstraints rowConteudo = new RowConstraints();
+        rowConteudo.setVgrow(Priority.ALWAYS);
+        mainGrid.getRowConstraints().addAll(rowTopo, rowConteudo);
+
+        // Topo (ocupa as duas colunas)
         Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(130);
         logoView.setPreserveRatio(true);
 
-        // Carregando a imagem do título (produto.png)
         Image tituloImagem = new Image(getClass().getResourceAsStream("/img/logo/produto.png"));
         ImageView tituloView = new ImageView(tituloImagem);
         tituloView.setPreserveRatio(true);
-        tituloView.setFitHeight(200); // Ajuste conforme desejado
+        tituloView.setFitHeight(120);
 
-        // Colocando logo e título lado a lado no topo
-        HBox topoBox = new HBox(20, logoView, tituloView); // 20 é espaçamento entre as imagens
-        topoBox.setAlignment(Pos.CENTER_LEFT);
-        topoBox.setPadding(new Insets(10, 20, 10, 20));
+        lblMensagemSucesso = new Label();
+        lblMensagemSucesso.getStyleClass().add("mensagem-sucesso");
+        lblMensagemSucesso.setVisible(false);
 
+        campoPesquisa = new TextField();
+        campoPesquisa.setPromptText("Pesquisar produto...");
+        campoPesquisa.setPrefWidth(400);
+        campoPesquisa.textProperty().addListener((obs, oldVal, newVal) -> filtrarProdutos(newVal));
 
-        // Criando botões
-        Button btnAdd = new Button("Adicionar");
-        Button btnEditar = new Button("Editar Produto");
-        Button btnApagar = new Button("Apagar Produto");
-        Button btnVoltar = new Button("Home");
-        Button btnSair = new Button("Sair do Sistema");
+        Button btnAdd = criarBotaoAcao("/img/icon/lista.png", "Adicionar Produto");
+        Button btnEdit = criarBotaoAcao("/img/icon/lapis.png", "Editar Produto");
+        Button btnDelete = criarBotaoAcao("/img/icon/fechar.png", "Apagar Produto");
+        
+        btnEdit.setDisable(true);
+        btnDelete.setDisable(true);
 
-        // Ajuste de largura dos botões
-        double larguraPadrao = 200;
-        btnAdd.setPrefWidth(larguraPadrao);
-        btnEditar.setPrefWidth(larguraPadrao);
-        btnApagar.setPrefWidth(larguraPadrao);
-        btnVoltar.setPrefWidth(larguraPadrao);
-        btnSair.setPrefWidth(larguraPadrao);
+        // Organização do topo
+        HBox tituloMensagemBox = new HBox(10, tituloView, lblMensagemSucesso);
+        tituloMensagemBox.setAlignment(Pos.CENTER_LEFT);
 
-        // Configuração da tabela
+        HBox logoTituloBox = new HBox(20, logoView, tituloMensagemBox);
+        logoTituloBox.setAlignment(Pos.CENTER_LEFT);
+        logoTituloBox.setPadding(new Insets(10, 10, 5, 10));
+
+        HBox pesquisaAcoesBox = new HBox(12, campoPesquisa, btnAdd, btnEdit, btnDelete);
+        pesquisaAcoesBox.setAlignment(Pos.CENTER_RIGHT);
+        pesquisaAcoesBox.setPadding(new Insets(5, 565, 15, 10));
+
+        VBox topoBox = new VBox(5, logoTituloBox, pesquisaAcoesBox);
+        mainGrid.add(topoBox, 0, 0, 2, 1);
+
+        // Tabela (coluna esquerda)
         table = new TableView<>();
-        table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
-        table.setPrefSize(875, 800);
-        table.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
-        table.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.getStyleClass().add("table-view");
 
-        // Colunas da tabela
+        // Configuração das colunas
         TableColumn<Produto, String> colNome = new TableColumn<>("Nome");
         colNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
-        colNome.setPrefWidth(420);
+        colNome.setPrefWidth(400);
 
         TableColumn<Produto, String> colCodBarras = new TableColumn<>("Código de Barras");
         colCodBarras.setCellValueFactory(new PropertyValueFactory<>("codBarras"));
-        colCodBarras.setPrefWidth(250);
+        colCodBarras.setPrefWidth(100);
 
-        //coluna de preços com formatação
         TableColumn<Produto, String> colPreco = new TableColumn<>("Preço (R$)");
-        colPreco.setCellValueFactory(cellData -> {
-            Double preco = cellData.getValue().getPreco();
-            DecimalFormat df = new DecimalFormat("#,##0.00 R$");
-            return new javafx.beans.property.SimpleStringProperty(df.format(preco));
+        colPreco.setCellValueFactory(cell -> {
+            Double preco = cell.getValue().getPreco();
+            DecimalFormat df = new DecimalFormat("R$ #,##0.00");
+            return new SimpleStringProperty(df.format(preco));
         });
-        colPreco.setPrefWidth(183);
+        colPreco.setPrefWidth(50);
 
         table.getColumns().addAll(colNome, colCodBarras, colPreco);
 
-        // Carrega os dados na tabela
+        // Adiciona a tabela em um ScrollPane
+        ScrollPane scrollTable = new ScrollPane(table);
+        scrollTable.setFitToWidth(true);
+        scrollTable.setFitToHeight(true);
+        mainGrid.add(scrollTable, 1, 1);
+
+        // Botões Home e Sair (coluna direita, inferior)
+        Button btnVoltar = criarBotaoGrande("Home", "/img/icon/casa.png");
+        Button btnSair = criarBotaoGrande("Sair do Sistema", "/img/icon/fechar.png");
+
+        VBox rightButtonsBox = new VBox(15, btnVoltar, btnSair);
+        rightButtonsBox.setAlignment(Pos.BOTTOM_LEFT);
+        rightButtonsBox.setPadding(new Insets(0, 20, 20, 0));
+        mainGrid.add(rightButtonsBox, 0, 1);
+
+        // Carregar dados e configurar eventos
         carregarProdutos();
 
-        // Ações dos botões
+        table.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            produtoSelecionado = newSelection;
+            btnEdit.setDisable(newSelection == null);
+            btnDelete.setDisable(newSelection == null);
+        });
+
         btnAdd.setOnAction(e -> abrirFormularioProduto(null));
-        btnEditar.setOnAction(e -> {
-            Produto selecionado = table.getSelectionModel().getSelectedItem();
-                        if (selecionado != null) {
-                abrirFormularioProduto(selecionado);
-            } else {
-                alerta("Selecione um produto para editar.");
+        btnEdit.setOnAction(e -> {
+            if (produtoSelecionado != null) {
+                abrirFormularioProduto(produtoSelecionado);
             }
         });
-        btnApagar.setOnAction(e -> {
-            Produto selecionado = table.getSelectionModel().getSelectedItem();
-            if (selecionado != null) {
-                apagarProduto(selecionado);
-            } else {
-                alerta("Selecione um produto para apagar.");
+        btnDelete.setOnAction(e -> {
+            if (produtoSelecionado != null) {
+                apagarProduto(produtoSelecionado);  
             }
         });
 
-        btnVoltar.setOnAction(e -> {
-            try {
-                String cargo = AutenticarUser.getCargo();
-                switch (cargo) {
-                    case "Administrador":
-                        new TelaHomeADM(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar(stage);
-                        break;
-                    case "Moderador":
-                        new TelaHomeMOD(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar(stage);
-                        break;
-                    case "Funcionário":
-                        new TelaHomeFUN(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar(stage);
-                        break;
-                    default:
-                        System.out.println("Cargo não reconhecido: " + cargo);
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                alerta("Erro ao retornar para a tela principal.");
-            }
-        });
+        btnVoltar.setOnAction(e -> voltarParaHome(stage));
+        btnSair.setOnAction(e -> confirmarSaida(stage));
 
-        btnSair.setOnAction(e -> {
-            Alert alert = new Alert(AlertType.CONFIRMATION);
-            alert.setTitle("Confirmação de Saída");
-            alert.setHeaderText("Deseja realmente sair do sistema?");
-            alert.initOwner(stage);
-            alert.showAndWait().ifPresent(resp -> {
-                if (resp == ButtonType.OK) {
-                    stage.close();
-                }
-            });
-        });
-
-        // Layout dos botões
-        VBox botoes = new VBox(10, btnAdd, btnEditar, btnApagar, btnVoltar, btnSair);
-        botoes.setPadding(new Insets(10));
-        botoes.setAlignment(Pos.BOTTOM_LEFT);
-
-        // Container da tabela, alinhada no canto superior esquerdo
-        VBox tabelaContainer = new VBox(table);
-        tabelaContainer.setAlignment(Pos.TOP_LEFT);
-        tabelaContainer.setPadding(new Insets(35)); // menos padding para não criar muito espaço
-
-        // Layout principal
-        BorderPane layout = new BorderPane();
-
-        // Topo com logo e imagem título
-        layout.setTop(topoBox);
-
-        // Tabela no centro e botões à direita
-        layout.setCenter(tabelaContainer);
-        layout.setRight(botoes);
-
-        // Ajuste de margem para os botões
-        BorderPane.setMargin(botoes, new Insets(20));
-
-        // Estilo CSS
-        layout.getStyleClass().add("produtos");
-
-        // Cena e configurações do stage
-        Scene scene = new Scene(layout, 1000, 600);
+        // Cena e Stage
+        Scene scene = new Scene(mainGrid, 1100, 700);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Módulo de Produtos");
-        stage.setFullScreen(true);
-        stage.setResizable(true);
+        stage.setMinWidth(800);
+        stage.setMinHeight(600);
         stage.show();
     }
 
-    // Método para carregar produtos do banco na tabela
-    public void carregarProdutos() {
+    private Button criarBotaoAcao(String caminhoIcone, String tooltip) {
+        Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
+        ImageView icon = new ImageView(img);
+        icon.setFitWidth(20);
+        icon.setFitHeight(20);
+        
+        Button btn = new Button("", icon);
+        btn.getStyleClass().add("acao"); // Adiciona a classe CSS
+        
+        // Adiciona classe extra para o botão de deletar
+        if (tooltip.toLowerCase().contains("apagar")) {
+            btn.getStyleClass().add("delete");
+        }
+        
+        btn.setTooltip(new Tooltip(tooltip));
+        btn.setPrefSize(40, 40);
+        return btn;
+    }
+
+    private Button criarBotaoGrande(String texto, String caminhoIcone) {
+        ImageView icon = new ImageView(new Image(getClass().getResourceAsStream(caminhoIcone)));
+        icon.setFitWidth(32);
+        icon.setFitHeight(32);
+        
+        Button btn = new Button(texto, icon);
+        btn.setPrefWidth(250);
+        return btn;
+    }
+
+    private void carregarProdutos() {
         listaProdutos = FXCollections.observableArrayList();
         String sql = "SELECT ID_Produto, Nome, Cod_Barras, Preco FROM produtos ORDER BY Nome";
-        System.out.println("Executando consulta: " + sql);
-        
+
         try (Connection con = getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
-            int count = 0;
             while (rs.next()) {
-                count++;
-                Produto p = new Produto(
-                        rs.getInt("ID_Produto"),
-                        rs.getString("Nome"),
-                        rs.getString("Cod_Barras"),
-                        rs.getDouble("Preco")
-                );
-                System.out.println("Produto encontrado: " + p.getNome());
-                listaProdutos.add(p);
+                listaProdutos.add(new Produto(
+                    rs.getInt("ID_Produto"),
+                    rs.getString("Nome"),
+                    rs.getString("Cod_Barras"),
+                    rs.getDouble("Preco")
+                ));
             }
-            System.out.println("Total de produtos carregados: " + count);
             table.setItems(listaProdutos);
-            table.refresh();
         } catch (SQLException e) {
-            e.printStackTrace();
-            alerta("Erro ao carregar produtos do banco: " + e.getMessage());
+            mostrarAlertaErro("Erro ao carregar produtos", "Erro ao carregar produtos do banco: " + e.getMessage());
         }
     }
 
-    // Abre o formulário para adicionar ou editar produto
+    private void filtrarProdutos(String filtro) {
+        if (listaProdutos == null || filtro == null || filtro.isEmpty()) {
+            table.setItems(listaProdutos);
+            return;
+        }
+
+        String filtroLower = filtro.toLowerCase();
+        ObservableList<Produto> filtrados = listaProdutos.filtered(p -> 
+            p.getNome().toLowerCase().contains(filtroLower) || 
+            p.getCodBarras().toLowerCase().contains(filtroLower)
+        );
+        table.setItems(filtrados);
+    }
+
     private void abrirFormularioProduto(Produto produto) {
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.setTitle(produto == null ? "Adicionar Produto" : "Editar Produto");
 
-        // Campos do formulário
-        Label lblNome = new Label("Nome:");
-        TextField tfNome = new TextField();
-        tfNome.getStyleClass().add("text-fill-tbl");
+        TextField txtNome = new TextField();
+        txtNome.setPromptText("Nome do Produto");
+        txtNome.setPrefWidth(250);
 
-        Label lblCodBarras = new Label("Código de Barras:");
-        TextField tfCodBarras = new TextField();
-        Label lblPreco = new Label("Preço (R$):");
-        TextField tfPreco = new TextField();
+        TextField txtCodBarras = new TextField();
+        txtCodBarras.setPromptText("Código de Barras");
+        txtCodBarras.setPrefWidth(250);
 
-        // Se for edição, preencher os campos
+        TextField txtPreco = new TextField();
+        txtPreco.setPromptText("Preço (R$)");
+        txtPreco.setPrefWidth(250);
+
         if (produto != null) {
-            tfNome.setText(produto.getNome());
-            tfCodBarras.setText(produto.getCodBarras());
-            DecimalFormat df = new DecimalFormat("#,##0.00");
-            tfPreco.setText(df.format(produto.getPreco()));
-
+            txtNome.setText(produto.getNome());
+            txtCodBarras.setText(produto.getCodBarras());
+            txtPreco.setText(String.format("%.2f", produto.getPreco()));
         }
 
-        // Botões do formulário
         Button btnSalvar = new Button("Salvar");
-        Button btnCancelar = new Button("Cancelar");
+        btnSalvar.setDefaultButton(true);
+        btnSalvar.setOnAction(e -> salvarProduto(produto, txtNome, txtCodBarras, txtPreco, dialog));
 
-        // Ação do botão salvar
-        btnSalvar.setOnAction(e -> {
-            String nome = tfNome.getText().trim();
-            String codBarras = tfCodBarras.getText().trim();
-            String precoStr = tfPreco.getText().trim();
+        GridPane formGrid = new GridPane();
+        formGrid.setHgap(10);
+        formGrid.setVgap(10);
+        formGrid.setPadding(new Insets(10));
+        
+        formGrid.add(new Label("Nome:"), 0, 0);
+        formGrid.add(txtNome, 1, 0);
+        formGrid.add(new Label("Código de Barras:"), 0, 1);
+        formGrid.add(txtCodBarras, 1, 1);
+        formGrid.add(new Label("Preço (R$):"), 0, 2);
+        formGrid.add(txtPreco, 1, 2);
+        formGrid.add(btnSalvar, 1, 3);
 
-            // Validação
-            if (nome.isEmpty() || codBarras.isEmpty() || precoStr.isEmpty()) {
-                alerta("Preencha todos os campos!");
-                return;
-            }
-
-            double preco;
-            try {
-            preco = Double.parseDouble(precoStr.replace(",", "."));
-            } catch (NumberFormatException ex) {
-                alerta("Preço inválido!");
-                return;
-            }
-
-            if (produto == null) {
-                if (inserirProduto(new Produto(0, nome, codBarras, preco))) {
-                    carregarProdutos();
-                    dialog.close();
-                }
-            } else {
-                produto.setNome(nome);
-                produto.setCodBarras(codBarras);
-                produto.setPreco(preco);
-                if (atualizarProduto(produto)) {
-                    carregarProdutos();
-                    dialog.close();
-                }
-            }
-        });
-
-        // Ação do botão cancelar
-        btnCancelar.setOnAction(e -> dialog.close());
-
-        // Layout do formulário
-        GridPane grid = new GridPane();
-        grid.setVgap(10);
-        grid.setHgap(10);
-        grid.setPadding(new Insets(15));
-        grid.add(lblNome, 0, 0);
-        grid.add(tfNome, 1, 0);
-        grid.add(lblCodBarras, 0, 1);
-        grid.add(tfCodBarras, 1, 1);
-        grid.add(lblPreco, 0, 2);
-        grid.add(tfPreco, 1, 2);
-        HBox botoes = new HBox(10, btnSalvar, btnCancelar);
-        grid.add(botoes, 1, 3);
-        botoes.setAlignment(Pos.CENTER_RIGHT);
-
-        Scene scene = new Scene(grid);
+        Scene scene = new Scene(formGrid);
+        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
         dialog.setScene(scene);
         dialog.showAndWait();
     }
 
-    // Insere novo produto no banco
-    private boolean inserirProduto(Produto p) {
-        String sql = "INSERT INTO produtos (Nome, Cod_Barras, Preco) VALUES (?, ?, ?)";
-        try (Connection con = getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+    private void salvarProduto(Produto produto, TextField txtNome, TextField txtCodBarras, 
+                             TextField txtPreco, Stage dialog) {
+        String nome = txtNome.getText().trim();
+        String codBarras = txtCodBarras.getText().trim();
+        String precoStr = txtPreco.getText().trim();
 
-            ps.setString(1, p.getNome());
-            ps.setString(2, p.getCodBarras());
-            ps.setDouble(3, p.getPreco());
-            ps.executeUpdate();
-            return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            alerta("Erro ao inserir produto: " + e.getMessage());
-            return false;
+        if (nome.isEmpty() || codBarras.isEmpty() || precoStr.isEmpty()) {
+            mostrarAlertaErro("Campos obrigatórios", "Preencha todos os campos.");
+            return;
         }
+
+        double preco;
+        try {
+            preco = Double.parseDouble(precoStr.replace(",", "."));
+            if (preco <= 0) {
+                mostrarAlertaErro("Preço inválido", "O preço deve ser maior que zero.");
+                return;
+            }
+        } catch (NumberFormatException ex) {
+            mostrarAlertaErro("Preço inválido", "Use números com ponto ou vírgula decimal.");
+            return;
+        }
+
+        int idProduto = produto != null ? produto.getId() : 0;
+        if (validarProdutoExistente(nome, codBarras, idProduto)) {
+            return;
+        }
+
+        if (produto == null) {
+            inserirProduto(new Produto(0, nome, codBarras, preco));
+        } else {
+            produto.setNome(nome);
+            produto.setCodBarras(codBarras);
+            produto.setPreco(preco);
+            atualizarProduto(produto);
+        }
+        dialog.close();
     }
 
-    // Atualiza produto no banco
-    private boolean atualizarProduto(Produto p) {
-        String sql = "UPDATE produtos SET Nome = ?, Cod_Barras = ?, Preco = ? WHERE ID_Produto = ?";
+    private boolean validarProdutoExistente(String nome, String codBarras, int idProduto) {
+        String sql = "SELECT ID_Produto, Nome, Cod_Barras FROM produtos WHERE (Nome = ? OR Cod_Barras = ?) AND ID_Produto != ?";
+        
         try (Connection con = getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setString(1, p.getNome());
-            ps.setString(2, p.getCodBarras());
-            ps.setDouble(3, p.getPreco());
-            ps.setInt(4, p.getId());
-            ps.executeUpdate();
-            return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            alerta("Erro ao atualizar produto: " + e.getMessage());
-            return false;
-        }
-    }
-
-    // Apaga produto
-    private void apagarProduto(Produto p) {
-        Alert confirm = new Alert(AlertType.CONFIRMATION);
-        confirm.setTitle("Confirmação");
-        confirm.setHeaderText("Deseja realmente apagar o produto '" + p.getNome() + "'?");
-        confirm.showAndWait().ifPresent(resp -> {
-            if (resp == ButtonType.OK) {
-                String sql = "DELETE FROM produtos WHERE ID_Produto = ?";
-                try (Connection con = getConnection();
-                     PreparedStatement ps = con.prepareStatement(sql)) {
-
-                    ps.setInt(1, p.getId());
-                    ps.executeUpdate();
-                    carregarProdutos();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                    alerta("Erro ao apagar produto: " + e.getMessage());
+            
+            ps.setString(1, nome);
+            ps.setString(2, codBarras);
+            ps.setInt(3, idProduto);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int idExistente = rs.getInt("ID_Produto");
+                    String nomeExistente = rs.getString("Nome");
+                    String codBarrasExistente = rs.getString("Cod_Barras");
+                    
+                    String mensagem;
+                    if (nomeExistente.equalsIgnoreCase(nome) && codBarrasExistente.equalsIgnoreCase(codBarras)) {
+                        mensagem = "Já existe um produto com este nome e código de barras!";
+                    } else if (nomeExistente.equalsIgnoreCase(nome)) {
+                        mensagem = "Já existe um produto com este nome!";
+                    } else {
+                        mensagem = "Já existe um produto com este código de barras!";
+                    }
+                    
+                    Alert alert = new Alert(AlertType.WARNING);
+                    alert.setTitle("Produto Existente");
+                    alert.setHeaderText("Conflito ao salvar produto");
+                    alert.setContentText(mensagem);
+                    alert.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+                    
+                    ButtonType btnIrParaProduto = new ButtonType("Ir para o Produto", ButtonBar.ButtonData.OTHER);
+                    ButtonType btnFechar = new ButtonType("Fechar", ButtonBar.ButtonData.CANCEL_CLOSE);
+                    alert.getButtonTypes().setAll(btnIrParaProduto, btnFechar);
+                    
+                    Optional<ButtonType> result = alert.showAndWait();
+                    if (result.isPresent() && result.get() == btnIrParaProduto) {
+                        selecionarProdutoNaTabela(idExistente);
+                    }
+                    return true;
                 }
             }
-        });
+        } catch (SQLException e) {
+            mostrarAlertaErro("Erro de validação", "Erro ao validar produto: " + e.getMessage());
+        }
+        return false;
     }
 
-    // Método utilitário para mostrar alertas
-    private void alerta(String mensagem) {
-        Alert alert = new Alert(AlertType.INFORMATION);
-        alert.setTitle("Informação");
+    private void selecionarProdutoNaTabela(int idProduto) {
+        for (Produto p : listaProdutos) {
+            if (p.getId() == idProduto) {
+                table.getSelectionModel().select(p);
+                table.scrollTo(p);
+                break;
+            }
+        }
+    }
+
+    private void inserirProduto(Produto produto) {
+        String sql = "INSERT INTO produtos (Nome, Cod_Barras, Preco) VALUES (?, ?, ?)";
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setString(1, produto.getNome());
+            ps.setString(2, produto.getCodBarras());
+            ps.setDouble(3, produto.getPreco());
+            
+            int rows = ps.executeUpdate();
+            if (rows > 0) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        produto.setId(rs.getInt(1));
+                        listaProdutos.add(produto);
+                        mostrarMensagemSucesso("Produto adicionado com sucesso!");
+                    }
+                }
+            } else {
+                mostrarAlertaErro("Erro ao adicionar", "Erro ao adicionar produto.");
+            }
+        } catch (SQLException e) {
+            mostrarAlertaErro("Erro no banco de dados", "Erro ao adicionar produto: " + e.getMessage());
+        }
+    }
+
+    private void atualizarProduto(Produto produto) {
+        String sql = "UPDATE produtos SET Nome=?, Cod_Barras=?, Preco=? WHERE ID_Produto=?";
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, produto.getNome());
+            ps.setString(2, produto.getCodBarras());
+            ps.setDouble(3, produto.getPreco());
+            ps.setInt(4, produto.getId());
+            
+            int rows = ps.executeUpdate();
+            if (rows > 0) {
+                int index = listaProdutos.indexOf(produto);
+                if (index >= 0) {
+                    listaProdutos.set(index, produto);
+                }
+                mostrarMensagemSucesso("Produto atualizado com sucesso!");
+            } else {
+                mostrarAlertaErro("Erro ao atualizar", "Erro ao atualizar produto.");
+            }
+        } catch (SQLException e) {
+            mostrarAlertaErro("Erro no banco de dados", "Erro ao atualizar produto: " + e.getMessage());
+        }
+    }
+
+    private void apagarProduto(Produto produto) {
+        Alert confirm = new Alert(AlertType.CONFIRMATION);
+        confirm.setTitle("Confirmação");
+        confirm.setHeaderText("Deseja apagar o produto: " + produto.getNome() + "?");
+        confirm.setContentText("Esta ação não pode ser desfeita.");
+        confirm.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            String sql = "DELETE FROM produtos WHERE ID_Produto = ?";
+            try (Connection con = getConnection();
+                 PreparedStatement ps = con.prepareStatement(sql)) {
+                
+                ps.setInt(1, produto.getId());
+                int rows = ps.executeUpdate();
+                if (rows > 0) {
+                    listaProdutos.remove(produto);
+                    mostrarMensagemSucesso("Produto apagado com sucesso!");
+                } else {
+                    mostrarAlertaErro("Erro ao apagar", "Erro ao apagar produto.");
+                }
+            } catch (SQLException e) {
+                mostrarAlertaErro("Erro no banco de dados", "Erro ao apagar produto: " + e.getMessage());
+            }
+        }
+    }
+
+    private void voltarParaHome(Stage stage) {
+        try {
+            String cargo = AutenticarUser.getCargo();
+            switch (cargo) {
+                case "Administrador":
+                    new TelaHomeADM(AutenticarUser.getNome(), cargo).mostrar(stage);
+                    break;
+                case "Moderador":
+                    new TelaHomeMOD(AutenticarUser.getNome(), cargo).mostrar(stage);
+                    break;
+                case "Funcionário":
+                    new TelaHomeFUN(AutenticarUser.getNome(), cargo).mostrar(stage);
+                    break;
+                default:
+                    mostrarAlertaErro("Cargo inválido", "Cargo não reconhecido: " + cargo);
+            }
+        } catch (Exception ex) {
+            mostrarAlertaErro("Erro de navegação", "Erro ao retornar para a tela principal.");
+        }
+    }
+
+    private void confirmarSaida(Stage stage) {
+        Alert alert = new Alert(AlertType.CONFIRMATION);
+        alert.setTitle("Confirmação de Saída");
+        alert.setHeaderText("Deseja realmente sair do sistema?");
+        alert.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            stage.close();
+        }
+    }
+
+    private void mostrarMensagemSucesso(String texto) {
+        lblMensagemSucesso.setText(texto);
+        lblMensagemSucesso.setVisible(true);
+
+        PauseTransition pause = new PauseTransition(Duration.seconds(4));
+        pause.setOnFinished(e -> lblMensagemSucesso.setVisible(false));
+        pause.play();
+    }
+
+    private void mostrarAlertaErro(String titulo, String mensagem) {
+        Alert alert = new Alert(AlertType.ERROR);
+        alert.setTitle(titulo);
         alert.setHeaderText(null);
         alert.setContentText(mensagem);
+        alert.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
         alert.showAndWait();
     }
 }
