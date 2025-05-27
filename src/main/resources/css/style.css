@@ -122,34 +122,6 @@
 .button.acao.delete:hover {
     -fx-background-color: #f44336; /* Vermelho mais claro */
 }/* ESTILO ESPECÍFICO PARA BOTÕES DE AÇÃO (ÍCONES) */
-.button.acao {
-    -fx-background-radius: 8; /* Bordas mais arredondadas */
-    -fx-background-color: linear-gradient(to bottom, #c09727, #e8b923); 
-    -fx-border-radius: 8;
-    -fx-padding: 8; /* Espaçamento interno reduzido */
-    -fx-min-width: 40px; /* Tamanho fixo */
-    -fx-min-height: 40px;
-    -fx-max-width: 40px;
-    -fx-max-height: 40px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 3, 0, 0, 1);
-    -fx-transition: all 0.3s; /* Transição suave para hover */
-}
-
-.button.acao:hover {
-    -fx-background-color: linear-gradient(to bottom, #c5a332, #eec341); /* Cor mais clara ao passar mouse */
-    -fx-scale-x: 1.15; /* Efeito de expansão leve */
-    -fx-scale-y: 1.15;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 5, 0, 0, 2);
-}
-
-/* Estilo específico para o botão de deletar */
-.button.acao.delete {
-    -fx-background-color: #d32f2f; /* Vermelho para delete */
-}
-
-.button.acao.delete:hover {
-    -fx-background-color: #f44336; /* Vermelho mais claro */
-}
 
 /* ESTILOS PARA CAMPOS DE TEXTO - FUNDO BRANCO E TEXTO PRETO */
 .text-field {
