@@ -35,35 +35,43 @@ public class Produtos {
     private Label lblMensagemSucesso;
     private Produto produtoSelecionado;
 
-private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=false;trustServerCertificate=true;";
-private static final String USER = "sa";
-private static final String PASSWORD = "Mendes@12345!";
-
+    private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=false;trustServerCertificate=true;";
+    private static final String USER = "sa";
+    private static final String PASSWORD = "Mendes@12345!";
 
     private Connection getConnection() throws SQLException {
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 
     public void show(Stage stage) {
-        // Configuração do Layout Principal
-        GridPane mainGrid = new GridPane();
-        mainGrid.setHgap(20);
-        mainGrid.setVgap(10);
-        mainGrid.setPadding(new Insets(15));
+        // Configuração do Layout Principal usando BorderPane
+        BorderPane mainPane = new BorderPane();
         
-        ColumnConstraints colEsquerda = new ColumnConstraints();
-        colEsquerda.setPercentWidth(40);
-        ColumnConstraints colDireita = new ColumnConstraints();
-        colDireita.setPercentWidth(60);
-        mainGrid.getColumnConstraints().addAll(colEsquerda, colDireita);
-
-        RowConstraints rowTopo = new RowConstraints();
-        rowTopo.setPrefHeight(190);
-        RowConstraints rowConteudo = new RowConstraints();
-        rowConteudo.setVgrow(Priority.ALWAYS);
-        mainGrid.getRowConstraints().addAll(rowTopo, rowConteudo);
-
-        // Topo (ocupa as duas colunas)
+        // Área esquerda (botões laterais)
+        VBox leftMenu = new VBox(15);
+        leftMenu.setPadding(new Insets(20));
+        leftMenu.setStyle("-fx-background-color: #2a3f54; -fx-border-color: #1a2a3a; -fx-border-width: 0 1 0 0;");
+        leftMenu.setPrefWidth(200);
+        leftMenu.setMinWidth(200);
+        
+        // Botões laterais
+        Button btnVoltar = criarBotaoLateral("Home", "/img/icon/casa.png");
+        Button btnSair = criarBotaoLateral("Sair do Sistema", "/img/icon/fechar.png");
+        
+        // Espaçador para alinhar os botões
+        Region spacer = new Region();
+        spacer.setPrefHeight(Double.MAX_VALUE);
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+        
+        leftMenu.getChildren().addAll(btnVoltar, spacer, btnSair);
+        
+        // Área central (conteúdo principal)
+        GridPane contentGrid = new GridPane();
+        contentGrid.setHgap(20);
+        contentGrid.setVgap(10);
+        contentGrid.setPadding(new Insets(15));
+        
+        // Topo com logo e título
         Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(130);
@@ -83,6 +91,7 @@ private static final String PASSWORD = "Mendes@12345!";
         campoPesquisa.setPrefWidth(400);
         campoPesquisa.textProperty().addListener((obs, oldVal, newVal) -> filtrarProdutos(newVal));
 
+        // Botões de ação
         Button btnAdd = criarBotaoAcao("/img/icon/lista.png", "Adicionar Produto");
         Button btnEdit = criarBotaoAcao("/img/icon/lapis.png", "Editar Produto");
         Button btnDelete = criarBotaoAcao("/img/icon/fechar.png", "Apagar Produto");
@@ -100,17 +109,16 @@ private static final String PASSWORD = "Mendes@12345!";
 
         HBox pesquisaAcoesBox = new HBox(12, campoPesquisa, btnAdd, btnEdit, btnDelete);
         pesquisaAcoesBox.setAlignment(Pos.CENTER_RIGHT);
-        pesquisaAcoesBox.setPadding(new Insets(5, 565, 15, 10));
+        pesquisaAcoesBox.setPadding(new Insets(5, 0, 15, 10));
 
         VBox topoBox = new VBox(5, logoTituloBox, pesquisaAcoesBox);
-        mainGrid.add(topoBox, 0, 0, 2, 1);
+        contentGrid.add(topoBox, 0, 0, 2, 1);
 
-        // Tabela (coluna esquerda)
+        // Tabela de produtos
         table = new TableView<>();
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.getStyleClass().add("table-view");
 
-        // Configuração das colunas
         TableColumn<Produto, String> colNome = new TableColumn<>("Nome");
         colNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
         colNome.setPrefWidth(400);
@@ -129,20 +137,14 @@ private static final String PASSWORD = "Mendes@12345!";
 
         table.getColumns().addAll(colNome, colCodBarras, colPreco);
 
-        // Adiciona a tabela em um ScrollPane
         ScrollPane scrollTable = new ScrollPane(table);
         scrollTable.setFitToWidth(true);
         scrollTable.setFitToHeight(true);
-        mainGrid.add(scrollTable, 1, 1);
+        contentGrid.add(scrollTable, 0, 1, 2, 1);
 
-        // Botões Home e Sair (coluna direita, inferior)
-        Button btnVoltar = criarBotaoGrande("Home", "/img/icon/casa.png");
-        Button btnSair = criarBotaoGrande("Sair do Sistema", "/img/icon/fechar.png");
-
-        VBox rightButtonsBox = new VBox(15, btnVoltar, btnSair);
-        rightButtonsBox.setAlignment(Pos.BOTTOM_LEFT);
-        rightButtonsBox.setPadding(new Insets(0, 20, 20, 0));
-        mainGrid.add(rightButtonsBox, 0, 1);
+        // Configuração do layout principal
+        mainPane.setLeft(leftMenu);
+        mainPane.setCenter(contentGrid);
 
         // Carregar dados e configurar eventos
         carregarProdutos();
@@ -169,7 +171,7 @@ private static final String PASSWORD = "Mendes@12345!";
         btnSair.setOnAction(e -> confirmarSaida(stage));
 
         // Cena e Stage
-        Scene scene = new Scene(mainGrid, 1100, 700);
+        Scene scene = new Scene(mainPane, 1100, 700);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
         stage.setScene(scene);
@@ -180,32 +182,59 @@ private static final String PASSWORD = "Mendes@12345!";
     }
 
     private Button criarBotaoAcao(String caminhoIcone, String tooltip) {
-        Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
-        ImageView icon = new ImageView(img);
-        icon.setFitWidth(20);
-        icon.setFitHeight(20);
-        
-        Button btn = new Button("", icon);
-        btn.getStyleClass().add("acao"); // Adiciona a classe CSS
-        
-        // Adiciona classe extra para o botão de deletar
-        if (tooltip.toLowerCase().contains("apagar")) {
-            btn.getStyleClass().add("delete");
+        try {
+            Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
+            ImageView icon = new ImageView(img);
+            icon.setFitWidth(20);
+            icon.setFitHeight(20);
+            
+            Button btn = new Button();
+            btn.setGraphic(icon);
+            btn.getStyleClass().add("acao");
+            
+            if (tooltip.toLowerCase().contains("apagar")) {
+                btn.getStyleClass().add("delete");
+            }
+            
+            btn.setTooltip(new Tooltip(tooltip));
+            btn.setPrefSize(40, 40);
+            return btn;
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar ícone: " + caminhoIcone);
+            return new Button(tooltip); // Fallback se o ícone não carregar
         }
-        
-        btn.setTooltip(new Tooltip(tooltip));
-        btn.setPrefSize(40, 40);
-        return btn;
     }
 
-    private Button criarBotaoGrande(String texto, String caminhoIcone) {
-        ImageView icon = new ImageView(new Image(getClass().getResourceAsStream(caminhoIcone)));
-        icon.setFitWidth(32);
-        icon.setFitHeight(32);
-        
-        Button btn = new Button(texto, icon);
-        btn.setPrefWidth(250);
-        return btn;
+    private Button criarBotaoLateral(String texto, String caminhoIcone) {
+        try {
+            Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
+            ImageView icon = new ImageView(img);
+            icon.setFitWidth(20);
+            icon.setFitHeight(20);
+            icon.setStyle("-fx-fill: white;");
+            
+            Label textLabel = new Label(texto);
+            textLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
+            
+            HBox content = new HBox(10, icon, textLabel);
+            content.setAlignment(Pos.CENTER_LEFT);
+            
+            Button btn = new Button();
+            btn.setGraphic(content);
+            btn.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+            btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
+            btn.setPrefWidth(180);
+            btn.setPrefHeight(40);
+            
+            // Efeito hover
+            btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: linear-gradient(to left,rgba(192, 151, 39, 0.39),rgba(232, 186, 35, 0.18));  -fx-border-radius: 4; -fx-background-radius: 4;"));
+            btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;"));
+            
+            return btn;
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar ícone: " + caminhoIcone);
+            return new Button(texto); // Fallback se o ícone não carregar
+        }
     }
 
     private void carregarProdutos() {

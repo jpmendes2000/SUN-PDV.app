@@ -203,3 +203,23 @@
     -fx-border-radius: 10;
     -fx-background-radius: 10;
 }
+
+.side-panel {
+    -fx-background-color: #2a3f54;
+    -fx-border-color: #1a2a3a;
+    -fx-border-width: 0 1 0 0;
+}
+
+.side-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-alignment: center-left;
+    -fx-padding: 100px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+}
+
+.side-button:hover {
+    -fx-background-color: #012d5c;
+}
