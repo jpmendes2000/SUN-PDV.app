@@ -41,10 +41,6 @@ public class Produtos {
 
     private Connection getConnection() throws SQLException {
         return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-        String url = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=true;trustServerCertificate=true";
-        String user = "sa";
-        String password = "Jp081007!";
-        return DriverManager.getConnection(url, user, password);
     }
 
     public void show(Stage stage) {
