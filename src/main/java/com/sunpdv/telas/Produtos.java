@@ -35,12 +35,13 @@ public class Produtos {
     private Label lblMensagemSucesso;
     private Produto produtoSelecionado;
 
-    private static final String DB_URL = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=true;trustServerCertificate=true";
-    private static final String DB_USER = "sa";
-    private static final String DB_PASSWORD = "Mendes@12345!";
+private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=false;trustServerCertificate=true;";
+private static final String USER = "sa";
+private static final String PASSWORD = "Mendes@12345!";
+
 
     private Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 
     public void show(Stage stage) {
