@@ -46,7 +46,7 @@ public class LoginApp extends Application {
 
 public static String url = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=true;trustServerCertificate=true;";
 private static final String USER = "sa";
-private static final String PASSWORD = "Mendes@12345!";
+private static final String PASSWORD = "Senha@12345!";
 
 
     public static void main(String[] args) {
@@ -149,7 +149,7 @@ private static final String PASSWORD = "Mendes@12345!";
         root.setPadding(new Insets(20));
 
         Scene scene = new Scene(root, 680, 380);
-        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
 
         loginBtn.setOnMouseEntered(e -> {
             ScaleTransition st = new ScaleTransition(Duration.millis(150), loginBtn);
