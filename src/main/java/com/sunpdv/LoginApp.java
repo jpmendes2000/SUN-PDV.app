@@ -45,18 +45,15 @@ public class LoginApp extends Application {
     private static final int TEMPO_ESPERA = 120;
     private Timeline contagemRegressiva;
 
-    private static final String URL = "jdbc:sqlserver://localhost:1433;"
-            + "database=SUN_PDVlocal;"
-            + "user=sa;"
-            + "password=Jp081007!;"
-            + "encrypt=false;"
-            + "trustServerCertificate=true;"
-            + "loginTimeout=30;";
+public static String url = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=true;trustServerCertificate=true;";
+private static final String USER = "sa";
+private static final String PASSWORD = "Senha@12345!";
+
 
     public static void main(String[] args) {
         try {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            try (Connection conn = DriverManager.getConnection(URL)) {
+            try (Connection conn = DriverManager.getConnection(url, USER, PASSWORD)) {
                 System.out.println("Conexão com banco local OK!");
             }
         } catch (Exception e) {
@@ -153,7 +150,7 @@ public class LoginApp extends Application {
         root.setPadding(new Insets(20));
 
         Scene scene = new Scene(root, 680, 380);
-        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
 
         loginBtn.setOnMouseEntered(e -> {
             ScaleTransition st = new ScaleTransition(Duration.millis(150), loginBtn);
@@ -185,6 +182,7 @@ public class LoginApp extends Application {
                 protected String call() {
                     try {
                         return autenticarUsuario(email, senha);
+
                     } catch (Exception ex) {
                         ex.printStackTrace();
                         return "Erro: " + ex.getMessage();
@@ -243,7 +241,7 @@ public class LoginApp extends Application {
 
         stage.setScene(scene);
         stage.setTitle("Login - SUN PDV");
-        stage.setResizable(false);
+        stage.setResizable(true);
         stage.show();
     }
 
@@ -267,11 +265,11 @@ public class LoginApp extends Application {
     String emailCriptografado = criptografarAES(email);
     String senhaHash = hashSHA256(senha);
 
-    try (Connection conn = DriverManager.getConnection(URL)) {
-       String sql = "SELECT l.Nome, c.Cargo, l.ID_Permissao " +
-             "FROM login_sistema l " +
-             "INNER JOIN Cargo c ON l.ID_Cargo = c.ID_Cargo " +
-             "WHERE l.Email = ? AND l.Senha = ?";
+    try (Connection conn = DriverManager.getConnection(url, USER, PASSWORD)) {
+        String sql = "SELECT l.Nome, c.Cargo, l.ID_Permissao " +
+                     "FROM login_sistema l " +
+                     "INNER JOIN Cargo c ON l.ID_Cargo = c.ID_Cargo " +
+                     "WHERE l.Email = ? AND l.Senha = ?";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, emailCriptografado);
@@ -298,6 +296,7 @@ public class LoginApp extends Application {
         return "Erro ao autenticar: " + e.getMessage();
     }
 }
+
 
 
     private String criptografarAES(String texto) throws Exception {

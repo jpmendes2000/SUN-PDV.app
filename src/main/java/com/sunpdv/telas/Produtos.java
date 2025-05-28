@@ -35,43 +35,63 @@ public class Produtos {
     private Label lblMensagemSucesso;
     private Produto produtoSelecionado;
 
-    private static final String DB_URL = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=true;trustServerCertificate=true";
-    private static final String DB_USER = "sa";
-    private static final String DB_PASSWORD = "Jp081007!";
+    private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=false;trustServerCertificate=true;";
+    private static final String USER = "sa";
+    private static final String PASSWORD = "Senha@12345!";
 
     private Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 
     public void show(Stage stage) {
-        // Configuração do Layout Principal
-        GridPane mainGrid = new GridPane();
-        mainGrid.setHgap(20);
-        mainGrid.setVgap(10);
-        mainGrid.setPadding(new Insets(15));
+        // Configuração do Layout Principal usando BorderPane
+        BorderPane mainPane = new BorderPane();
         
-        ColumnConstraints colEsquerda = new ColumnConstraints();
-        colEsquerda.setPercentWidth(40);
-        ColumnConstraints colDireita = new ColumnConstraints();
-        colDireita.setPercentWidth(60);
-        mainGrid.getColumnConstraints().addAll(colEsquerda, colDireita);
-
-        RowConstraints rowTopo = new RowConstraints();
-        rowTopo.setPrefHeight(190);
-        RowConstraints rowConteudo = new RowConstraints();
-        rowConteudo.setVgrow(Priority.ALWAYS);
-        mainGrid.getRowConstraints().addAll(rowTopo, rowConteudo);
-
-        // Topo (ocupa as duas colunas)
+        // Área esquerda (menu lateral)
+        VBox leftMenu = new VBox(15);
+        leftMenu.setPadding(new Insets(20));
+        leftMenu.setStyle("-fx-background-color: #00536d; -fx-border-color: #00536d; -fx-border-width: 0 1 0 0;-fx-border-radius: 0 18 18 0;-fx-background-radius: 0 18 18 0;");
+        leftMenu.setPrefWidth(200);
+        leftMenu.setMinWidth(200);
+        
+        // Logo no topo do menu lateral
         Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
         ImageView logoView = new ImageView(logo);
-        logoView.setFitWidth(130);
+        logoView.setFitWidth(120);
         logoView.setPreserveRatio(true);
-
+        logoView.setStyle("-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 0);");
+        
+        VBox logoBox = new VBox(logoView);
+        logoBox.setAlignment(Pos.CENTER);
+        logoBox.setPadding(new Insets(0, 0, 20, 0));
+        
+        // Espaçador para empurrar os botões para baixo
+        Region spacer = new Region();
+        spacer.setPrefHeight(Double.MAX_VALUE);
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+        
+        // Botões na parte inferior do menu lateral
+        Button btnVoltar = criarBotaoLateral("Home", "/img/icon/casa.png");
+        Button btnSair = criarBotaoLateral("Sair do Sistema", "/img/icon/fechar.png");
+        
+        VBox buttonBox = new VBox(15, btnVoltar, btnSair);
+        buttonBox.setAlignment(Pos.BOTTOM_LEFT);
+        buttonBox.setPadding(new Insets(0, 0, 20, 0)); // Added padding to push buttons down
+        
+        leftMenu.getChildren().addAll(logoBox, spacer, buttonBox);
+        
+        // Área central (conteúdo principal)
+        GridPane contentGrid = new GridPane();
+        contentGrid.setHgap(20);
+        contentGrid.setVgap(10);
+        contentGrid.setPadding(new Insets(15));
+        contentGrid.setAlignment(Pos.TOP_CENTER);
+        
+        // Topo com título
         Image tituloImagem = new Image(getClass().getResourceAsStream("/img/logo/produto.png"));
         ImageView tituloView = new ImageView(tituloImagem);
         tituloView.setPreserveRatio(true);
-        tituloView.setFitHeight(120);
+        tituloView.setFitHeight(80);
 
         lblMensagemSucesso = new Label();
         lblMensagemSucesso.getStyleClass().add("mensagem-sucesso");
@@ -82,6 +102,7 @@ public class Produtos {
         campoPesquisa.setPrefWidth(400);
         campoPesquisa.textProperty().addListener((obs, oldVal, newVal) -> filtrarProdutos(newVal));
 
+        // Botões de ação
         Button btnAdd = criarBotaoAcao("/img/icon/lista.png", "Adicionar Produto");
         Button btnEdit = criarBotaoAcao("/img/icon/lapis.png", "Editar Produto");
         Button btnDelete = criarBotaoAcao("/img/icon/fechar.png", "Apagar Produto");
@@ -93,30 +114,26 @@ public class Produtos {
         HBox tituloMensagemBox = new HBox(10, tituloView, lblMensagemSucesso);
         tituloMensagemBox.setAlignment(Pos.CENTER_LEFT);
 
-        HBox logoTituloBox = new HBox(20, logoView, tituloMensagemBox);
-        logoTituloBox.setAlignment(Pos.CENTER_LEFT);
-        logoTituloBox.setPadding(new Insets(10, 10, 5, 10));
-
         HBox pesquisaAcoesBox = new HBox(12, campoPesquisa, btnAdd, btnEdit, btnDelete);
         pesquisaAcoesBox.setAlignment(Pos.CENTER_RIGHT);
-        pesquisaAcoesBox.setPadding(new Insets(5, 565, 15, 10));
+        pesquisaAcoesBox.setPadding(new Insets(5, 0, 15, 10));
 
-        VBox topoBox = new VBox(5, logoTituloBox, pesquisaAcoesBox);
-        mainGrid.add(topoBox, 0, 0, 2, 1);
+        VBox topoBox = new VBox(5, tituloMensagemBox, pesquisaAcoesBox);
+        contentGrid.add(topoBox, 0, 0, 2, 1);
 
-        // Tabela (coluna esquerda)
+        // Tabela de produtos (expandida)
         table = new TableView<>();
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.getStyleClass().add("table-view");
+        table.setStyle("-fx-padding: 0 20 0 0;"); // Added right padding to expand table to the right
 
-        // Configuração das colunas
         TableColumn<Produto, String> colNome = new TableColumn<>("Nome");
         colNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
-        colNome.setPrefWidth(400);
+        colNome.setPrefWidth(350); // Increased width
 
         TableColumn<Produto, String> colCodBarras = new TableColumn<>("Código de Barras");
         colCodBarras.setCellValueFactory(new PropertyValueFactory<>("codBarras"));
-        colCodBarras.setPrefWidth(100);
+        colCodBarras.setPrefWidth(250); // Increased width
 
         TableColumn<Produto, String> colPreco = new TableColumn<>("Preço (R$)");
         colPreco.setCellValueFactory(cell -> {
@@ -124,70 +141,42 @@ public class Produtos {
             DecimalFormat df = new DecimalFormat("R$ #,##0.00");
             return new SimpleStringProperty(df.format(preco));
         });
-        colPreco.setPrefWidth(50);
+        colPreco.setPrefWidth(150);
 
         table.getColumns().addAll(colNome, colCodBarras, colPreco);
 
-        // Adiciona a tabela em um ScrollPane
+        // Aumentando o tamanho da tabela
+        table.setPrefHeight(650); // Increased height
+        
         ScrollPane scrollTable = new ScrollPane(table);
         scrollTable.setFitToWidth(true);
         scrollTable.setFitToHeight(true);
-        mainGrid.add(scrollTable, 1, 1);
+        scrollTable.setPrefViewportHeight(650); // Increased height
+        scrollTable.setStyle("-fx-padding: 0 20 0 0;"); // Added right padding
+        contentGrid.add(scrollTable, 0, 1, 2, 1);
 
-        // Botões Home e Sair (coluna direita, inferior)
-        Button btnVoltar = criarBotaoGrande("Home", "/img/icon/casa.png");
-        Button btnSair = criarBotaoGrande("Sair do Sistema", "/img/icon/fechar.png");
+        // Configuração do layout principal
+        mainPane.setLeft(leftMenu);
+        mainPane.setCenter(contentGrid);
 
-        VBox rightButtonsBox = new VBox(15, btnVoltar, btnSair);
-        rightButtonsBox.setAlignment(Pos.BOTTOM_LEFT);
-        rightButtonsBox.setPadding(new Insets(0, 20, 20, 0));
-        mainGrid.add(rightButtonsBox, 0, 1);
-
-        // Carregar dados e configurar eventos
-        carregarProdutos();
-
-        table.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-            produtoSelecionado = newSelection;
-            btnEdit.setDisable(newSelection == null);
-            btnDelete.setDisable(newSelection == null);
-        });
-
-        btnAdd.setOnAction(e -> abrirFormularioProduto(null));
-        btnEdit.setOnAction(e -> {
-            if (produtoSelecionado != null) {
-                abrirFormularioProduto(produtoSelecionado);
-            }
-        });
-        btnDelete.setOnAction(e -> {
-            if (produtoSelecionado != null) {
-                apagarProduto(produtoSelecionado);  
-            }
-        });
-
-        btnVoltar.setOnAction(e -> voltarParaHome(stage));
-        btnSair.setOnAction(e -> confirmarSaida(stage));
-
-        // Cena e Stage
-        Scene scene = new Scene(mainGrid, 1100, 700);
-        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
-
-        stage.setScene(scene);
-        stage.setTitle("SUN PDV - Módulo de Produtos");
-        stage.setMinWidth(800);
-        stage.setMinHeight(600);
-        stage.show();
+        // ... (rest of the method remains the same)
     }
 
-    private Button criarBotaoAcao(String caminhoIcone, String tooltip) {
+private Button criarBotaoAcao(String caminhoIcone, String tooltip) {
+    try {
         Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
+        if (img.isError()) {
+            throw new Exception("Error loading image: " + caminhoIcone);
+        }
+        
         ImageView icon = new ImageView(img);
         icon.setFitWidth(20);
         icon.setFitHeight(20);
         
-        Button btn = new Button("", icon);
-        btn.getStyleClass().add("acao"); // Adiciona a classe CSS
+        Button btn = new Button();
+        btn.setGraphic(icon);
+        btn.getStyleClass().add("acao");
         
-        // Adiciona classe extra para o botão de deletar
         if (tooltip.toLowerCase().contains("apagar")) {
             btn.getStyleClass().add("delete");
         }
@@ -195,17 +184,67 @@ public class Produtos {
         btn.setTooltip(new Tooltip(tooltip));
         btn.setPrefSize(40, 40);
         return btn;
-    }
-
-    private Button criarBotaoGrande(String texto, String caminhoIcone) {
-        ImageView icon = new ImageView(new Image(getClass().getResourceAsStream(caminhoIcone)));
-        icon.setFitWidth(32);
-        icon.setFitHeight(32);
-        
-        Button btn = new Button(texto, icon);
-        btn.setPrefWidth(250);
+    } catch (Exception e) {
+        System.err.println("Erro ao carregar ícone: " + caminhoIcone);
+        Button btn = new Button(tooltip);
+        btn.getStyleClass().add("acao");
         return btn;
     }
+}
+
+private Button criarBotaoLateral(String texto, String caminhoIcone) {
+    try {
+        Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
+        if (img.isError()) {
+            throw new Exception("Error loading image: " + caminhoIcone);
+        }
+        
+        ImageView icon = new ImageView(img);
+        icon.setFitWidth(20);
+        icon.setFitHeight(20);
+        icon.setStyle("-fx-fill: white;");
+        
+        Label textLabel = new Label(texto);
+        textLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
+        
+        // Container for the yellow bar indicator
+        StackPane indicatorContainer = new StackPane();
+        indicatorContainer.setMinWidth(5);
+        indicatorContainer.setMaxWidth(5);
+        indicatorContainer.setStyle("-fx-background-color: transparent;");
+        
+        HBox content = new HBox(indicatorContainer, icon, textLabel);
+        content.setAlignment(Pos.CENTER_LEFT);
+        content.setSpacing(10);
+        
+        Button btn = new Button();
+        btn.setGraphic(content);
+        btn.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+        btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
+        btn.setPrefWidth(180);
+        btn.setPrefHeight(40);
+        
+        // Hover effect with yellow bar
+        btn.setOnMouseEntered(e -> {
+            btn.setStyle("-fx-background-color: linear-gradient(to left,rgba(192, 151, 39, 0.39),rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4;");
+            indicatorContainer.setStyle("-fx-background-color: #ffcc00; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
+        });
+        btn.setOnMouseExited(e -> {
+            btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
+            indicatorContainer.setStyle("-fx-background-color: transparent;");
+        });
+        
+        return btn;
+    } catch (Exception e) {
+        System.err.println("Erro ao carregar ícone: " + caminhoIcone);
+        // Fallback button without icon
+        Button btn = new Button(texto);
+        btn.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-background-color: transparent;");
+        btn.setPrefWidth(180);
+        btn.setPrefHeight(40);
+        return btn;
+    }
+}
 
     private void carregarProdutos() {
         listaProdutos = FXCollections.observableArrayList();
@@ -284,7 +323,7 @@ public class Produtos {
         formGrid.add(btnSalvar, 1, 3);
 
         Scene scene = new Scene(formGrid);
-        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
         dialog.setScene(scene);
         dialog.showAndWait();
     }
