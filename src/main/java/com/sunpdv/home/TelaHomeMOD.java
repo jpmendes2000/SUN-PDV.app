@@ -3,7 +3,6 @@ package com.sunpdv.home;
 import com.sunpdv.AutenticarUser;
 import com.sunpdv.telas.Caixa;
 import com.sunpdv.telas.Produtos;
-
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
@@ -13,6 +12,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -24,13 +24,11 @@ public class TelaHomeMOD {
     private String nome;
     private String cargo;
 
-    // Construtor com nome e cargo do usuário
     public TelaHomeMOD(String nome, String cargo) {
         this.nome = nome;
         this.cargo = cargo;
     }
 
-    // Classe interna para alertas de confirmação com estilo
     private static class CustomConfirmationAlert extends Alert {
         public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
             super(AlertType.CONFIRMATION);
@@ -45,96 +43,116 @@ public class TelaHomeMOD {
         }
     }
 
-    // Exibe a tela principal do moderador
-    public void mostrar(Stage stage) {
+    private Button criarBotaoLateral(String texto, String caminhoIcone) {
+        try {
+            Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
+            ImageView icon = new ImageView(img);
+            icon.setFitWidth(20);
+            icon.setFitHeight(20);
+            icon.setStyle("-fx-fill: white;");
+            
+            Label textLabel = new Label(texto);
+            textLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
+            
+            StackPane indicatorContainer = new StackPane();
+            indicatorContainer.setMinWidth(3);
+            indicatorContainer.setMaxWidth(3);
+            indicatorContainer.setMinHeight(30);
+            indicatorContainer.setMaxHeight(30);
+            indicatorContainer.setStyle("-fx-background-color: transparent;");
+            
+            HBox leftContent = new HBox(10, icon, textLabel);
+            leftContent.setAlignment(Pos.CENTER_LEFT);
+            
+            HBox content = new HBox(leftContent, new Region(), indicatorContainer);
+            content.setAlignment(Pos.CENTER_LEFT);
+            HBox.setHgrow(content.getChildren().get(1), Priority.ALWAYS);
+            
+            Button btn = new Button();
+            btn.setGraphic(content);
+            btn.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+            btn.setStyle("-fx-background-color: transparent;");
+            btn.setPrefWidth(280);
+            btn.setPrefHeight(42);
+            
+            btn.setOnMouseEntered(e -> {
+                btn.setStyle("-fx-background-color: linear-gradient(to left,rgba(192,151,39,0.39),rgba(232,186,35,0.18));");
+                indicatorContainer.setStyle("-fx-background-color:rgba(255,204,0,0.64);");
+            });
+            btn.setOnMouseExited(e -> {
+                btn.setStyle("-fx-background-color: transparent;");
+                indicatorContainer.setStyle("-fx-background-color: transparent;");
+            });
+            
+            return btn;
+        } catch (Exception e) {
+            Button btn = new Button(texto);
+            btn.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
+            btn.setPrefWidth(280);
+            return btn;
+        }
+    }
 
-        // Maximiza janela na tela do usuário
-        Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
-        stage.setX(screenBounds.getMinX());
-        stage.setY(screenBounds.getMinY());
-        stage.setWidth(screenBounds.getWidth());
-        stage.setHeight(screenBounds.getHeight());
+    public void mostrar(Stage stage) {
+        // Configuração do layout principal
+        BorderPane mainPane = new BorderPane();
+        
+        // Área esquerda (menu lateral)
+        VBox leftMenu = new VBox();
+        leftMenu.setStyle("-fx-background-color: #00536d;");
+        leftMenu.setPrefWidth(280);
+        leftMenu.setMinWidth(280);
 
         // Logo
         Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(120);
         logoView.setPreserveRatio(true);
+        
+        VBox logoBox = new VBox(logoView);
+        logoBox.setAlignment(Pos.CENTER);
+        logoBox.setPadding(new Insets(20, 0, 20, 0));
 
-        VBox topBox = new VBox(10, logoView);
-        topBox.setPadding(new Insets(20));
-        topBox.setAlignment(Pos.TOP_LEFT);
-
-        ImageView iconVendas = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/carrinho-de-compras.png")));
-        iconVendas.setFitWidth(32);
-        iconVendas.setFitHeight(32);
-
-        ImageView iconProdutos = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/lista.png")));
-        iconProdutos.setFitWidth(32);
-        iconProdutos.setFitHeight(32);
-
-        ImageView iconSair = new ImageView(new Image(getClass().getResourceAsStream("/img/icon/fechar.png")));
-        iconSair.setFitWidth(32);
-        iconSair.setFitHeight(32);
-
-        // Botões para moderador (menos opções que ADM)
-        Button btnVendas = new Button("Vendas", iconVendas);
-        Button btnProdutos = new Button("Gerenciar Produtos", iconProdutos);
-        Button btnSair = new Button("Sair do Sistema", iconSair);
-
-        double larguraPadrao = 250;
-        for (Button btn : new Button[]{btnVendas, btnProdutos, btnSair}) {
-            btn.setPrefWidth(larguraPadrao);
-        }
-
-        // Define ações dos botões
+        // Botões empilhados na parte inferior
+        Button btnVendas = criarBotaoLateral("Vendas", "/img/icon/carrinho-de-compras.png");
+        Button btnProdutos = criarBotaoLateral("Produtos", "/img/icon/lista.png");
+        Button btnSair = criarBotaoLateral("Sair", "/img/icon/fechar.png");
+        
+        // Ações dos botões
         btnVendas.setOnAction(e -> new Caixa().show(stage));
         btnProdutos.setOnAction(e -> new Produtos().show(stage));
-
-        // Botão sair exibe alerta de confirmação
         btnSair.setOnAction(e -> {
-            CustomConfirmationAlert alert = new CustomConfirmationAlert(
-                stage,
-                "Confirmação de Saída",
-                "Deseja realmente sair do sistema?",
-                ""
-            );
-            alert.showAndWait().ifPresent(response -> {
-                if (response == ButtonType.OK) {
-                    AutenticarUser.limparDados();
-                    stage.close();
-                }
-            });
+            new CustomConfirmationAlert(stage, "Confirmação", "Deseja sair?", "")
+                .showAndWait().ifPresent(r -> { if (r == ButtonType.OK) stage.close(); });
         });
 
-        // Caixa vertical com botões
-        VBox botoesBox = new VBox(15, btnVendas, btnProdutos, btnSair);
-        botoesBox.setAlignment(Pos.BOTTOM_LEFT);
-        botoesBox.setPadding(new Insets(0, 0, 6, 6)); 
-
-        Label mensagemFixa = new Label("Bem-vindo(a), " + nome + " você é " + cargo);
-        mensagemFixa.getStyleClass().add("mensagem-bemvindo");
-
+        // Container para os botões (alinhado na parte inferior)
+        VBox buttonContainer = new VBox(10, btnVendas, btnProdutos, btnSair);
+        buttonContainer.setAlignment(Pos.BOTTOM_LEFT);
+        buttonContainer.setPadding(new Insets(0, 0, 20, 0));
+        
+        // Espaçador para empurrar os botões para baixo
         Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        HBox bottomBox = new HBox(20, botoesBox, spacer, mensagemFixa);
-        bottomBox.setPadding(new Insets(0, 30, 10, 15));
-        bottomBox.setAlignment(Pos.BOTTOM_RIGHT);
-
-        // Layout principal
-        BorderPane layout = new BorderPane();
-        layout.setTop(topBox);
-        layout.setBottom(bottomBox);
-
-        // Cena com estilo CSS
-        Scene scene = new Scene(layout, 1000, 600);
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+        
+        // Layout completo do menu lateral
+        leftMenu.getChildren().addAll(logoBox, spacer, buttonContainer);
+        
+        // Área central
+        Label welcomeLabel = new Label("Bem-vindo, " + nome + " (" + cargo + ")");
+        welcomeLabel.getStyleClass().add("mensagem-bemvindo");
+        StackPane centerPane = new StackPane(welcomeLabel);
+        
+        // Configuração final
+        mainPane.setLeft(leftMenu);
+        mainPane.setCenter(centerPane);
+        
+        Scene scene = new Scene(mainPane, 1200, 800);
         scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
-
-        // Configura e mostra a janela
+        
         stage.setScene(scene);
-        stage.setTitle("SUN PDV - Painel Moderador");
-        stage.setResizable(true);
+        stage.setTitle("SUN PDV - Moderador");
+        stage.setMaximized(true);
         stage.show();
     }
 }
