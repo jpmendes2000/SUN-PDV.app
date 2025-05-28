@@ -49,10 +49,10 @@ public class Produtos {
         
         // Área esquerda (menu lateral)
         VBox leftMenu = new VBox(15);
-        leftMenu.setPadding(new Insets(20));
+        leftMenu.setPadding(new Insets(0));
         leftMenu.setStyle("-fx-background-color: #00536d; -fx-border-color: #00536d; -fx-border-width: 0 1 0 0;-fx-border-radius: 0 18 18 0;-fx-background-radius: 0 18 18 0;");
-        leftMenu.setPrefWidth(200);
-        leftMenu.setMinWidth(200);
+        leftMenu.setPrefWidth(280);
+        leftMenu.setMinWidth(280);
         
         // Logo no topo do menu lateral
         Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
@@ -129,11 +129,11 @@ public class Produtos {
 
         TableColumn<Produto, String> colNome = new TableColumn<>("Nome");
         colNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
-        colNome.setPrefWidth(350); // Increased width
+        colNome.setPrefWidth(950); // Increased width
 
         TableColumn<Produto, String> colCodBarras = new TableColumn<>("Código de Barras");
         colCodBarras.setCellValueFactory(new PropertyValueFactory<>("codBarras"));
-        colCodBarras.setPrefWidth(250); // Increased width
+        colCodBarras.setPrefWidth(300); // Increased width
 
         TableColumn<Produto, String> colPreco = new TableColumn<>("Preço (R$)");
         colPreco.setCellValueFactory(cell -> {
@@ -146,14 +146,14 @@ public class Produtos {
         table.getColumns().addAll(colNome, colCodBarras, colPreco);
 
         // Aumentando o tamanho da tabela
-        table.setPrefHeight(650); // Increased height
-        table.setPrefWidth(950);
+        table.setPrefHeight(1650); 
+        table.setPrefWidth(1200);
         
         ScrollPane scrollTable = new ScrollPane(table);
         scrollTable.setFitToWidth(true);
         scrollTable.setFitToHeight(true);
-        scrollTable.setPrefViewportHeight(650); // Increased height
-        scrollTable.setStyle("-fx-padding: 0 20 0 0;"); // Added right padding
+        scrollTable.setPrefViewportHeight(1650); // Increased height
+        scrollTable.setStyle("-fx-padding: 0 0 0 0;"); // Added right padding
         contentGrid.add(scrollTable, 0, 1, 2, 1);
 
         // Configuração do layout principal
@@ -242,21 +242,21 @@ private Button criarBotaoLateral(String texto, String caminhoIcone) {
         indicatorContainer.setMaxWidth(5);
         indicatorContainer.setStyle("-fx-background-color: transparent;");
         
-        HBox content = new HBox(indicatorContainer, icon, textLabel);
-        content.setAlignment(Pos.CENTER_LEFT);
+        HBox content = new HBox(icon, textLabel, indicatorContainer);
+        content.setAlignment(Pos.BOTTOM_LEFT);
         content.setSpacing(10);
         
         Button btn = new Button();
         btn.setGraphic(content);
         btn.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
         btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
-        btn.setPrefWidth(180);
-        btn.setPrefHeight(40);
+        btn.setPrefWidth(350);
+        btn.setPrefHeight(42);
         
         // Hover effect with yellow bar
         btn.setOnMouseEntered(e -> {
             btn.setStyle("-fx-background-color: linear-gradient(to left,rgba(192, 151, 39, 0.39),rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4;");
-            indicatorContainer.setStyle("-fx-background-color: #ffcc00; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
+            indicatorContainer.setStyle("-fx-background-color:rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
         });
         btn.setOnMouseExited(e -> {
             btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
