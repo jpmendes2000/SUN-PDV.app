@@ -323,7 +323,7 @@ private Button criarBotaoLateral(String texto, String caminhoIcone) {
         formGrid.add(btnSalvar, 1, 3);
 
         Scene scene = new Scene(formGrid);
-        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
         dialog.setScene(scene);
         dialog.showAndWait();
     }

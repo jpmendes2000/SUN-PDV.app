@@ -138,7 +138,7 @@ public class TelaHomeADM {
         layout.setBottom(bottomBox);
 
         Scene scene = new Scene(layout, 1000, 600);
-        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
 
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Painel Administrativo");
