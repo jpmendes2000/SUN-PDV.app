@@ -26,7 +26,7 @@
 - 🧍‍♂️ **Gestão de Usuários** com diferentes níveis de acesso
 - 📦 **Controle de Produtos**: entrada e saída com código de barras
 - 📊 **Interface Moderna** com JavaFX + CSS externo
-- ☁️ **Banco de Dados em Nuvem** (MySQL/Azure)
+- ☁️ **Banco de Dados em Nuvem** (SQLserver/Azure)
 - ⏳ **Bloqueio Temporário** após tentativas inválidas
 - 🔄 **Feedback Visual** com animações de transição
 
