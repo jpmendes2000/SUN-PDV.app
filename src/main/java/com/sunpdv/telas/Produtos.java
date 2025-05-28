@@ -22,6 +22,11 @@ import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TableRow;
 
 import java.sql.*;
 import java.text.DecimalFormat;
@@ -47,7 +52,7 @@ public class Produtos {
         // Configuração do Layout Principal usando BorderPane
         BorderPane mainPane = new BorderPane();
         
-                // Área esquerda (menu lateral) - TRECHO MODIFICADO
+        // Área esquerda (menu lateral) - TRECHO MODIFICADO
         VBox leftMenu = new VBox();
         leftMenu.setPadding(new Insets(0));
         leftMenu.setStyle("-fx-background-color: #00536d; -fx-border-color: #00536d; -fx-border-width: 0 1 0 0;-fx-border-radius: 0 18 18 0;-fx-background-radius: 0 18 18 0;");
@@ -88,7 +93,7 @@ public class Produtos {
         Image tituloImagem = new Image(getClass().getResourceAsStream("/img/logo/produto.png"));
         ImageView tituloView = new ImageView(tituloImagem);
         tituloView.setPreserveRatio(true);
-        tituloView.setFitHeight(80);
+        tituloView.setFitHeight(130);
 
         lblMensagemSucesso = new Label();
         lblMensagemSucesso.getStyleClass().add("mensagem-sucesso");
@@ -142,6 +147,36 @@ public class Produtos {
 
         table.getColumns().addAll(colNome, colCodBarras, colPreco);
 
+        // Configuração do double-click para editar
+        table.setRowFactory(tv -> {
+            TableRow<Produto> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && (!row.isEmpty())) {
+                    produtoSelecionado = row.getItem();
+                    abrirFormularioProduto(produtoSelecionado);
+                }
+            });
+            return row;
+        });
+
+        // Configuração do menu de contexto
+        ContextMenu contextMenu = criarMenuContexto();
+        table.setContextMenu(contextMenu);
+
+        // Listener para menu de contexto com botão direito
+        table.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            if (event.getButton() == MouseButton.SECONDARY) {
+                Produto selected = table.getSelectionModel().getSelectedItem();
+                if (selected != null) {
+                    contextMenu.show(table, event.getScreenX(), event.getScreenY());
+                } else {
+                    contextMenu.hide();
+                }
+            } else {
+                contextMenu.hide();
+            }
+        });
+
         // Ajuste do tamanho da tabela
         table.setPrefHeight(1650); 
         table.setPrefWidth(1200);
@@ -157,124 +192,146 @@ public class Produtos {
         mainPane.setLeft(leftMenu);
         mainPane.setCenter(contentGrid);
 
-            btnAdd.setOnAction(e -> abrirFormularioProduto(null));
-    btnEdit.setOnAction(e -> abrirFormularioProduto(produtoSelecionado));
-    btnDelete.setOnAction(e -> {
-        if (produtoSelecionado != null) {
-            apagarProduto(produtoSelecionado);
-        }
-    });
-
-    btnVoltar.setOnAction(e -> voltarParaHome(stage));
-    btnSair.setOnAction(e -> confirmarSaida(stage));
-
-    // Listener para seleção na tabela
-    table.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-        produtoSelecionado = newVal;
-        btnEdit.setDisable(newVal == null);
-        btnDelete.setDisable(newVal == null);
-    });
-
-    // Carrega os produtos
-    carregarProdutos();
-
-    // Configuração da cena e stage
-    Scene scene = new Scene(mainPane, 1200, 800);
-    scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
-    stage.setScene(scene);
-    stage.setTitle("Gerenciamento de Produtos");
-    stage.setMaximized(true);  // Opcional - abre maximizado
-    stage.show();
-    // ====== FIM DO BLOCO ADICIONADO ======
-    }
-
-private Button criarBotaoAcao(String caminhoIcone, String tooltip) {
-    try {
-        Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
-        if (img.isError()) {
-            throw new Exception("Error loading image: " + caminhoIcone);
-        }
-        
-        ImageView icon = new ImageView(img);
-        icon.setFitWidth(20);
-        icon.setFitHeight(20);
-        
-        Button btn = new Button();
-        btn.setGraphic(icon);
-        btn.getStyleClass().add("acao");
-        
-        if (tooltip.toLowerCase().contains("apagar")) {
-            btn.getStyleClass().add("delete");
-        }
-        
-        btn.setTooltip(new Tooltip(tooltip));
-        btn.setPrefSize(40, 40);
-        return btn;
-    } catch (Exception e) {
-        System.err.println("Erro ao carregar ícone: " + caminhoIcone);
-        Button btn = new Button(tooltip);
-        btn.getStyleClass().add("acao");
-        return btn;
-    }
-}
-
-private Button criarBotaoLateral(String texto, String caminhoIcone) {
-    try {
-        Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
-        if (img.isError()) {
-            throw new Exception("Error loading image: " + caminhoIcone);
-        }
-        
-        ImageView icon = new ImageView(img);
-        icon.setFitWidth(20);
-        icon.setFitHeight(20);
-        icon.setStyle("-fx-fill: white;");
-        
-        Label textLabel = new Label(texto);
-        textLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
-        
-        // Container for the yellow bar indicator (agora à direita)
-        StackPane indicatorContainer = new StackPane();
-        indicatorContainer.setMinWidth(5);
-        indicatorContainer.setMaxWidth(5);
-        indicatorContainer.setStyle("-fx-background-color: transparent;");
-        
-        // HBox para organizar ícone e texto à esquerda
-        HBox leftContent = new HBox(10, icon, textLabel);
-        leftContent.setAlignment(Pos.CENTER_LEFT);
-        
-        // HBox principal que empurra o indicador para a direita
-        HBox content = new HBox(leftContent, new Region(), indicatorContainer);
-        content.setAlignment(Pos.CENTER_LEFT);
-        HBox.setHgrow(content.getChildren().get(1), Priority.ALWAYS);
-        
-        Button btn = new Button();
-        btn.setGraphic(content);
-        btn.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-        btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
-        btn.setPrefWidth(280); // Ajustado para a largura do menu
-        btn.setPrefHeight(42);
-        
-        // Hover effect com a barra amarela à direita
-        btn.setOnMouseEntered(e -> {
-            btn.setStyle("-fx-background-color: linear-gradient(to left,rgba(192, 151, 39, 0.39),rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4;");
-            indicatorContainer.setStyle("-fx-background-color:rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
+        btnAdd.setOnAction(e -> abrirFormularioProduto(null));
+        btnEdit.setOnAction(e -> abrirFormularioProduto(produtoSelecionado));
+        btnDelete.setOnAction(e -> {
+            if (produtoSelecionado != null) {
+                apagarProduto(produtoSelecionado);
+            }
         });
-        btn.setOnMouseExited(e -> {
-            btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
+
+        btnVoltar.setOnAction(e -> voltarParaHome(stage));
+        btnSair.setOnAction(e -> confirmarSaida(stage));
+
+        // Listener para seleção na tabela
+        table.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            produtoSelecionado = newVal;
+            btnEdit.setDisable(newVal == null);
+            btnDelete.setDisable(newVal == null);
+        });
+
+        // Carrega os produtos
+        carregarProdutos();
+
+        // Configuração da cena e stage
+        Scene scene = new Scene(mainPane, 1200, 800);
+        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
+        stage.setScene(scene);
+        stage.setTitle("Gerenciamento de Produtos");
+        stage.setMaximized(true);  // Opcional - abre maximizado
+        stage.show();
+    }
+
+    private ContextMenu criarMenuContexto() {
+        ContextMenu contextMenu = new ContextMenu();
+        
+        MenuItem editarItem = new MenuItem("Editar");
+        editarItem.setOnAction(e -> {
+            if (produtoSelecionado != null) {
+                abrirFormularioProduto(produtoSelecionado);
+            }
+        });
+        
+        MenuItem apagarItem = new MenuItem("Apagar");
+        apagarItem.setOnAction(e -> {
+            if (produtoSelecionado != null) {
+                apagarProduto(produtoSelecionado);
+            }
+        });
+        
+        contextMenu.getItems().addAll(editarItem, apagarItem);
+        return contextMenu;
+    }
+
+    private Button criarBotaoAcao(String caminhoIcone, String tooltip) {
+        try {
+            Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
+            if (img.isError()) {
+                throw new Exception("Error loading image: " + caminhoIcone);
+            }
+            
+            ImageView icon = new ImageView(img);
+            icon.setFitWidth(20);
+            icon.setFitHeight(20);
+            
+            Button btn = new Button();
+            btn.setGraphic(icon);
+            btn.getStyleClass().add("acao");
+            
+            if (tooltip.toLowerCase().contains("apagar")) {
+                btn.getStyleClass().add("delete");
+            }
+            
+            btn.setTooltip(new Tooltip(tooltip));
+            btn.setPrefSize(40, 40);
+            return btn;
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar ícone: " + caminhoIcone);
+            Button btn = new Button(tooltip);
+            btn.getStyleClass().add("acao");
+            return btn;
+        }
+    }
+
+    private Button criarBotaoLateral(String texto, String caminhoIcone) {
+        try {
+            Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
+            if (img.isError()) {
+                throw new Exception("Error loading image: " + caminhoIcone);
+            }
+            
+            ImageView icon = new ImageView(img);
+            icon.setFitWidth(20);
+            icon.setFitHeight(20);
+            icon.setStyle("-fx-fill: white;");
+            
+            Label textLabel = new Label(texto);
+            textLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
+            
+            // Container for the yellow bar indicator (agora à direita)
+            StackPane indicatorContainer = new StackPane();
+            indicatorContainer.setMinWidth(3);
+            indicatorContainer.setMaxWidth(3);
+            indicatorContainer.setMinHeight(30);
+            indicatorContainer.setMaxHeight(30);
             indicatorContainer.setStyle("-fx-background-color: transparent;");
-        });
-        
-        return btn;
-    } catch (Exception e) {
-        System.err.println("Erro ao carregar ícone: " + caminhoIcone);
-        Button btn = new Button(texto);
-        btn.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-background-color: transparent;");
-        btn.setPrefWidth(280);
-        btn.setPrefHeight(40);
-        return btn;
+            
+            // HBox para organizar ícone e texto à esquerda
+            HBox leftContent = new HBox(10, icon, textLabel);
+            leftContent.setAlignment(Pos.CENTER_LEFT);
+            
+            // HBox principal que empurra o indicador para a direita
+            HBox content = new HBox(leftContent, new Region(), indicatorContainer);
+            content.setAlignment(Pos.CENTER_LEFT);
+            HBox.setHgrow(content.getChildren().get(1), Priority.ALWAYS);
+            
+            Button btn = new Button();
+            btn.setGraphic(content);
+            btn.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+            btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
+            btn.setPrefWidth(280); // Ajustado para a largura do menu
+            btn.setPrefHeight(42);
+            
+            // Hover effect com a barra amarela à direita
+            btn.setOnMouseEntered(e -> {
+                btn.setStyle("-fx-background-color: linear-gradient(to left,rgba(192, 151, 39, 0.39),rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4;");
+                indicatorContainer.setStyle("-fx-background-color:rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
+            });
+            btn.setOnMouseExited(e -> {
+                btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
+                indicatorContainer.setStyle("-fx-background-color: transparent;");
+            });
+            
+            return btn;
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar ícone: " + caminhoIcone);
+            Button btn = new Button(texto);
+            btn.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-background-color: transparent;");
+            btn.setPrefWidth(280);
+            btn.setPrefHeight(40);
+            return btn;
+        }
     }
-}
 
     private void carregarProdutos() {
         listaProdutos = FXCollections.observableArrayList();
