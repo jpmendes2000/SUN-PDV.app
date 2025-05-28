@@ -39,7 +39,7 @@ public class TelaHomeFUN {
             this.setContentText(content);
             Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
             stage.getScene().getStylesheets().add(
-                getClass().getResource("/css/style.css").toExternalForm()
+                getClass().getResource("/img/css/style.css").toExternalForm()
             );
         }
     }
@@ -123,7 +123,7 @@ public class TelaHomeFUN {
 
         // Cena com CSS
         Scene scene = new Scene(layout, 1000, 600);
-        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
 
         // Configura e mostra a janela
         stage.setScene(scene);

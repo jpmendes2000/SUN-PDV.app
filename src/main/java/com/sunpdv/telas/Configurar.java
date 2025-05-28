@@ -121,7 +121,7 @@ public class Configurar {
 
         // Configuração da cena
         Scene scene = new Scene(principal, 1000, 600);
-        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
 
         // Configuração da janela
         stage.setScene(scene);

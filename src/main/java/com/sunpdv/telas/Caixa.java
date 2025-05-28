@@ -30,7 +30,7 @@ public class Caixa {
             // Adiciona o CSS ao Alert
             Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
             stage.getScene().getStylesheets().add(
-                getClass().getResource("/css/style.css").toExternalForm()
+                getClass().getResource("/img/css/style.css").toExternalForm()
             );
         }
     }
@@ -99,7 +99,8 @@ public class Caixa {
             CustomConfirmationAlert alert = new CustomConfirmationAlert(
                 stage,
                 "Confirmação de Saída",
-                "Deseja realmente sair do sistema?",
+                "Deseja realmente sair do sis\n" + //
+                                        "            stage.getScene().getStylesheets().add(tema?",
                 ""
             );
 
@@ -123,7 +124,7 @@ public class Caixa {
 
         // Cena com tamanho padrão e CSS
         Scene scene = new Scene(principal, 1000, 600);
-        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
 
         // Configura o Stage principal
         stage.setScene(scene);

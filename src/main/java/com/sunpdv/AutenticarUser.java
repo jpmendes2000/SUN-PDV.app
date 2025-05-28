@@ -13,9 +13,9 @@ public class AutenticarUser {
 
     static {
         // Estrutura: usuário -> {nome, cargo, idPermissao, senha}
-        baseUsuarios.put("adm", new String[]{"Administrador", "ADM", "1", "123"});
-        baseUsuarios.put("mod", new String[]{"Moderador", "MOD", "2", "123"});
-        baseUsuarios.put("fun", new String[]{"Funcionário", "FUN", "3", "123"});
+        baseUsuarios.put("adm", new String[]{"Administrador"});
+        baseUsuarios.put("mod", new String[]{"Moderador"});
+        baseUsuarios.put("fun", new String[]{"Funcionario"});
     }
 
     // Getters

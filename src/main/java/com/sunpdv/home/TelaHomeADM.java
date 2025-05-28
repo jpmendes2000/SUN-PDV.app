@@ -41,7 +41,7 @@ public class TelaHomeADM {
 
             Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
             stage.getScene().getStylesheets().add(
-                getClass().getResource("/css/style.css").toExternalForm()
+                getClass().getResource("/img/css/style.css").toExternalForm()
             );
         }
     }

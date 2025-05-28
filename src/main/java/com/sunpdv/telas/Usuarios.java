@@ -33,7 +33,7 @@ public class Usuarios {
             // Adiciona o CSS ao Alert
             Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
             stage.getScene().getStylesheets().add(
-                getClass().getResource("/css/style.css").toExternalForm()
+                getClass().getResource("/img/css/style.css").toExternalForm()
             );
         }
     }
@@ -107,7 +107,7 @@ public class Usuarios {
         StackPane.setAlignment(botoesBox, Pos.BOTTOM_RIGHT);
 
         Scene scene = new Scene(root, 1000, 600);
-        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
 
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Gerenciamento de Usuários");

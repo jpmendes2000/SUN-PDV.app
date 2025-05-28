@@ -396,7 +396,7 @@ private Button criarBotaoLateral(String texto, String caminhoIcone) {
                     alert.setTitle("Produto Existente");
                     alert.setHeaderText("Conflito ao salvar produto");
                     alert.setContentText(mensagem);
-                    alert.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+                    alert.getDialogPane().getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
                     
                     ButtonType btnIrParaProduto = new ButtonType("Ir para o Produto", ButtonBar.ButtonData.OTHER);
                     ButtonType btnFechar = new ButtonType("Fechar", ButtonBar.ButtonData.CANCEL_CLOSE);
@@ -481,7 +481,7 @@ private Button criarBotaoLateral(String texto, String caminhoIcone) {
         confirm.setTitle("Confirmação");
         confirm.setHeaderText("Deseja apagar o produto: " + produto.getNome() + "?");
         confirm.setContentText("Esta ação não pode ser desfeita.");
-        confirm.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        confirm.getDialogPane().getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
         
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
@@ -528,7 +528,7 @@ private Button criarBotaoLateral(String texto, String caminhoIcone) {
         Alert alert = new Alert(AlertType.CONFIRMATION);
         alert.setTitle("Confirmação de Saída");
         alert.setHeaderText("Deseja realmente sair do sistema?");
-        alert.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        alert.getDialogPane().getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
         
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
@@ -550,7 +550,7 @@ private Button criarBotaoLateral(String texto, String caminhoIcone) {
         alert.setTitle(titulo);
         alert.setHeaderText(null);
         alert.setContentText(mensagem);
-        alert.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        alert.getDialogPane().getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
         alert.showAndWait();
     }
 }
