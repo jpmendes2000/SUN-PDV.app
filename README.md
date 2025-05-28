@@ -38,7 +38,7 @@
 |------------|-----------|
 | `Java 17` | Linguagem base do projeto |
 | `JavaFX` | Framework gráfico para UI moderna |
-| `MySQL` | Banco de dados relacional |
+| `SQLserver` | Banco de dados relacional |
 | `JDBC` | Conexão entre Java e MySQL |
 | `CSS` | Estilização da interface via arquivo externo |
 | `Azure` | Hospedagem em nuvem do banco de dados |
