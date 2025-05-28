@@ -11,6 +11,7 @@ import java.util.Base64;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
+import com.AutenticarUser;
 import com.sunpdv.home.TelaHomeADM;
 import com.sunpdv.home.TelaHomeMOD;
 import com.sunpdv.home.TelaHomeFUN;

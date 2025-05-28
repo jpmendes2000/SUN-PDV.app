@@ -1,6 +1,6 @@
 package com.sunpdv.telas;
 
-import com.sunpdv.AutenticarUser;
+import com.AutenticarUser;
 import com.sunpdv.home.TelaHomeADM;
 import com.sunpdv.home.TelaHomeFUN;
 import com.sunpdv.home.TelaHomeMOD;

@@ -1,6 +1,6 @@
 package com.sunpdv.home;
 
-import com.sunpdv.AutenticarUser;
+import com.AutenticarUser;
 import com.sunpdv.telas.Caixa;
 
 import javafx.geometry.Insets;
