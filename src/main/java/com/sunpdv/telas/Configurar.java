@@ -34,7 +34,7 @@ public class Configurar {
             // Aplica o estilo CSS à janela de diálogo
             Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
             stage.getScene().getStylesheets().add(
-                getClass().getResource("/css/style.css").toExternalForm()
+                getClass().getResource("/img/css/style.css").toExternalForm()
             );
         }
     }

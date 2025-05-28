@@ -147,6 +147,7 @@ public class Produtos {
 
         // Aumentando o tamanho da tabela
         table.setPrefHeight(650); // Increased height
+        table.setPrefWidth(950);
         
         ScrollPane scrollTable = new ScrollPane(table);
         scrollTable.setFitToWidth(true);
@@ -159,7 +160,35 @@ public class Produtos {
         mainPane.setLeft(leftMenu);
         mainPane.setCenter(contentGrid);
 
-        // ... (rest of the method remains the same)
+            btnAdd.setOnAction(e -> abrirFormularioProduto(null));
+    btnEdit.setOnAction(e -> abrirFormularioProduto(produtoSelecionado));
+    btnDelete.setOnAction(e -> {
+        if (produtoSelecionado != null) {
+            apagarProduto(produtoSelecionado);
+        }
+    });
+
+    btnVoltar.setOnAction(e -> voltarParaHome(stage));
+    btnSair.setOnAction(e -> confirmarSaida(stage));
+
+    // Listener para seleção na tabela
+    table.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+        produtoSelecionado = newVal;
+        btnEdit.setDisable(newVal == null);
+        btnDelete.setDisable(newVal == null);
+    });
+
+    // Carrega os produtos
+    carregarProdutos();
+
+    // Configuração da cena e stage
+    Scene scene = new Scene(mainPane, 1200, 800);
+    scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
+    stage.setScene(scene);
+    stage.setTitle("Gerenciamento de Produtos");
+    stage.setMaximized(true);  // Opcional - abre maximizado
+    stage.show();
+    // ====== FIM DO BLOCO ADICIONADO ======
     }
 
 private Button criarBotaoAcao(String caminhoIcone, String tooltip) {
