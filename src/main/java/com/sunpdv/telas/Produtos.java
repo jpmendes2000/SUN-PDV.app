@@ -47,38 +47,35 @@ public class Produtos {
         // Configuração do Layout Principal usando BorderPane
         BorderPane mainPane = new BorderPane();
         
-        // Área esquerda (menu lateral)
-        VBox leftMenu = new VBox(15);
+                // Área esquerda (menu lateral) - TRECHO MODIFICADO
+        VBox leftMenu = new VBox();
         leftMenu.setPadding(new Insets(0));
         leftMenu.setStyle("-fx-background-color: #00536d; -fx-border-color: #00536d; -fx-border-width: 0 1 0 0;-fx-border-radius: 0 18 18 0;-fx-background-radius: 0 18 18 0;");
         leftMenu.setPrefWidth(280);
         leftMenu.setMinWidth(280);
-        
+
         // Logo no topo do menu lateral
         Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(120);
         logoView.setPreserveRatio(true);
         logoView.setStyle("-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 0);");
-        
+
         VBox logoBox = new VBox(logoView);
         logoBox.setAlignment(Pos.CENTER);
-        logoBox.setPadding(new Insets(0, 0, 20, 0));
-        
-        // Espaçador para empurrar os botões para baixo
-        Region spacer = new Region();
-        spacer.setPrefHeight(Double.MAX_VALUE);
-        VBox.setVgrow(spacer, Priority.ALWAYS);
-        
+        logoBox.setPadding(new Insets(20, 0, 20, 0)); // Padding ajustado
+
         // Botões na parte inferior do menu lateral
         Button btnVoltar = criarBotaoLateral("Home", "/img/icon/casa.png");
         Button btnSair = criarBotaoLateral("Sair do Sistema", "/img/icon/fechar.png");
-        
-        VBox buttonBox = new VBox(15, btnVoltar, btnSair);
-        buttonBox.setAlignment(Pos.BOTTOM_LEFT);
-        buttonBox.setPadding(new Insets(0, 0, 20, 0)); // Added padding to push buttons down
-        
-        leftMenu.getChildren().addAll(logoBox, spacer, buttonBox);
+
+        VBox buttonBox = new VBox(10, btnVoltar, btnSair); // Espaçamento reduzido
+        buttonBox.setAlignment(Pos.TOP_LEFT);
+        buttonBox.setPadding(new Insets(0, 0, 20, 0));
+
+        // Organização do menu lateral
+        leftMenu.getChildren().addAll(logoBox, new Region(), buttonBox);
+        VBox.setVgrow(leftMenu.getChildren().get(1), Priority.ALWAYS); // Empurra os botões para baixo
         
         // Área central (conteúdo principal)
         GridPane contentGrid = new GridPane();
@@ -125,15 +122,15 @@ public class Produtos {
         table = new TableView<>();
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.getStyleClass().add("table-view");
-        table.setStyle("-fx-padding: 0 20 0 0;"); // Added right padding to expand table to the right
+        table.setStyle("-fx-padding: 0;"); // Removido padding extra
 
         TableColumn<Produto, String> colNome = new TableColumn<>("Nome");
         colNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
-        colNome.setPrefWidth(950); // Increased width
+        colNome.setPrefWidth(950);
 
         TableColumn<Produto, String> colCodBarras = new TableColumn<>("Código de Barras");
         colCodBarras.setCellValueFactory(new PropertyValueFactory<>("codBarras"));
-        colCodBarras.setPrefWidth(300); // Increased width
+        colCodBarras.setPrefWidth(300);
 
         TableColumn<Produto, String> colPreco = new TableColumn<>("Preço (R$)");
         colPreco.setCellValueFactory(cell -> {
@@ -145,15 +142,15 @@ public class Produtos {
 
         table.getColumns().addAll(colNome, colCodBarras, colPreco);
 
-        // Aumentando o tamanho da tabela
+        // Ajuste do tamanho da tabela
         table.setPrefHeight(1650); 
         table.setPrefWidth(1200);
-        
+
         ScrollPane scrollTable = new ScrollPane(table);
         scrollTable.setFitToWidth(true);
         scrollTable.setFitToHeight(true);
-        scrollTable.setPrefViewportHeight(1650); // Increased height
-        scrollTable.setStyle("-fx-padding: 0 0 0 0;"); // Added right padding
+        scrollTable.setPrefViewportHeight(1650);
+        scrollTable.setStyle("-fx-padding: 0;"); // Removido padding extra
         contentGrid.add(scrollTable, 0, 1, 2, 1);
 
         // Configuração do layout principal
@@ -236,24 +233,29 @@ private Button criarBotaoLateral(String texto, String caminhoIcone) {
         Label textLabel = new Label(texto);
         textLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
         
-        // Container for the yellow bar indicator
+        // Container for the yellow bar indicator (agora à direita)
         StackPane indicatorContainer = new StackPane();
         indicatorContainer.setMinWidth(5);
         indicatorContainer.setMaxWidth(5);
         indicatorContainer.setStyle("-fx-background-color: transparent;");
         
-        HBox content = new HBox(icon, textLabel, indicatorContainer);
-        content.setAlignment(Pos.BOTTOM_LEFT);
-        content.setSpacing(10);
+        // HBox para organizar ícone e texto à esquerda
+        HBox leftContent = new HBox(10, icon, textLabel);
+        leftContent.setAlignment(Pos.CENTER_LEFT);
+        
+        // HBox principal que empurra o indicador para a direita
+        HBox content = new HBox(leftContent, new Region(), indicatorContainer);
+        content.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(content.getChildren().get(1), Priority.ALWAYS);
         
         Button btn = new Button();
         btn.setGraphic(content);
         btn.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
         btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
-        btn.setPrefWidth(350);
+        btn.setPrefWidth(280); // Ajustado para a largura do menu
         btn.setPrefHeight(42);
         
-        // Hover effect with yellow bar
+        // Hover effect com a barra amarela à direita
         btn.setOnMouseEntered(e -> {
             btn.setStyle("-fx-background-color: linear-gradient(to left,rgba(192, 151, 39, 0.39),rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4;");
             indicatorContainer.setStyle("-fx-background-color:rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
@@ -266,10 +268,9 @@ private Button criarBotaoLateral(String texto, String caminhoIcone) {
         return btn;
     } catch (Exception e) {
         System.err.println("Erro ao carregar ícone: " + caminhoIcone);
-        // Fallback button without icon
         Button btn = new Button(texto);
         btn.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-background-color: transparent;");
-        btn.setPrefWidth(180);
+        btn.setPrefWidth(280);
         btn.setPrefHeight(40);
         return btn;
     }
