@@ -135,10 +135,13 @@ public class TelaHomeFUN {
         // Layout completo do menu lateral
         leftMenu.getChildren().addAll(logoBox, spacer, buttonContainer);
         
-        // Área central
-        Label welcomeLabel = new Label("Bem-vindo, " + nome + " (" + cargo + ")");
-        welcomeLabel.getStyleClass().add("mensagem-bemvindo");
-        StackPane centerPane = new StackPane(welcomeLabel);
+       // Área direita (conteúdo principal)
+        Label mensagemFixa = new Label("Bem-vindo(a), " + nome + " você é " + cargo);
+        mensagemFixa.getStyleClass().add("mensagem-bemvindo");
+        mensagemFixa.setPadding(new Insets(0, 20, 20, 0));
+
+        StackPane centerPane = new StackPane(mensagemFixa);
+        centerPane.setAlignment(Pos.BOTTOM_RIGHT);
         
         // Configuração final
         mainPane.setLeft(leftMenu);
