@@ -107,7 +107,7 @@ public class Produtos {
         // Botões de ação
         Button btnAdd = criarBotaoAcao("/img/icon/lista.png", "Adicionar Produto");
         Button btnEdit = criarBotaoAcao("/img/icon/lapis.png", "Editar Produto");
-        Button btnDelete = criarBotaoAcao("/img/icon/fechar.png", "Apagar Produto");
+        Button btnDelete = criarBotaoAcao("/img/icon/lixeira.png", "Apagar Produto");
         
         btnEdit.setDisable(true);
         btnDelete.setDisable(true);
