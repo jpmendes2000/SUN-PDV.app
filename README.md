@@ -2,7 +2,7 @@
 
 <p align="center">
   <strong>Sistema de Ponto de Venda (PDV)</strong><br>
-  Uma aplicação Java completa com JavaFX, JDBC e MySQL, feita para controle de produtos, usuários e autenticação segura.
+  Uma aplicação Java completa com JavaFX, JDBC e SQLserver, feita para controle de produtos, usuários e autenticação segura.
 </p>
 
 <p align="center">
@@ -38,7 +38,7 @@
 |------------|-----------|
 | `Java 17` | Linguagem base do projeto |
 | `JavaFX` | Framework gráfico para UI moderna |
-| `MySQL` | Banco de dados relacional |
+| `SQLserver` | Banco de dados relacional |
 | `JDBC` | Conexão entre Java e MySQL |
 | `CSS` | Estilização da interface via arquivo externo |
 | `Azure` | Hospedagem em nuvem do banco de dados |
