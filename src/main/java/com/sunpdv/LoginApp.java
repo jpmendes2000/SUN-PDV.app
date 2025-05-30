@@ -263,7 +263,7 @@ public class LoginApp extends Application {
                 contagemRegressiva.stop();
                 statusLabel.setText("");
             }
-        });
+        }));
         contagemRegressiva.setCycleCount(Timeline.INDEFINITE);
         contagemRegressiva.play();
     }
