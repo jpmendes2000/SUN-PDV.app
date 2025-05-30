@@ -172,9 +172,10 @@ public class TelaHomeADM {
         // Área direita (conteúdo principal)
         Label mensagemFixa = new Label("Bem-vindo(a), " + nome + " você é " + cargo);
         mensagemFixa.getStyleClass().add("mensagem-bemvindo");
+        mensagemFixa.setPadding(new Insets(0, 20, 20, 0));
 
         StackPane centerPane = new StackPane(mensagemFixa);
-        centerPane.setAlignment(Pos.CENTER);
+        centerPane.setAlignment(Pos.BOTTOM_RIGHT);
 
         // Layout principal
         BorderPane layout = new BorderPane();

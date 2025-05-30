@@ -90,9 +90,9 @@ private static final String PASSWORD = "Senha@12345!";
         olhoBtn.setStyle("-fx-background-color: transparent; -fx-padding: 5 5 5 5;");
 
         // Caminhos dos ícones (você pode converter para path relativo se quiser usar como resource)
-        String caminhoVisivel = getClass().getResource("/img/icon/visibilidade.png").toExternalForm();
-        String caminhoNaoVisivel = getClass().getResource("/img/icon/not-visibilidade.png").toExternalForm();
-        String entrarIcon = getClass().getResource("/img/icon/entrar.png").toExternalForm();
+        String caminhoVisivel = getClass().getResource("/img/icon/Olho-nao-cortado.svg").toExternalForm();
+        String caminhoNaoVisivel = getClass().getResource("/img/icon/Olho-Cortado.svg").toExternalForm();
+        String entrarIcon = getClass().getResource("/img/icon/Entrar.svg").toExternalForm();
 
 
         // ImageView que será trocado
