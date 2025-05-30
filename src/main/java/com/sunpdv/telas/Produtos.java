@@ -114,10 +114,10 @@ public class Produtos {
 
         // Organização do topo
         HBox tituloMensagemBox = new HBox(10, tituloView, lblMensagemSucesso);
-        tituloMensagemBox.setAlignment(Pos.CENTER_LEFT);
+        tituloMensagemBox.setAlignment(Pos.TOP_LEFT);
 
         HBox pesquisaAcoesBox = new HBox(12, campoPesquisa, btnAdd, btnEdit, btnDelete);
-        pesquisaAcoesBox.setAlignment(Pos.CENTER_RIGHT);
+        pesquisaAcoesBox.setAlignment(Pos.CENTER_LEFT);
         pesquisaAcoesBox.setPadding(new Insets(5, 0, 15, 10));
 
         VBox topoBox = new VBox(5, tituloMensagemBox, pesquisaAcoesBox);
