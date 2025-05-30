@@ -92,6 +92,7 @@ private static final String PASSWORD = "Senha@12345!";
         // Caminhos dos ícones (você pode converter para path relativo se quiser usar como resource)
         String caminhoVisivel = getClass().getResource("/img/icon/visibilidade.png").toExternalForm();
         String caminhoNaoVisivel = getClass().getResource("/img/icon/not-visibilidade.png").toExternalForm();
+        String entrarIcon = getClass().getResource("/img/icon/entrar.png").toExternalForm();
 
 
         // ImageView que será trocado
@@ -100,6 +101,9 @@ private static final String PASSWORD = "Senha@12345!";
         olhoIcon.setFitHeight(27);
         olhoBtn.setGraphic(olhoIcon);
 
+        ImageView entrarIconView = new ImageView(new Image(entrarIcon));
+        entrarIconView.setFitHeight(24);
+        entrarIconView.setFitWidth(24);
         // Ação do botão
         olhoBtn.setOnAction(e -> {
             boolean mostrar = olhoBtn.isSelected();
@@ -124,7 +128,7 @@ private static final String PASSWORD = "Senha@12345!";
         emailLinha.setAlignment(Pos.CENTER_LEFT);
         senhaLinha.setAlignment(Pos.CENTER_LEFT);
 
-        Button loginBtn = new Button("Entrar");
+        Button loginBtn = new Button("Entrar", entrarIconView);
         loginBtn.setDisable(true);
 
         Label statusLabel = new Label();
