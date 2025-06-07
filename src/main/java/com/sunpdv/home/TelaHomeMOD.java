@@ -138,14 +138,21 @@ public class TelaHomeMOD {
         // Layout completo do menu lateral
         leftMenu.getChildren().addAll(logoBox, spacer, buttonContainer);
         
-        // Área central
-        Label welcomeLabel = new Label("Bem-vindo, " + nome + " (" + cargo + ")");
-        welcomeLabel.getStyleClass().add("mensagem-bemvindo");
-        StackPane centerPane = new StackPane(welcomeLabel);
+               // Área direita (conteúdo principal)
+        Label mensagemFixa = new Label("Bem-vindo(a), " + nome + " você é " + cargo);
+        mensagemFixa.getStyleClass().add("mensagem-bemvindo");
+
+        StackPane posMensagem = new StackPane(mensagemFixa);
+        posMensagem.setAlignment(Pos.BOTTOM_RIGHT);
+        posMensagem.setPadding(new Insets(0, 20, 20, 0));
+
+        BorderPane layout = new BorderPane();
+        layout.setLeft(leftMenu);
+        layout.setCenter(posMensagem);
         
         // Configuração final
         mainPane.setLeft(leftMenu);
-        mainPane.setCenter(centerPane);
+        mainPane.setCenter(posMensagem);
         
         Scene scene = new Scene(mainPane, 1200, 800);
         scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
