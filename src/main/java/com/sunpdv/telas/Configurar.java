@@ -15,14 +15,15 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 
 public class Configurar {
 
-    /**
-     * Classe interna para criar uma caixa de confirmação customizada
-     * com estilo CSS aplicado.
-     */
     private static class CustomConfirmationAlert extends Alert {
         public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
             super(AlertType.CONFIRMATION);
@@ -30,8 +31,6 @@ public class Configurar {
             this.setTitle(title);
             this.setHeaderText(header);
             this.setContentText(content);
-            
-            // Aplica o estilo CSS à janela de diálogo
             Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
             stage.getScene().getStylesheets().add(
                 getClass().getResource("/img/css/style.css").toExternalForm()
@@ -39,36 +38,66 @@ public class Configurar {
         }
     }
 
-    /**
-     * Método principal que exibe a tela de Configurações.
-     */
     public void show(Stage stage) {
-        // Configuração da logo
+        // LOGO superior
         Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
         ImageView logoView = new ImageView(logo);
-        logoView.setFitWidth(130); // Define a largura
-        logoView.setPreserveRatio(true); // Mantém a proporção da imagem
+        logoView.setFitWidth(130);
+        logoView.setPreserveRatio(true);
 
-        // Coloca a logo em um VBox para alinhar
         VBox logoBox = new VBox(logoView);
         logoBox.setPadding(new Insets(20));
         logoBox.setAlignment(Pos.TOP_LEFT);
 
-        // Botões principais
+        // BOTÕES principais
         Button btnVoltarHome = new Button("Home");
         Button btnSair = new Button("Sair do Sistema");
+        Button btnSelecionarLogo = new Button("Selecionar logo da empresa");
 
-        // Define largura padrão para os botões
-        double larguraPadrao = 250;
-        btnVoltarHome.setPrefWidth(larguraPadrao);
-        btnSair.setPrefWidth(larguraPadrao);
+        btnVoltarHome.setPrefWidth(250);
+        btnSair.setPrefWidth(250);
+        btnSelecionarLogo.setPrefWidth(250);
 
-         // Ação de voltar à tela principal (ADM, MOD ou FUN)
+        // AÇÃO: Selecionar logo
+        btnSelecionarLogo.setOnAction(e -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Selecionar Imagem de Logo");
+            fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Imagens", "*.png", "*.jpg", "*.jpeg")
+            );
+
+            File selectedFile = fileChooser.showOpenDialog(stage);
+            if (selectedFile != null) {
+                try (FileInputStream fis = new FileInputStream(selectedFile);
+                     FileOutputStream fos = new FileOutputStream("logo_empresa.png")) {
+
+                    byte[] buffer = new byte[1024];
+                    int bytesRead;
+                    while ((bytesRead = fis.read(buffer)) > 0) {
+                        fos.write(buffer, 0, bytesRead);
+                    }
+
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Logo atualizada");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Logo da empresa atualizada com sucesso!");
+                    alert.showAndWait();
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Erro");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Erro ao salvar imagem.");
+                    alert.showAndWait();
+                }
+            }
+        });
+
+        // AÇÃO: Voltar para a tela principal
         btnVoltarHome.setOnAction(e -> {
             try {
                 String cargo = AutenticarUser.getCargo();
-
-                // Direciona para a tela conforme o cargo
                 switch (cargo) {
                     case "Administrador":
                         new TelaHomeADM(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar(stage);
@@ -92,7 +121,7 @@ public class Configurar {
             }
         });
 
-        // Ação do botão Sair do Sistema
+        // AÇÃO: Sair
         btnSair.setOnAction(e -> {
             CustomConfirmationAlert alert = new CustomConfirmationAlert(
                 stage,
@@ -100,32 +129,27 @@ public class Configurar {
                 "Deseja realmente sair do sistema?",
                 ""
             );
-
             alert.showAndWait().ifPresent(response -> {
                 if (response == ButtonType.OK) {
-                    stage.close(); // Fecha o aplicativo
+                    stage.close();
                 }
             });
         });
 
-        // Layout dos botões
-        VBox botoesBox = new VBox(15, btnVoltarHome, btnSair);
+        VBox botoesBox = new VBox(15, btnVoltarHome, btnSair, btnSelecionarLogo);
         botoesBox.setPadding(new Insets(40));
-        botoesBox.setAlignment(Pos.BOTTOM_LEFT);
+        botoesBox.setAlignment(Pos.CENTER_LEFT);
 
-        // Layout principal
         StackPane principal = new StackPane();
         principal.getChildren().addAll(logoBox, botoesBox);
         StackPane.setAlignment(logoBox, Pos.TOP_LEFT);
-        StackPane.setAlignment(botoesBox, Pos.CENTER);
+        StackPane.setAlignment(botoesBox, Pos.CENTER_LEFT);
 
-        // Configuração da cena
         Scene scene = new Scene(principal, 1000, 600);
         scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
 
-        // Configuração da janela
         stage.setScene(scene);
-        stage.setTitle("SUN PDV - Módulo de Caixa");
+        stage.setTitle("SUN PDV - Configurações");
         stage.setFullScreen(true);
         stage.setResizable(true);
         stage.show();
