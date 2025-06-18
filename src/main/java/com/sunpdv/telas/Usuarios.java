@@ -2,6 +2,8 @@ package com.sunpdv.telas;
 
 import com.sunpdv.AutenticarUser;
 import com.sunpdv.home.TelaHomeADM;
+import com.sunpdv.home.TelaHomeFUN;
+import com.sunpdv.home.TelaHomeMOD;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -68,15 +70,37 @@ public class Usuarios {
         String cargo = AutenticarUser.getCargo() != null ? AutenticarUser.getCargo() : "Cargo";
 
         // Botões
-        Button btnVoltar = new Button("Home");
+        Button btnHome = new Button("Home");
         Button btnSair = new Button("Sair do Sistema");
         double larguraBotao = 200;
-        btnVoltar.setPrefWidth(larguraBotao);
+        btnHome.setPrefWidth(larguraBotao);
         btnSair.setPrefWidth(larguraBotao);
 
-        // Ação do botão Home
-        btnVoltar.setOnAction(e -> {
-            new TelaHomeADM(nome, cargo).mostrar(stage);
+         // AÇÃO: Voltar para a tela principal
+        btnHome.setOnAction(e -> {
+            try {
+                String Cargo = AutenticarUser.getCargo();
+                switch (cargo) {
+                    case "Administrador":
+                        new TelaHomeADM(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar(stage);
+                        break;
+                    case "Moderador":
+                        new TelaHomeMOD(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar(stage);
+                        break;
+                    case "Funcionário":
+                        new TelaHomeFUN(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar(stage);
+                        break;
+                    default:
+                        System.out.println("Cargo não reconhecido: " + cargo);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Erro");
+                alert.setHeaderText(null);
+                alert.setContentText("Erro ao retornar para a tela principal.");
+                alert.showAndWait();
+            }
         });
 
         // Ação do botão Sair
@@ -95,7 +119,7 @@ public class Usuarios {
         });
 
         // VBox com os botões empilhados verticalmente no canto inferior direito
-        VBox botoesBox = new VBox(15, btnVoltar, btnSair);
+        VBox botoesBox = new VBox(15, btnHome, btnSair);
         botoesBox.setPadding(new Insets(35));
         botoesBox.setAlignment(Pos.BOTTOM_LEFT);
 

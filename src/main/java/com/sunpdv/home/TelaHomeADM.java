@@ -19,9 +19,10 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
-import javafx.scene.control.Tooltip;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+
+import java.io.File;
 
 public class TelaHomeADM {
 
@@ -33,6 +34,7 @@ public class TelaHomeADM {
         this.cargo = cargo;
     }
 
+    // Alerta de confirmação com CSS customizado
     private static class CustomConfirmationAlert extends Alert {
         public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
             super(AlertType.CONFIRMATION);
@@ -43,61 +45,60 @@ public class TelaHomeADM {
 
             Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
             stage.getScene().getStylesheets().add(
-                getClass().getResource("/img/css/style.css").toExternalForm()
+                TelaHomeADM.class.getResource("/img/css/style.css").toExternalForm()
             );
         }
     }
 
+    /**
+     * Cria botão lateral com ícone, texto e barra lateral amarela no hover
+     */
     private Button criarBotaoLateral(String texto, String caminhoIcone) {
         try {
             Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
             if (img.isError()) {
-                throw new Exception("Error loading image: " + caminhoIcone);
+                throw new Exception("Erro ao carregar imagem: " + caminhoIcone);
             }
-            
+
             ImageView icon = new ImageView(img);
             icon.setFitWidth(20);
             icon.setFitHeight(20);
-            icon.setStyle("-fx-fill: white;");
-            
+
             Label textLabel = new Label(texto);
             textLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
-            
-            // Container for the yellow bar indicator (agora à direita)
-            StackPane indicatorContainer = new StackPane();
+
+            StackPane indicatorContainer = new StackPane(); // barra amarela lateral
             indicatorContainer.setMinWidth(3);
             indicatorContainer.setMaxWidth(3);
             indicatorContainer.setMinHeight(30);
             indicatorContainer.setMaxHeight(30);
             indicatorContainer.setStyle("-fx-background-color: transparent;");
-            
-            // HBox para organizar ícone e texto à esquerda
+
             HBox leftContent = new HBox(10, icon, textLabel);
             leftContent.setAlignment(Pos.CENTER_LEFT);
-            
-            // HBox principal que empurra o indicador para a direita
+
             HBox content = new HBox(leftContent, new Region(), indicatorContainer);
             content.setAlignment(Pos.CENTER_LEFT);
             HBox.setHgrow(content.getChildren().get(1), Priority.ALWAYS);
-            
+
             Button btn = new Button();
             btn.setGraphic(content);
             btn.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
             btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
             btn.setPrefWidth(280);
             btn.setPrefHeight(42);
-            
-            // Hover effect com a barra amarela à direita
+
             btn.setOnMouseEntered(e -> {
-                btn.setStyle("-fx-background-color: linear-gradient(to left,rgba(192, 151, 39, 0.39),rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4;");
-                indicatorContainer.setStyle("-fx-background-color:rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
+                btn.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4;");
+                indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
             });
             btn.setOnMouseExited(e -> {
                 btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
                 indicatorContainer.setStyle("-fx-background-color: transparent;");
             });
-            
+
             return btn;
+
         } catch (Exception e) {
             System.err.println("Erro ao carregar ícone: " + caminhoIcone);
             Button btn = new Button(texto);
@@ -108,6 +109,9 @@ public class TelaHomeADM {
         }
     }
 
+    /**
+     * Exibe a tela principal
+     */
     public void mostrar(Stage stage) {
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
         stage.setX(screenBounds.getMinX());
@@ -115,25 +119,22 @@ public class TelaHomeADM {
         stage.setWidth(screenBounds.getWidth());
         stage.setHeight(screenBounds.getHeight());
 
-        // Área esquerda (menu lateral)
+        // Menu lateral
         VBox leftMenu = new VBox();
-        leftMenu.setPadding(new Insets(0));
-        leftMenu.setStyle("-fx-background-color: #00536d; -fx-border-color: #00536d; -fx-border-width: 0 1 0 0;-fx-border-radius: 0 18 18 0;-fx-background-radius: 0 18 18 0;");
         leftMenu.setPrefWidth(280);
-        leftMenu.setMinWidth(280);
+        leftMenu.setStyle("-fx-background-color: #00536d;");
 
-        // Logo no topo do menu lateral
+        // Logo SUN PDV
         Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(120);
         logoView.setPreserveRatio(true);
-        logoView.setStyle("-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 0);");
 
         VBox logoBox = new VBox(logoView);
         logoBox.setAlignment(Pos.CENTER);
         logoBox.setPadding(new Insets(20, 0, 20, 0));
 
-        // Botões do menu lateral
+        // Botões do menu
         Button btnVendas = criarBotaoLateral("Vendas", "/img/icon/carrinho-de-compras.png");
         Button btnProdutos = criarBotaoLateral("Gerenciar Produtos", "/img/icon/lista.png");
         Button btnUsuarios = criarBotaoLateral("Gerenciar Usuários", "/img/icon/grupo.png");
@@ -162,24 +163,50 @@ public class TelaHomeADM {
         });
 
         VBox buttonBox = new VBox(10, btnVendas, btnProdutos, btnUsuarios, btnConfigurar, btnSair);
-        buttonBox.setAlignment(Pos.TOP_LEFT);
+        buttonBox.setAlignment(Pos.BOTTOM_LEFT);
         buttonBox.setPadding(new Insets(0, 0, 20, 0));
 
-        // Organização do menu lateral
-        leftMenu.getChildren().addAll(logoBox, new Region(), buttonBox);
-        VBox.setVgrow(leftMenu.getChildren().get(1), Priority.ALWAYS);
+        Region espaco = new Region();
+        VBox.setVgrow(espaco, Priority.ALWAYS);
 
-        // Área direita (conteúdo principal)
+        leftMenu.getChildren().addAll(logoBox, espaco, buttonBox);
+
+        // Conteúdo central - logo do mercado configurada (se existir)
+        StackPane centro = new StackPane();
+        centro.setPadding(new Insets(20));
+
+        File imagemLogo = new File("logo_empresa.png");
+        if (imagemLogo.exists()) {
+            Image imageLogo = new Image(imagemLogo.toURI().toString());
+            ImageView imageView = new ImageView(imageLogo);
+
+            imageView.setFitWidth(1000);
+            imageView.setFitHeight(800);
+            imageView.setPreserveRatio(true);
+
+            centro.getChildren().add(imageView);
+        } else {
+            Label placeholder = new Label("Nenhuma logo configurada");
+            placeholder.setStyle("-fx-font-size: 22px; -fx-text-fill: #999;");
+            centro.getChildren().add(placeholder);
+        }
+
+        // Mensagem inferior direita com nome e cargo
         Label mensagemFixa = new Label("Bem-vindo(a), " + nome + " você é " + cargo);
         mensagemFixa.getStyleClass().add("mensagem-bemvindo");
 
-        StackPane centerPane = new StackPane(mensagemFixa);
-        centerPane.setAlignment(Pos.CENTER);
+        StackPane posMensagem = new StackPane(mensagemFixa);
+        posMensagem.setAlignment(Pos.BOTTOM_RIGHT);
+        posMensagem.setPadding(new Insets(0, 20, 20, 280));
 
         // Layout principal
         BorderPane layout = new BorderPane();
         layout.setLeft(leftMenu);
-        layout.setCenter(centerPane);
+        leftMenu.setPrefHeight(Double.MAX_VALUE);
+        layout.setCenter(centro);
+        StackPane conteudoComMensagem = new StackPane(centro, posMensagem);
+        layout.setCenter(conteudoComMensagem);
+
 
         Scene scene = new Scene(layout, 1200, 800);
         scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
