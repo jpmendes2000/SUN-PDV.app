@@ -163,11 +163,13 @@ public class TelaHomeADM {
         });
 
         VBox buttonBox = new VBox(10, btnVendas, btnProdutos, btnUsuarios, btnConfigurar, btnSair);
-        buttonBox.setAlignment(Pos.TOP_LEFT);
+        buttonBox.setAlignment(Pos.BOTTOM_LEFT);
         buttonBox.setPadding(new Insets(0, 0, 20, 0));
 
-        leftMenu.getChildren().addAll(logoBox, new Region(), buttonBox);
-        VBox.setVgrow(leftMenu.getChildren().get(1), Priority.ALWAYS);
+        Region espaco = new Region();
+        VBox.setVgrow(espaco, Priority.ALWAYS);
+
+        leftMenu.getChildren().addAll(logoBox, espaco, buttonBox);
 
         // Conteúdo central - logo do mercado configurada (se existir)
         StackPane centro = new StackPane();
@@ -195,13 +197,16 @@ public class TelaHomeADM {
 
         StackPane posMensagem = new StackPane(mensagemFixa);
         posMensagem.setAlignment(Pos.BOTTOM_RIGHT);
-        posMensagem.setPadding(new Insets(0, 20, 20, 0));
+        posMensagem.setPadding(new Insets(0, 20, 20, 280));
 
         // Layout principal
         BorderPane layout = new BorderPane();
         layout.setLeft(leftMenu);
+        leftMenu.setPrefHeight(Double.MAX_VALUE);
         layout.setCenter(centro);
-        layout.setBottom(posMensagem);
+        StackPane conteudoComMensagem = new StackPane(centro, posMensagem);
+        layout.setCenter(conteudoComMensagem);
+
 
         Scene scene = new Scene(layout, 1200, 800);
         scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
