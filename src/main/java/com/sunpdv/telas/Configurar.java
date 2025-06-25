@@ -105,10 +105,10 @@ public class Configurar {
         logoBox.setPadding(new Insets(20, 0, 20, 0));
 
         // Botões Home e Sair com ícones
-        Button btnVoltar = criarBotaoLateral("Home", "/img/icon/casa.png");
+        Button btnVoltarHome = criarBotaoLateral("Home", "/img/icon/casa.png");
         Button btnSair = criarBotaoLateral("Sair do Sistema", "/img/icon/fechar.png");
 
-        VBox buttonBox = new VBox(10, btnVoltar, btnSair);
+        VBox buttonBox = new VBox(10, btnVoltarHome, btnSair);
         buttonBox.setAlignment(Pos.TOP_LEFT);
         buttonBox.setPadding(new Insets(0, 0, 20, 0));
 
@@ -118,7 +118,7 @@ public class Configurar {
         // --- Área central (Configurações da logo) ---
 
         // Botões "Selecionar logo" e "Remover logo"
-        Button btnSelecionarLogo = new Button("Selecionar logo da empresa");
+        Button btnSelecionarLogo = new Button("Selecionar logo");
         Button btnRemoverLogo = new Button("Tirar foto da logo");
         btnSelecionarLogo.setPrefWidth(200);
         btnRemoverLogo.setPrefWidth(200);
@@ -202,7 +202,7 @@ public class Configurar {
         });
 
         // Botão Home: retorna para a tela inicial de acordo com o cargo
-        btnVoltar.setOnAction(e -> {
+        btnVoltarHome.setOnAction(e -> {
             try {
                 String Cargo = AutenticarUser.getCargo();
                 switch (Cargo) {
