@@ -24,9 +24,6 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.TableRow;
 
 import java.sql.*;
 import java.text.DecimalFormat;
@@ -218,7 +215,8 @@ public class Produtos {
         scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
         stage.setScene(scene);
         stage.setTitle("Gerenciamento de Produtos");
-        stage.setMaximized(true);  // Opcional - abre maximizado
+        stage.setFullScreen(true);
+        stage.setResizable(true);
         stage.show();
     }
 
