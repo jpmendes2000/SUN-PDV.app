@@ -211,7 +211,8 @@ public class TelaHomeMOD {
 
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Painel Administrativo");
-        stage.setMaximized(true);
+        stage.setFullScreen(true);
+        stage.setResizable(true);
         stage.show();
     }
 }

@@ -193,7 +193,8 @@ public class Usuarios {
 
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Gerenciamento de Usuários");
-        stage.setMaximized(true);
+        stage.setFullScreen(true);
+        stage.setResizable(true);
         stage.show();
     }
 }

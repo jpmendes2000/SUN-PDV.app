@@ -211,7 +211,8 @@ public class TelaHomeFUN {
 
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Painel Administrativo");
-        stage.setMaximized(true);
-        stage.show();
+        stage.setFullScreen(true);
+        stage.setResizable(true);
+        stage.show();;
     }
 }
