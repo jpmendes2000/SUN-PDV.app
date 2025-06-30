@@ -105,8 +105,11 @@ public class Usuarios {
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(120);
         logoView.setPreserveRatio(true);
+        
+        Label titulonaABA = new Label("Gerenciamento de Usuários");
+        titulonaABA.setStyle("-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;");
 
-        VBox logoBox = new VBox(logoView);
+        VBox logoBox = new VBox(logoView, titulonaABA);
         logoBox.setAlignment(Pos.CENTER);
         logoBox.setPadding(new Insets(20, 0, 20, 0));
 

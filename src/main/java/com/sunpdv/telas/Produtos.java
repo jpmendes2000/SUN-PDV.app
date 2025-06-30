@@ -52,7 +52,7 @@ public class Produtos {
         // Área esquerda (menu lateral) - TRECHO MODIFICADO
         VBox leftMenu = new VBox();
         leftMenu.setPadding(new Insets(0));
-        leftMenu.setStyle("-fx-background-color: #00536d; -fx-border-color: #00536d; -fx-border-width: 0 1 0 0;-fx-border-radius: 0 18 18 0;-fx-background-radius: 0 18 18 0;");
+        leftMenu.setStyle("-fx-background-color: #00536d;");
         leftMenu.setPrefWidth(280);
         leftMenu.setMinWidth(280);
 
@@ -63,7 +63,10 @@ public class Produtos {
         logoView.setPreserveRatio(true);
         logoView.setStyle("-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 0);");
 
-        VBox logoBox = new VBox(logoView);
+        Label titulonaABA = new Label("Gerenciamento de Produtos");
+        titulonaABA.setStyle("-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;");
+
+        VBox logoBox = new VBox(logoView, titulonaABA);
         logoBox.setAlignment(Pos.CENTER);
         logoBox.setPadding(new Insets(20, 0, 20, 0)); // Padding ajustado
 
@@ -85,12 +88,6 @@ public class Produtos {
         contentGrid.setVgap(10);
         contentGrid.setPadding(new Insets(15));
         contentGrid.setAlignment(Pos.TOP_CENTER);
-        
-        // Topo com título
-        Image tituloImagem = new Image(getClass().getResourceAsStream("/img/logo/produto.png"));
-        ImageView tituloView = new ImageView(tituloImagem);
-        tituloView.setPreserveRatio(true);
-        tituloView.setFitHeight(130);
 
         lblMensagemSucesso = new Label();
         lblMensagemSucesso.getStyleClass().add("mensagem-sucesso");
@@ -106,11 +103,12 @@ public class Produtos {
         Button btnEdit = criarBotaoAcao("/img/icon/lapis.png", "Editar Produto");
         Button btnDelete = criarBotaoAcao("/img/icon/lixeira.png", "Apagar Produto");
         
+        
         btnEdit.setDisable(true);
         btnDelete.setDisable(true);
 
         // Organização do topo
-        HBox tituloMensagemBox = new HBox(10, tituloView, lblMensagemSucesso);
+        HBox tituloMensagemBox = new HBox(10, lblMensagemSucesso);
         tituloMensagemBox.setAlignment(Pos.TOP_LEFT);
 
         HBox pesquisaAcoesBox = new HBox(12, campoPesquisa, btnAdd, btnEdit, btnDelete);
@@ -254,6 +252,7 @@ public class Produtos {
             
             Button btn = new Button();
             btn.setGraphic(icon);
+            btn.setAlignment(Pos.CENTER); // Centraliza o ícone dentro do botão
             btn.getStyleClass().add("acao");
             
             if (tooltip.toLowerCase().contains("apagar")) {
@@ -316,7 +315,7 @@ public class Produtos {
                 indicatorContainer.setStyle("-fx-background-color:rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
             });
             btn.setOnMouseExited(e -> {
-                btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
+                btn.setStyle("-fx-background-color: transparent; -fx-background-radius: 4;");
                 indicatorContainer.setStyle("-fx-background-color: transparent;");
             });
             

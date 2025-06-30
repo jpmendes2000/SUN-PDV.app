@@ -74,8 +74,8 @@
 
 /* ESTILOS PARA BOTÕES - AUMENTADOS E ESTILIZADOS */
 .button {
-    -fx-background-radius: 15; /* Bordas mais arredondadas */
--fx-alignment: CENTER_LEFT; /* Alinhamento à esquerda */
+    -fx-background-radius: 5; /* Bordas mais arredondadas */
+    -fx-alignment: CENTER_LEFT; /* Alinhamento à esquerda */
     -fx-content-display: LEFT; /* Garante que o conteúdo fique à esquerda */
     -fx-text-alignment: LEFT; 
     -fx-padding: 12 0 12 25; 
@@ -95,9 +95,7 @@
 
 /* ESTILO ESPECÍFICO PARA BOTÕES DE AÇÃO (ÍCONES) */
 .button.acao {
-    -fx-background-radius: 8; /* Bordas mais arredondadas */
     -fx-background-color: linear-gradient(to bottom, #c09727, #e8b923); 
-    -fx-border-radius: 8;
     -fx-padding: 8; /* Espaçamento interno reduzido */
     -fx-min-width: 40px; /* Tamanho fixo */
     -fx-min-height: 40px;
@@ -224,4 +222,33 @@
 
 .side-button:hover {
     -fx-background-color: #012d5c;
+}
+.BotaoConfig {
+    -fx-background-color: #00536d; /* fundo escuro */
+    -fx-text-fill: #a9cce3; /* azul claro para texto */
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #00536d;
+    -fx-border-width: 1.5;
+    -fx-padding: 6 14 6 14;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, transparent, 4, 0, 0, 1);
+    -fx-alignment: center;
+    -fx-transition: all 0.3s ease;
+}
+
+.BotaoConfig:hover {
+    -fx-background-color: #00536d;
+    -fx-text-fill: #a9cce3;
+    -fx-border-color: transparent;
+    -fx-effect: dropshadow(three-pass-box, rgba(93,173,226,0.8), 8, 0, 0, 2);
+}
+
+.BotaoConfig:pressed {
+    -fx-background-color: transparent;
+    -fx-text-fill: #a9cce3;
+    -fx-border-color: #a9cce3;
+    -fx-effect: none;
 }

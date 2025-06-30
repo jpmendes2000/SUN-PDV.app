@@ -23,7 +23,6 @@ import javafx.stage.Stage;
 import java.io.*;
 
 public class Configurar {
-
     // Alerta personalizado com CSS para confirmação
     private static class CustomConfirmationAlert extends Alert {
         public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
@@ -75,7 +74,7 @@ public class Configurar {
             btn.setOnMouseEntered(e -> {
                 btn.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18));");
                 indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64);");
-            });
+            }); 
             btn.setOnMouseExited(e -> {
                 btn.setStyle("-fx-background-color: transparent;");
                 indicatorContainer.setStyle("-fx-background-color: transparent;");
@@ -100,7 +99,10 @@ public class Configurar {
         logoView.setPreserveRatio(true);
         logoView.setStyle("-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 0);");
 
-        VBox logoBox = new VBox(logoView);
+        Label titulonaABA = new Label("Configurações");
+        titulonaABA.setStyle("-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;");
+
+        VBox logoBox = new VBox(logoView, titulonaABA);
         logoBox.setAlignment(Pos.CENTER);
         logoBox.setPadding(new Insets(20, 0, 20, 0));
 
@@ -117,39 +119,63 @@ public class Configurar {
 
         // --- Área central (Configurações da logo) ---
 
+        Label titulo = new Label("Configuração de Logo");
+        titulo.setStyle("-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;");
+
         // Botões "Selecionar logo" e "Remover logo"
-        Button btnSelecionarLogo = new Button("Selecionar logo");
-        Button btnRemoverLogo = new Button("Tirar foto da logo");
-        btnSelecionarLogo.setPrefWidth(200);
-        btnRemoverLogo.setPrefWidth(200);
+        Button btnSelecionarLogo = new Button("Selecionar");
+        Button btnRemoverLogo = new Button("Tirar");
+        btnSelecionarLogo.setPrefSize(100, 30);
+        btnSelecionarLogo.getStyleClass().add("BotaoConfig");
+        btnRemoverLogo.setPrefSize(100, 30);
+        btnRemoverLogo.getStyleClass().add("BotaoConfig");
 
-        VBox botoesLogo = new VBox(20, btnSelecionarLogo, btnRemoverLogo);
-        botoesLogo.setAlignment(Pos.BASELINE_LEFT);
-        botoesLogo.setPadding(new Insets(40, 0, 40, 50));
+        VBox botoesLogo = new VBox();
+        botoesLogo.setSpacing(7);
+        botoesLogo.setPadding(new Insets(0, 0, 0, 0));
+        VBox.setMargin(titulo, new Insets(0, 50, 10, 50));
+        botoesLogo.getChildren().addAll(titulo, btnSelecionarLogo, btnRemoverLogo);
 
-        // Exibição da logo da empresa (padrão ou personalizada)
+        // Configuração do retângulo com a imagem ou texto "Sem logo"
         ImageView imageLogo = new ImageView();
+        imageLogo.setFitWidth(100);
+        imageLogo.setPreserveRatio(true);
+
+        Label semLogoLabel = new Label("Sem logo");
+        semLogoLabel.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
+
+        StackPane imageContainer = new StackPane();
+        imageContainer.setPrefSize(150, 100);
+        imageContainer.setStyle("-fx-background-color: #D3D3D3; -fx-border-color: #A9A9A9; -fx-border-width: 2;");
+        imageContainer.setAlignment(Pos.CENTER);
+
         File fileLogo = new File("logo_empresa.png");
         if (fileLogo.exists()) {
             imageLogo.setImage(new Image(fileLogo.toURI().toString()));
+            semLogoLabel.setVisible(false);
         } else {
-            imageLogo.setImage(new Image(getClass().getResourceAsStream("/img/logo/logo.png")));
+            imageLogo.setImage(null);
+            semLogoLabel.setVisible(true);
         }
-        imageLogo.setFitWidth(200);
-        imageLogo.setPreserveRatio(true);
 
-        VBox imagemBox = new VBox(imageLogo);
-        imagemBox.setAlignment(Pos.BASELINE_LEFT);
-        imagemBox.setPadding(new Insets(40, 50, 40, 0));
+        imageContainer.getChildren().addAll(imageLogo, semLogoLabel);
+
+        VBox imagemBox = new VBox(imageContainer);
+        imagemBox.setAlignment(Pos.TOP_LEFT);
 
         // Organiza botões à esquerda e imagem à direita
-        HBox centro = new HBox(botoesLogo, imagemBox);
-        centro.setAlignment(Pos.CENTER);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS); // Expande o spacer para ocupar o espaço disponível
+        HBox confgLogo = new HBox(botoesLogo, spacer, imagemBox);
+        confgLogo.setPadding(new Insets(20, 0, 30, 0));
+        confgLogo.setAlignment(Pos.CENTER_LEFT);
+        HBox.setMargin(botoesLogo, new Insets(0, 0, 0, 50)); // Mantém a margem para mover os botões
+        HBox.setMargin(imagemBox, new Insets(0, 0, 0, 2)); // Margem mínima para a imagem
 
         // Layout principal
         BorderPane root = new BorderPane();
         root.setLeft(leftMenu);
-        root.setCenter(centro);
+        root.setCenter(confgLogo);
 
         Scene scene = new Scene(root, 1200, 700);
         scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
@@ -181,6 +207,7 @@ public class Configurar {
                     }
 
                     imageLogo.setImage(new Image(selectedFile.toURI().toString()));
+                    semLogoLabel.setVisible(false);
                     mostrarAlerta("Logo atualizada", "Logo da empresa atualizada com sucesso!", AlertType.INFORMATION);
 
                 } catch (Exception ex) {
@@ -194,10 +221,13 @@ public class Configurar {
         btnRemoverLogo.setOnAction(e -> {
             File logoFile = new File("logo_empresa.png");
             if (logoFile.exists() && logoFile.delete()) {
-                imageLogo.setImage(new Image(getClass().getResourceAsStream("/img/logo/logo.png")));
+                imageLogo.setImage(null);
+                semLogoLabel.setVisible(true);
                 mostrarAlerta("Logo removida", "Logo da empresa foi removida com sucesso!", AlertType.INFORMATION);
             } else {
-                mostrarAlerta("Erro", "Erro ao remover logo.", AlertType.ERROR);
+                imageLogo.setImage(null);
+                semLogoLabel.setVisible(true);
+                mostrarAlerta("Erro", "Erro ao remover logo ou logo não encontrada.", AlertType.ERROR);
             }
         });
 
