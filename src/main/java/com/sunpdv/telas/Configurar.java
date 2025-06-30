@@ -161,7 +161,7 @@ public class Configurar {
         imageContainer.getChildren().addAll(imageLogo, semLogoLabel);
 
         VBox imagemBox = new VBox(imageContainer);
-        imagemBox.setAlignment(Pos.TOP_LEFT);
+        imagemBox.setPadding(new Insets(50, 600, 20, 0));
 
         // Organiza botões à esquerda e imagem à direita
         Region spacer = new Region();
