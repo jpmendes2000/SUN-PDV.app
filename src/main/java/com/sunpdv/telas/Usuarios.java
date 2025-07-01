@@ -107,7 +107,7 @@ public class Usuarios {
         logoView.setPreserveRatio(true);
         
         Label titulonaABA = new Label("Gerenciamento de Usuários");
-        titulonaABA.setStyle("-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;");
+        titulonaABA.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 18px; -fx-font-weight: bold;");
 
         VBox logoBox = new VBox(logoView, titulonaABA);
         logoBox.setAlignment(Pos.CENTER);

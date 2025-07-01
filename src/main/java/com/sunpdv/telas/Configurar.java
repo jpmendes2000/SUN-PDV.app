@@ -23,7 +23,8 @@ import javafx.stage.Stage;
 import java.io.*;
 
 public class Configurar {
-    // Alerta personalizado com CSS para confirmação
+
+    // Classe interna para criar alertas personalizados com estilo CSS
     private static class CustomConfirmationAlert extends Alert {
         public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
             super(AlertType.CONFIRMATION);
@@ -32,37 +33,41 @@ public class Configurar {
             this.setHeaderText(header);
             this.setContentText(content);
             Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
-            stage.getScene().getStylesheets().add(
-                getClass().getResource("/img/css/style.css").toExternalForm()
-            );
+            stage.getScene().getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
         }
     }
 
-    // Criação de botão lateral com ícone e efeito de hover com barra amarela
+    // Método para criar botões laterais com ícone e efeito de hover
     private Button criarBotaoLateral(String texto, String caminhoIcone) {
         try {
+            // Carrega a imagem do ícone a partir do recurso
             Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
             ImageView icon = new ImageView(img);
             icon.setFitWidth(20);
             icon.setFitHeight(20);
 
+            // Configura o texto do botão com estilo
             Label textLabel = new Label(texto);
             textLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
 
-            StackPane indicatorContainer = new StackPane(); // barra amarela
+            // Cria o contêiner para a barra indicadora amarela
+            StackPane indicatorContainer = new StackPane();
             indicatorContainer.setMinWidth(3);
             indicatorContainer.setMaxWidth(3);
             indicatorContainer.setMinHeight(30);
             indicatorContainer.setMaxHeight(30);
             indicatorContainer.setStyle("-fx-background-color: transparent;");
 
+            // Alinha o ícone e o texto à esquerda
             HBox leftContent = new HBox(10, icon, textLabel);
             leftContent.setAlignment(Pos.CENTER_LEFT);
 
+            // Monta o conteúdo do botão com espaçamento
             HBox content = new HBox(leftContent, new Region(), indicatorContainer);
             content.setAlignment(Pos.CENTER_LEFT);
             HBox.setHgrow(content.getChildren().get(1), Priority.ALWAYS);
 
+            // Configura o botão com o conteúdo gráfico
             Button btn = new Button();
             btn.setGraphic(content);
             btn.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
@@ -70,11 +75,11 @@ public class Configurar {
             btn.setPrefWidth(280);
             btn.setPrefHeight(42);
 
-            // Efeito hover (barra amarela e fundo)
+            // Adiciona efeito de hover (fundo e barra amarela)
             btn.setOnMouseEntered(e -> {
                 btn.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18));");
                 indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64);");
-            }); 
+            });
             btn.setOnMouseExited(e -> {
                 btn.setStyle("-fx-background-color: transparent;");
                 indicatorContainer.setStyle("-fx-background-color: transparent;");
@@ -82,17 +87,18 @@ public class Configurar {
 
             return btn;
         } catch (Exception e) {
+            // Retorna um botão simples em caso de erro ao carregar o ícone
             return new Button(texto);
         }
     }
 
     public void show(Stage stage) {
-        // --- Barra lateral (Menu esquerdo) ---
+        // Cria a barra lateral (menu esquerdo) com fundo azul escuro
         VBox leftMenu = new VBox();
         leftMenu.setPrefWidth(280);
         leftMenu.setStyle("-fx-background-color: #00536d;");
 
-        // Logo SUN PDV no topo do menu lateral
+        // Configura o logo SUN PDV no topo do menu
         Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(120);
@@ -100,13 +106,13 @@ public class Configurar {
         logoView.setStyle("-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 0);");
 
         Label titulonaABA = new Label("Configurações");
-        titulonaABA.setStyle("-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;");
+        titulonaABA.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 18px; -fx-font-weight: bold;");
 
         VBox logoBox = new VBox(logoView, titulonaABA);
         logoBox.setAlignment(Pos.CENTER);
         logoBox.setPadding(new Insets(20, 0, 20, 0));
 
-        // Botões Home e Sair com ícones
+        // Adiciona botões Home e Sair ao menu
         Button btnVoltarHome = criarBotaoLateral("Home", "/img/icon/casa.png");
         Button btnSair = criarBotaoLateral("Sair do Sistema", "/img/icon/fechar.png");
 
@@ -115,38 +121,19 @@ public class Configurar {
         buttonBox.setPadding(new Insets(0, 0, 20, 0));
 
         leftMenu.getChildren().addAll(logoBox, new Region(), buttonBox);
-        VBox.setVgrow(leftMenu.getChildren().get(1), Priority.ALWAYS); // empurra os botões para baixo
+        VBox.setVgrow(leftMenu.getChildren().get(1), Priority.ALWAYS); // Empurra os botões para baixo
 
-        // --- Área central (Configurações da logo) ---
-
-        Label titulo = new Label("Configuração de Logo");
-        titulo.setStyle("-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;");
-
-        // Botões "Selecionar logo" e "Remover logo"
-        Button btnSelecionarLogo = new Button("Selecionar");
-        Button btnRemoverLogo = new Button("Tirar");
-        btnSelecionarLogo.setPrefSize(100, 30);
-        btnSelecionarLogo.getStyleClass().add("BotaoConfig");
-        btnRemoverLogo.setPrefSize(100, 30);
-        btnRemoverLogo.getStyleClass().add("BotaoConfig");
-
-        VBox botoesLogo = new VBox();
-        botoesLogo.setSpacing(7);
-        botoesLogo.setPadding(new Insets(0, 0, 0, 0));
-        VBox.setMargin(titulo, new Insets(0, 50, 10, 50));
-        botoesLogo.getChildren().addAll(titulo, btnSelecionarLogo, btnRemoverLogo);
-
-        // Configuração do retângulo com a imagem ou texto "Sem logo"
+        // Configura o contêiner da imagem (logo ou texto "Sem logo")
         ImageView imageLogo = new ImageView();
         imageLogo.setFitWidth(100);
         imageLogo.setPreserveRatio(true);
 
         Label semLogoLabel = new Label("Sem logo");
-        semLogoLabel.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
+        semLogoLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 14px;");
 
         StackPane imageContainer = new StackPane();
         imageContainer.setPrefSize(150, 100);
-        imageContainer.setStyle("-fx-background-color: #D3D3D3; -fx-border-color: #A9A9A9; -fx-border-width: 2;");
+        imageContainer.setStyle("-fx-background-color: transparent; -fx-border-color: #012d5c; -fx-border-width: 2; -fx-border-radius: 4px;");
         imageContainer.setAlignment(Pos.CENTER);
 
         File fileLogo = new File("logo_empresa.png");
@@ -157,25 +144,33 @@ public class Configurar {
             imageLogo.setImage(null);
             semLogoLabel.setVisible(true);
         }
-
         imageContainer.getChildren().addAll(imageLogo, semLogoLabel);
 
-        VBox imagemBox = new VBox(imageContainer);
-        imagemBox.setPadding(new Insets(50, 600, 20, 0));
+        // Configura o layout da área de configuração de logo
+        Label titulo = new Label("Configuração de Logo");
+        titulo.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 18px; -fx-font-weight: bold;");
 
-        // Organiza botões à esquerda e imagem à direita
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS); // Expande o spacer para ocupar o espaço disponível
-        HBox confgLogo = new HBox(botoesLogo, spacer, imagemBox);
-        confgLogo.setPadding(new Insets(20, 0, 30, 0));
-        confgLogo.setAlignment(Pos.CENTER_LEFT);
-        HBox.setMargin(botoesLogo, new Insets(0, 0, 0, 50)); // Mantém a margem para mover os botões
-        HBox.setMargin(imagemBox, new Insets(0, 0, 0, 2)); // Margem mínima para a imagem
+        Button btnSelecionarLogo = new Button("Selecionar");
+        Button btnRemoverLogo = new Button("Tirar");
+        btnSelecionarLogo.setPrefSize(100, 30);
+        btnSelecionarLogo.getStyleClass().add("BotaoConfig");
+        btnRemoverLogo.setPrefSize(100, 30);
+        btnRemoverLogo.getStyleClass().add("BotaoConfig");
 
-        // Layout principal
+        VBox botoesStack = new VBox(10, btnSelecionarLogo, btnRemoverLogo);
+        botoesStack.setAlignment(Pos.CENTER);
+
+        HBox botoesLogo = new HBox(10, botoesStack, imageContainer);
+        botoesLogo.setAlignment(Pos.CENTER_LEFT);
+
+        VBox configLayout = new VBox(10, titulo, botoesLogo);
+        configLayout.setAlignment(Pos.TOP_LEFT);
+        configLayout.setPadding(new Insets(20, 0, 0, 30));
+
+        // Configura o layout principal
         BorderPane root = new BorderPane();
         root.setLeft(leftMenu);
-        root.setCenter(confgLogo);
+        root.setCenter(configLayout);
 
         Scene scene = new Scene(root, 1200, 700);
         scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
@@ -185,31 +180,24 @@ public class Configurar {
         stage.setFullScreen(true);
         stage.show();
 
-        // --- Ações dos botões de configuração de logo ---
-
-        // Botão Selecionar logo
+        // Define as ações dos botões
         btnSelecionarLogo.setOnAction(e -> {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Selecionar Imagem de Logo");
-            fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("Imagens", "*.png", "*.jpg", "*.jpeg")
-            );
+            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Imagens", "*.png", "*.jpg", "*.jpeg"));
 
             File selectedFile = fileChooser.showOpenDialog(stage);
             if (selectedFile != null) {
                 try (FileInputStream fis = new FileInputStream(selectedFile);
                      FileOutputStream fos = new FileOutputStream("logo_empresa.png")) {
-
                     byte[] buffer = new byte[1024];
                     int bytesRead;
                     while ((bytesRead = fis.read(buffer)) > 0) {
                         fos.write(buffer, 0, bytesRead);
                     }
-
                     imageLogo.setImage(new Image(selectedFile.toURI().toString()));
                     semLogoLabel.setVisible(false);
                     mostrarAlerta("Logo atualizada", "Logo da empresa atualizada com sucesso!", AlertType.INFORMATION);
-
                 } catch (Exception ex) {
                     ex.printStackTrace();
                     mostrarAlerta("Erro", "Erro ao salvar imagem.", AlertType.ERROR);
@@ -217,7 +205,6 @@ public class Configurar {
             }
         });
 
-        // Botão Remover logo
         btnRemoverLogo.setOnAction(e -> {
             File logoFile = new File("logo_empresa.png");
             if (logoFile.exists() && logoFile.delete()) {
@@ -231,22 +218,21 @@ public class Configurar {
             }
         });
 
-        // Botão Home: retorna para a tela inicial de acordo com o cargo
         btnVoltarHome.setOnAction(e -> {
             try {
-                String Cargo = AutenticarUser.getCargo();
-                switch (Cargo) {
+                String cargo = AutenticarUser.getCargo();
+                switch (cargo) {
                     case "Administrador":
-                        new TelaHomeADM(AutenticarUser.getNome(), Cargo).mostrar(stage);
+                        new TelaHomeADM(AutenticarUser.getNome(), cargo).mostrar(stage);
                         break;
                     case "Moderador":
-                        new TelaHomeMOD(AutenticarUser.getNome(), Cargo).mostrar(stage);
+                        new TelaHomeMOD(AutenticarUser.getNome(), cargo).mostrar(stage);
                         break;
                     case "Funcionário":
-                        new TelaHomeFUN(AutenticarUser.getNome(), Cargo).mostrar(stage);
+                        new TelaHomeFUN(AutenticarUser.getNome(), cargo).mostrar(stage);
                         break;
                     default:
-                        System.out.println("Cargo não reconhecido: " + Cargo);
+                        System.out.println("Cargo não reconhecido: " + cargo);
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -254,7 +240,6 @@ public class Configurar {
             }
         });
 
-        // Botão Sair
         btnSair.setOnAction(e -> {
             CustomConfirmationAlert alert = new CustomConfirmationAlert(stage, "Sair", "Deseja realmente sair do sistema?", "");
             alert.showAndWait().ifPresent(response -> {
@@ -263,7 +248,7 @@ public class Configurar {
         });
     }
 
-    // Função de alerta genérica
+    // Método genérico para exibir alertas
     private void mostrarAlerta(String titulo, String mensagem, AlertType tipo) {
         Alert alert = new Alert(tipo);
         alert.setTitle(titulo);
