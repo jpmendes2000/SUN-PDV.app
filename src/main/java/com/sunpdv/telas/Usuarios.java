@@ -49,35 +49,18 @@ public class Usuarios {
             Label textLabel = new Label(texto);
             textLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
 
-            StackPane indicatorContainer = new StackPane();
-            indicatorContainer.setMinWidth(3);
-            indicatorContainer.setMaxWidth(3);
-            indicatorContainer.setMinHeight(30);
-            indicatorContainer.setMaxHeight(30);
-            indicatorContainer.setStyle("-fx-background-color: transparent;");
-
             HBox leftContent = new HBox(10, icon, textLabel);
             leftContent.setAlignment(Pos.CENTER_LEFT);
 
-            HBox content = new HBox(leftContent, new Region(), indicatorContainer);
-            content.setAlignment(Pos.CENTER_LEFT);
-            HBox.setHgrow(content.getChildren().get(1), Priority.ALWAYS);
-
             Button btn = new Button();
-            btn.setGraphic(content);
+            btn.setGraphic(leftContent);
             btn.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-            btn.setStyle("-fx-background-color: transparent;");
+            btn.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
             btn.setPrefWidth(280);
             btn.setPrefHeight(42);
 
-            btn.setOnMouseEntered(e -> {
-                btn.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18));");
-                indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64);");
-            });
-            btn.setOnMouseExited(e -> {
-                btn.setStyle("-fx-background-color: transparent;");
-                indicatorContainer.setStyle("-fx-background-color: transparent;");
-            });
+            btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: #e0e0e0; -fx-cursor: hand;"));
+            btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: transparent; -fx-cursor: hand;"));
 
             return btn;
         } catch (Exception e) {
@@ -86,7 +69,6 @@ public class Usuarios {
         }
     }
 
-    // Classe para representar dados de usuário
     private static class User {
         int id;
         String nome;
@@ -95,20 +77,19 @@ public class Usuarios {
 
         User(int id, String nome, String cargo, String permissao) {
             this.id = id;
-            this.nome = (nome != null && !nome.isEmpty()) ? nome : "Usuário Desconhecido";
-            this.cargo = cargo;
-            this.permissao = permissao;
+            this.nome = (nome != null && !nome.trim().isEmpty() && !nome.matches("\\d+")) ? nome.trim() : "Usuário Desconhecido";
+            this.cargo = (cargo != null && !cargo.trim().isEmpty()) ? cargo.trim() : "Sem Cargo";
+            this.permissao = (permissao != null && !permissao.trim().isEmpty()) ? permissao.trim() : "Sem Permissão";
         }
     }
 
-    // Método para carregar usuários do banco de dados
     private List<User> carregarUsuarios() {
         List<User> usuarios = new ArrayList<>();
         String query = "SELECT ls.ID_Login, ls.Nome, c.Cargo, p.permissao " +
-                      "FROM login_sistema ls " +
-                      "JOIN cargo c ON ls.ID_Cargo = c.ID_Cargo " +
-                      "JOIN permissao p ON ls.ID_Permissao = p.ID_Permissao " +
-                      "WHERE p.permissao = 'Aceito'";
+                       "FROM login_sistema ls " +
+                       "JOIN cargo c ON ls.ID_Cargo = c.ID_Cargo " +
+                       "JOIN permissao p ON ls.ID_Permissao = p.ID_Permissao " +
+                       "WHERE p.permissao = 'Aceito'";
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              Statement stmt = conn.createStatement();
@@ -116,6 +97,7 @@ public class Usuarios {
 
             while (rs.next()) {
                 String nome = rs.getString("Nome");
+                System.out.println("Nome carregado do banco: " + (nome != null ? nome : "null")); // Depuração
                 usuarios.add(new User(
                     rs.getInt("ID_Login"),
                     nome,
@@ -128,13 +110,12 @@ public class Usuarios {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Erro");
             alert.setHeaderText("Erro ao carregar usuários");
-            alert.setContentText("Detalhes do erro: " + e.getMessage());
+            alert.setContentText("Detalhes: " + e.getMessage());
             alert.showAndWait();
         }
         return usuarios;
     }
 
-    // Método para carregar cargos disponíveis
     private List<String> carregarCargos() {
         List<String> cargos = new ArrayList<>();
         String query = "SELECT Cargo FROM cargo";
@@ -151,70 +132,101 @@ public class Usuarios {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Erro");
             alert.setHeaderText("Erro ao carregar cargos");
-            alert.setContentText("Detalhes do erro: " + e.getMessage());
+            alert.setContentText("Detalhes: " + e.getMessage());
             alert.showAndWait();
         }
         return cargos;
     }
 
-    // Método para criar painel de cada usuário
     private VBox criarPainelUsuario(User user) {
         VBox painel = new VBox(10);
-        painel.setStyle("-fx-background-color: white; -fx-background-radius: 8px; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 2);");
-        painel.setPadding(new Insets(15));
+        painel.setStyle("-fx-background-color: white; -fx-padding: 15; -fx-border-radius: 5; -fx-background-radius: 5; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 2);");
         painel.setPrefWidth(600);
 
-        Label nomeLabel = new Label("Nome: " + (user.nome != null ? user.nome : "Sem Nome"));
+        Label nomeLabel = new Label("Nome: " + user.nome);
         nomeLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
 
-        Label cargoLabel = new Label("Cargo: " + (user.cargo != null ? user.cargo : "Sem Cargo"));
+        Label cargoLabel = new Label("Cargo: ");
         cargoLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #666;");
 
-        Button btnMudarSenha = new Button("Mudar Senha");
-        btnMudarSenha.setStyle("-fx-background-color: #00536d; -fx-text-fill: white; -fx-background-radius: 5px; -fx-cursor: hand;");
-        btnMudarSenha.setOnAction(e -> {
-            TextInputDialog dialog = new TextInputDialog();
-            dialog.setTitle("Mudar Senha");
-            dialog.setHeaderText("Mudar senha para " + user.nome);
-            dialog.setContentText("Nova senha:");
-            dialog.getDialogPane().getStylesheets().add(
-                getClass().getResource("/img/css/style.css").toExternalForm()
-            );
-            dialog.showAndWait().ifPresent(senha -> {
+        ComboBox<String> cargoCombo = new ComboBox<>();
+        List<String> cargos = carregarCargos();
+        if (cargos.isEmpty()) {
+            cargoCombo.getItems().add("Nenhum cargo disponível");
+            cargoCombo.setDisable(true);
+        } else {
+            cargoCombo.getItems().addAll(cargos);
+            cargoCombo.setValue(user.cargo);
+        }
+        cargoCombo.setStyle("-fx-background-color: white; -fx-border-color: #ccc; -fx-border-radius: 5;");
+        cargoCombo.setOnAction(e -> {
+            String novoCargo = cargoCombo.getValue();
+            if (novoCargo != null && !novoCargo.equals(user.cargo)) {
                 try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-                    String sql = "UPDATE login_sistema SET Senha = ? WHERE ID_Login = ?";
+                    String sql = "UPDATE login_sistema SET ID_Cargo = (SELECT ID_Cargo FROM cargo WHERE Cargo = ?) WHERE ID_Login = ?";
                     PreparedStatement stmt = conn.prepareStatement(sql);
-                    stmt.setString(1, senha); // Em produção, use hash para a senha
+                    stmt.setString(1, novoCargo);
                     stmt.setInt(2, user.id);
                     stmt.executeUpdate();
-
-                    Alert alert = new CustomConfirmationAlert(
-                        stage,
-                        "Sucesso",
-                        "Senha alterada com sucesso!",
-                        "A senha do usuário " + user.nome + " foi atualizada."
-                    );
+                    Alert alert = new CustomConfirmationAlert(stage, "Sucesso", "Cargo alterado!", "O cargo foi atualizado para " + novoCargo + ".");
                     alert.showAndWait();
+                    show(stage); // Recarrega a tela
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Erro");
-                    alert.setHeaderText("Erro ao atualizar senha");
-                    alert.setContentText("Não foi possível atualizar a senha do usuário.");
+                    alert.setHeaderText("Falha ao mudar cargo");
+                    alert.setContentText("Detalhes: " + ex.getMessage());
                     alert.showAndWait();
                 }
-            });
+            }
         });
 
+        HBox cargoBox = new HBox(10, cargoLabel, cargoCombo);
+        cargoBox.setAlignment(Pos.CENTER_LEFT);
+
+        TextField senhaField = new TextField();
+        senhaField.setPromptText("Nova senha");
+        senhaField.setStyle("-fx-background-color: white; -fx-border-color: #ccc; -fx-border-radius: 5; -fx-pref-width: 150;");
+        Button btnSalvarSenha = new Button("Salvar");
+        btnSalvarSenha.setStyle("-fx-background-color: #00536d; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;");
+        btnSalvarSenha.setOnAction(e -> {
+            String novaSenha = senhaField.getText().trim();
+            if (!novaSenha.isEmpty()) {
+                try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+                    String sql = "UPDATE login_sistema SET Senha = ? WHERE ID_Login = ?";
+                    PreparedStatement stmt = conn.prepareStatement(sql);
+                    stmt.setString(1, novaSenha);
+                    stmt.setInt(2, user.id);
+                    stmt.executeUpdate();
+                    Alert alert = new CustomConfirmationAlert(stage, "Sucesso", "Senha alterada!", "A senha foi atualizada com sucesso.");
+                    alert.showAndWait();
+                    senhaField.clear();
+                    show(stage); // Recarrega a tela
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Erro");
+                    alert.setHeaderText("Falha ao mudar senha");
+                    alert.setContentText("Detalhes: " + ex.getMessage());
+                    alert.showAndWait();
+                }
+            } else {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Aviso");
+                alert.setHeaderText("Campo vazio");
+                alert.setContentText("Digite uma nova senha.");
+                alert.showAndWait();
+            }
+        });
+
+        HBox senhaBox = new HBox(10, senhaField, btnSalvarSenha);
+        senhaBox.setAlignment(Pos.CENTER_LEFT);
+
         Button btnRemoverAcesso = new Button("Remover Acesso");
-        btnRemoverAcesso.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white; -fx-background-radius: 5px; -fx-cursor: hand;");
+        btnRemoverAcesso.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;");
         btnRemoverAcesso.setOnAction(e -> {
-            CustomConfirmationAlert alert = new CustomConfirmationAlert(
-                stage,
-                "Confirmação de Remoção",
-                "Deseja realmente remover o acesso de " + user.nome + "?",
-                "Esta ação alterará a permissão para 'Negado'."
-            );
+            CustomConfirmationAlert alert = new CustomConfirmationAlert(stage, "Confirmação", "Remover acesso de " + user.nome + "?", "Isso definirá a permissão como 'Negado'.");
             alert.showAndWait().ifPresent(response -> {
                 if (response == ButtonType.OK) {
                     try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
@@ -222,70 +234,25 @@ public class Usuarios {
                         PreparedStatement stmt = conn.prepareStatement(sql);
                         stmt.setInt(1, user.id);
                         stmt.executeUpdate();
-
-                        Alert success = new CustomConfirmationAlert(
-                            stage,
-                            "Sucesso",
-                            "Acesso removido!",
-                            "O acesso do usuário " + user.nome + " foi removido com sucesso."
-                        );
+                        Alert success = new CustomConfirmationAlert(stage, "Sucesso", "Acesso removido!", "O acesso foi removido com sucesso.");
                         success.showAndWait();
-                        // Atualizar a lista após remoção
                         show(stage);
                     } catch (SQLException ex) {
                         ex.printStackTrace();
                         Alert error = new Alert(Alert.AlertType.ERROR);
                         error.setTitle("Erro");
-                        error.setHeaderText("Erro ao remover acesso");
-                        error.setContentText("Não foi possível remover o acesso do usuário.");
-                        error.showAndWait();
+                        error.setHeaderText("Falha ao remover acesso");
+                        alert.setContentText("Detalhes: " + ex.getMessage());
+                        alert.showAndWait();
                     }
                 }
             });
         });
 
-        Button btnMudarCargo = new Button("Mudar Cargo");
-        btnMudarCargo.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-background-radius: 5px; -fx-cursor: hand;");
-        btnMudarCargo.setOnAction(e -> {
-            List<String> cargosDisponiveis = carregarCargos();
-            ChoiceDialog<String> dialog = new ChoiceDialog<>(user.cargo, cargosDisponiveis);
-            dialog.setTitle("Mudar Cargo");
-            dialog.setHeaderText("Selecione o novo cargo para " + user.nome);
-            dialog.getDialogPane().getStylesheets().add(
-                getClass().getResource("/img/css/style.css").toExternalForm()
-            );
-            dialog.showAndWait().ifPresent(novoCargo -> {
-                try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-                    String sql = "UPDATE login_sistema SET ID_Cargo = (SELECT ID_Cargo FROM cargo WHERE Cargo = ?) WHERE ID_Login = ?";
-                    PreparedStatement stmt = conn.prepareStatement(sql);
-                    stmt.setString(1, novoCargo);
-                    stmt.setInt(2, user.id);
-                    stmt.executeUpdate();
-
-                    Alert alert = new CustomConfirmationAlert(
-                        stage,
-                        "Sucesso",
-                        "Cargo alterado com sucesso!",
-                        "O cargo do usuário " + user.nome + " foi atualizado para " + novoCargo + "."
-                    );
-                    alert.showAndWait();
-                    // Atualizar a lista após alteração
-                    show(stage);
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Erro");
-                    alert.setHeaderText("Erro ao atualizar cargo");
-                    alert.setContentText("Não foi possível atualizar o cargo do usuário.");
-                    alert.showAndWait();
-                }
-            });
-        });
-
-        HBox botoes = new HBox(10, btnMudarSenha, btnRemoverAcesso, btnMudarCargo);
+        HBox botoes = new HBox(10, senhaBox, btnRemoverAcesso);
         botoes.setAlignment(Pos.CENTER_RIGHT);
 
-        painel.getChildren().addAll(nomeLabel, cargoLabel, botoes);
+        painel.getChildren().addAll(nomeLabel, cargoBox, botoes);
         return painel;
     }
 
@@ -298,10 +265,9 @@ public class Usuarios {
         stage.setWidth(screenBounds.getWidth());
         stage.setHeight(screenBounds.getHeight());
 
-        // Menu lateral
-        VBox leftMenu = new VBox();
-        leftMenu.setPrefWidth(280);
-        leftMenu.setStyle("-fx-background-color: #00536d;");
+        VBox menu = new VBox(20);
+        menu.setStyle("-fx-background-color: #00536d; -fx-padding: 20;");
+        menu.setPrefWidth(280);
 
         // Logo SUN PDV
         Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
@@ -316,11 +282,9 @@ public class Usuarios {
         logoBox.setAlignment(Pos.CENTER);
         logoBox.setPadding(new Insets(20, 0, 20, 0));
 
-        // Botões
         Button btnHome = criarBotaoLateral("Home", "/img/icon/casa.png");
-        Button btnSair = criarBotaoLateral("Sair do Sistema", "/img/icon/fechar.png");
+        Button btnSair = criarBotaoLateral("Sair", "/img/icon/fechar.png");
 
-        // Ações
         btnHome.setOnAction(e -> {
             try {
                 String cargo = AutenticarUser.getCargo();
@@ -341,19 +305,14 @@ public class Usuarios {
                 ex.printStackTrace();
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Erro");
-                alert.setHeaderText(null);
-                alert.setContentText("Erro ao retornar para a tela principal.");
+                alert.setHeaderText("Falha ao carregar tela inicial");
+                alert.setContentText("Detalhes: " + ex.getMessage());
                 alert.showAndWait();
             }
         });
 
         btnSair.setOnAction(e -> {
-            CustomConfirmationAlert alert = new CustomConfirmationAlert(
-                stage,
-                "Confirmação de Saída",
-                "Deseja realmente sair do sistema?",
-                ""
-            );
+            CustomConfirmationAlert alert = new CustomConfirmationAlert(stage, "Confirmação", "Deseja sair?", "Isso fechará o sistema.");
             alert.showAndWait().ifPresent(response -> {
                 if (response == ButtonType.OK) {
                     stage.close();
@@ -361,52 +320,33 @@ public class Usuarios {
             });
         });
 
+        Region espaco = new Region();
+        VBox.setVgrow(espaco, Priority.ALWAYS);
         VBox buttonBox = new VBox(10, btnHome, btnSair);
         buttonBox.setAlignment(Pos.BOTTOM_LEFT);
         buttonBox.setPadding(new Insets(0, 0, 20, 0));
 
-        Region espaco = new Region();
-        VBox.setVgrow(espaco, Priority.ALWAYS);
-        leftMenu.getChildren().addAll(logoBox, espaco, buttonBox);
+        menu.getChildren().addAll(logoBox, espaco, buttonBox);
 
-        // Conteúdo da tela - Lista de usuários
         VBox listaUsuarios = new VBox(10);
         listaUsuarios.setPadding(new Insets(20));
 
-        // Carregar usuários do banco
         List<User> usuarios = carregarUsuarios();
         if (usuarios.isEmpty()) {
-            Label semUsuarios = new Label("Nenhum usuário encontrado com permissão 'Aceito'.");
-            semUsuarios.setStyle("-fx-font-size: 16px; -fx-text-fill: #999;");
-            listaUsuarios.getChildren().add(semUsuarios);
+            listaUsuarios.getChildren().add(new Label("Nenhum usuário encontrado com permissão 'Aceito'."));
         } else {
             for (User user : usuarios) {
                 listaUsuarios.getChildren().add(criarPainelUsuario(user));
             }
         }
 
-        ScrollPane scrollPane = new ScrollPane(listaUsuarios);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setStyle("-fx-background: #f4f4f4; -fx-border-color: transparent;");
+        ScrollPane scroll = new ScrollPane(listaUsuarios);
+        scroll.setFitToWidth(true);
+        scroll.setStyle("-fx-background: #f4f4f4;");
 
-        // Mensagem inferior direita
-        String nomeAutenticado = AutenticarUser.getNome() != null && !AutenticarUser.getNome().isEmpty() ?
-                                AutenticarUser.getNome() : "Usuário Desconhecido";
-        String cargo = AutenticarUser.getCargo() != null ? AutenticarUser.getCargo() : "Sem Cargo";
-
-        Label mensagemFixa = new Label("Bem-vindo(a), " + nomeAutenticado + " você é " + cargo);
-        mensagemFixa.getStyleClass().add("mensagem-bemvindo");
-
-        StackPane posMensagem = new StackPane(mensagemFixa);
-        posMensagem.setAlignment(Pos.BOTTOM_RIGHT);
-        posMensagem.setPadding(new Insets(0, 20, 20, 280));
-
-        StackPane centroComMensagem = new StackPane(scrollPane, posMensagem);
-
-        // Layout principal
         BorderPane layout = new BorderPane();
-        layout.setLeft(leftMenu);
-        layout.setCenter(centroComMensagem);
+        layout.setLeft(menu);
+        layout.setCenter(scroll);
 
         Scene scene = new Scene(layout, 1200, 800);
         scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
