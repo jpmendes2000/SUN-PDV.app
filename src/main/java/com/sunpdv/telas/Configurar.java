@@ -241,9 +241,11 @@ public class Configurar {
         });
 
         btnSair.setOnAction(e -> {
-            CustomConfirmationAlert alert = new CustomConfirmationAlert(stage, "Sair", "Deseja realmente sair do sistema?", "");
+            CustomConfirmationAlert alert = new CustomConfirmationAlert(stage, "Confirmação", "Deseja sair?", "Isso fechará o sistema.");
             alert.showAndWait().ifPresent(response -> {
-                if (response == ButtonType.OK) stage.close();
+                if (response == ButtonType.OK) {
+                    stage.close();
+                }
             });
         });
     }

@@ -153,8 +153,8 @@ public class TelaHomeFUN {
             CustomConfirmationAlert alert = new CustomConfirmationAlert(
                 stage,
                 "Confirmação de Saída",
-                "Deseja realmente sair do sistema?",
-                ""
+                "Deseja sair?",
+                "Isso fechará o sistema."
             );
             alert.showAndWait().ifPresent(response -> {
                 if (response == ButtonType.OK) {
