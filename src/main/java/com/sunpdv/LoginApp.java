@@ -44,10 +44,9 @@ public class LoginApp extends Application {
     private static final int TEMPO_ESPERA = 120;
     private Timeline contagemRegressiva;
 
-public static String url = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=true;trustServerCertificate=true;";
-private static final String USER = "sa";
-private static final String PASSWORD = "Senha@12345!";
-
+    public static String url = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=true;trustServerCertificate=true;";
+    private static final String USER = "sa";
+    private static final String PASSWORD = "Senha@12345!";
 
     public static void main(String[] args) {
         try {
@@ -84,18 +83,14 @@ private static final String PASSWORD = "Senha@12345!";
 
         senhaVisivelField.textProperty().bindBidirectional(senhaField.textProperty());
 
-        // Criação do ToggleButton com ícone
         ToggleButton olhoBtn = new ToggleButton();
         olhoBtn.getStyleClass().add("olho-btn");
         olhoBtn.setStyle("-fx-background-color: transparent; -fx-padding: 5 5 5 5;");
 
-        // Caminhos dos ícones (você pode converter para path relativo se quiser usar como resource)
         String caminhoVisivel = getClass().getResource("/img/icon/visibilidade.png").toExternalForm();
         String caminhoNaoVisivel = getClass().getResource("/img/icon/not-visibilidade.png").toExternalForm();
         String entrarIcon = getClass().getResource("/img/icon/entrar.png").toExternalForm();
 
-
-        // ImageView que será trocado
         ImageView olhoIcon = new ImageView(new Image(caminhoNaoVisivel));
         olhoIcon.setFitWidth(27);
         olhoIcon.setFitHeight(27);
@@ -104,15 +99,13 @@ private static final String PASSWORD = "Senha@12345!";
         ImageView entrarIconView = new ImageView(new Image(entrarIcon));
         entrarIconView.setFitHeight(24);
         entrarIconView.setFitWidth(24);
-        // Ação do botão
+
         olhoBtn.setOnAction(e -> {
             boolean mostrar = olhoBtn.isSelected();
-
             senhaField.setVisible(!mostrar);
             senhaField.setManaged(!mostrar);
             senhaVisivelField.setVisible(mostrar);
             senhaVisivelField.setManaged(mostrar);
-
             olhoIcon.setImage(new Image(mostrar ? caminhoVisivel : caminhoNaoVisivel));
         });
 
@@ -185,7 +178,6 @@ private static final String PASSWORD = "Senha@12345!";
                 protected String call() {
                     try {
                         return autenticarUsuario(email, senha);
-
                     } catch (Exception ex) {
                         ex.printStackTrace();
                         return "Erro: " + ex.getMessage();
@@ -197,7 +189,6 @@ private static final String PASSWORD = "Senha@12345!";
                 String resultado = loginTask.getValue();
                 if ("sucesso".equalsIgnoreCase(resultado)) {
                     tentativas = 0;
-
                     try {
                         switch (AutenticarUser.getCargo()) {
                             case "Administrador":
@@ -214,8 +205,6 @@ private static final String PASSWORD = "Senha@12345!";
                                 loginBtn.setDisable(false);
                                 return;
                         }
-                        
-                        // Fecha a janela de login
                         ((Stage) loginBtn.getScene().getWindow()).close();
                     } catch (Exception ex) {
                         statusLabel.setText("Erro ao abrir a tela principal");
@@ -265,58 +254,59 @@ private static final String PASSWORD = "Senha@12345!";
     }
 
     private String autenticarUsuario(String email, String senha) throws Exception {
-    String emailCriptografado = criptografarAES(email);
-    String senhaHash = hashSHA256(senha);
+        String emailCriptografado = criptografarAES(email);
+        String senhaHash = hashSHA256(senha);
 
-    try (Connection conn = DriverManager.getConnection(url, USER, PASSWORD)) {
-        String sql = "SELECT l.Nome, c.Cargo, l.ID_Permissao " +
-                     "FROM login_sistema l " +
-                     "INNER JOIN Cargo c ON l.ID_Cargo = c.ID_Cargo " +
-                     "WHERE l.Email = ? AND l.Senha = ?";
+        try (Connection conn = DriverManager.getConnection(url, USER, PASSWORD)) {
+            String sql = "SELECT l.Nome, c.Cargo, p.permissao " +
+                         "FROM login_sistema l " +
+                         "INNER JOIN Cargo c ON l.ID_Cargo = c.ID_Cargo " +
+                         "INNER JOIN Permissao p ON l.ID_Permissao = p.ID_Permissao " +
+                         "WHERE l.Email = ? AND l.Senha = ?";
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, emailCriptografado);
-            stmt.setString(2, senhaHash);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, emailCriptografado);
+                stmt.setString(2, senhaHash);
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    String nome = rs.getString("Nome");
-                    String cargo = rs.getString("Cargo");
-                    int idPermissao = rs.getInt("ID_Permissao");
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        String nome = rs.getString("Nome");
+                        String cargo = rs.getString("Cargo");
+                        String permissao = rs.getString("permissao");
 
-                    AutenticarUser.setNome(nome);
-                    AutenticarUser.setCargo(cargo);
-                    AutenticarUser.setIdPermissao(idPermissao);
+                        if (!"Aceito".equalsIgnoreCase(permissao)) {
+                            return "Acesso negado";
+                        }
 
-                    return "sucesso";
-                } else {
-                    return "E-mail ou senha inválidos.";
+                        AutenticarUser.setNome(nome);
+                        AutenticarUser.setCargo(cargo);
+                        return "sucesso";
+                    } else {
+                        return "E-mail ou senha inválidos.";
+                    }
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Erro ao autenticar: " + e.getMessage();
         }
-    } catch (Exception e) {
-        e.printStackTrace();
-        return "Erro ao autenticar: " + e.getMessage();
     }
-}
-
-
 
     private String criptografarAES(String texto) throws Exception {
-    SecretKeySpec chave = new SecretKeySpec(AES_KEY.getBytes(), "AES");
-    Cipher cipher = Cipher.getInstance("AES");
-    cipher.init(Cipher.ENCRYPT_MODE, chave);
-    byte[] textoCriptografado = cipher.doFinal(texto.getBytes("UTF-8"));
-    return Base64.getEncoder().encodeToString(textoCriptografado);
-}
-
-private String hashSHA256(String texto) throws NoSuchAlgorithmException {
-    MessageDigest digest = MessageDigest.getInstance("SHA-256");
-    byte[] hashBytes = digest.digest(texto.getBytes());
-    StringBuilder sb = new StringBuilder();
-    for (byte b : hashBytes) {
-        sb.append(String.format("%02x", b));
+        SecretKeySpec chave = new SecretKeySpec(AES_KEY.getBytes(), "AES");
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.ENCRYPT_MODE, chave);
+        byte[] textoCriptografado = cipher.doFinal(texto.getBytes("UTF-8"));
+        return Base64.getEncoder().encodeToString(textoCriptografado);
     }
-    return sb.toString();
-}
+
+    private String hashSHA256(String texto) throws NoSuchAlgorithmException {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hashBytes = digest.digest(texto.getBytes());
+        StringBuilder sb = new StringBuilder();
+        for (byte b : hashBytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+    }
 }
