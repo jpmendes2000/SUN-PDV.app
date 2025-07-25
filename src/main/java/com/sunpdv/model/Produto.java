@@ -12,29 +12,31 @@ public class Produto {
     private final SimpleStringProperty codBarras;
     private final SimpleDoubleProperty preco;
 
-    public Produto(int id, String nome, String codBarras, double preco) {
+    public Produto(int id, String nome, double preco, String codBarras) {
         this.id = new SimpleIntegerProperty(id);
         this.nome = new SimpleStringProperty(nome);
-        this.codBarras = new SimpleStringProperty(codBarras);
         this.preco = new SimpleDoubleProperty(preco);
+        this.codBarras = new SimpleStringProperty(codBarras);
     }
 
     // Getters para PropertyValueFactory
     public int getId() { return id.get(); }
     public String getNome() { return nome.get(); }
-    public String getCodBarras() { return codBarras.get(); }
     public double getPreco() { return preco.get(); }
+    public String getCodBarras() { return codBarras.get(); }
+
 
     // Setters
     public void setId(int id) { this.id.set(id); }
     public void setNome(String nome) { this.nome.set(nome); }
-    public void setCodBarras(String codBarras) { this.codBarras.set(codBarras); }
     public void setPreco(double preco) { this.preco.set(preco); }
+    public void setCodBarras(String codBarras) { this.codBarras.set(codBarras); }
+
 
     // Property getters
     public SimpleIntegerProperty idProperty() { return id; }
     public SimpleStringProperty nomeProperty() { return nome; }
-    public SimpleStringProperty codBarrasProperty() { return codBarras; }
     public SimpleDoubleProperty precoProperty() { return preco; }
+    public SimpleStringProperty codBarrasProperty() { return codBarras; }
 
 }

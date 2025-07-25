@@ -385,8 +385,8 @@ public class Produtos {
                 listaProdutos.add(new Produto(
                     rs.getInt("ID_Produto"),
                     rs.getString("Nome"),
-                    rs.getString("Cod_Barras"),
-                    rs.getDouble("Preco")
+                    rs.getDouble("Preco"),
+                    rs.getString("Cod_Barras")
                 ));
             }
             table.setItems(listaProdutos);
@@ -414,55 +414,56 @@ public class Produtos {
     }
 
     /**
-     * Abre um formulário para adicionar ou editar um produto.
-     * @param produto Produto a ser editado (null para adicionar novo)
-     */
-    private void abrirFormularioProduto(Produto produto) {
-        Stage dialog = new Stage();
-        dialog.initModality(Modality.APPLICATION_MODAL); // Modalidade para bloquear a janela principal
-        dialog.setTitle(produto == null ? "Adicionar Produto" : "Editar Produto");
+ * Abre um formulário para adicionar ou editar um produto.
+ * @param produto Produto a ser editado (null para adicionar novo)
+ */
+private void abrirFormularioProduto(Produto produto) {
+    Stage dialog = new Stage();
+    dialog.initModality(Modality.APPLICATION_MODAL); // Modalidade para bloquear a janela principal
+    dialog.setTitle(produto == null ? "Adicionar Produto" : "Editar Produto");
 
-        TextField txtNome = new TextField();
-        txtNome.setPromptText("Nome do Produto");
-        txtNome.setPrefWidth(250);
+    TextField txtNome = new TextField();
+    txtNome.setPromptText("Nome do Produto");
+    txtNome.setPrefWidth(250);
 
-        TextField txtCodBarras = new TextField();
-        txtCodBarras.setPromptText("Código de Barras");
-        txtCodBarras.setPrefWidth(250);
+    // ALTERAÇÃO: Preço vem antes do Código de Barras
+    TextField txtPreco = new TextField();
+    txtPreco.setPromptText("Preço (R$)");
+    txtPreco.setPrefWidth(250);
 
-        TextField txtPreco = new TextField();
-        txtPreco.setPromptText("Preço (R$)");
-        txtPreco.setPrefWidth(250);
+    TextField txtCodBarras = new TextField();
+    txtCodBarras.setPromptText("Código de Barras");
+    txtCodBarras.setPrefWidth(250);
 
-        if (produto != null) {
-            txtNome.setText(produto.getNome());
-            txtCodBarras.setText(produto.getCodBarras());
-            txtPreco.setText(String.format("%.2f", produto.getPreco()));
-        }
-
-        Button btnSalvar = new Button("Salvar");
-        btnSalvar.setDefaultButton(true); // Define como botão padrão
-        btnSalvar.setOnAction(e -> salvarProduto(produto, txtNome, txtCodBarras, txtPreco, dialog));
-
-        GridPane formGrid = new GridPane();
-        formGrid.setHgap(10);
-        formGrid.setVgap(10);
-        formGrid.setPadding(new Insets(10));
-
-        formGrid.add(new Label("Nome:"), 0, 0);
-        formGrid.add(txtNome, 1, 0);
-        formGrid.add(new Label("Código de Barras:"), 0, 1);
-        formGrid.add(txtCodBarras, 1, 1);
-        formGrid.add(new Label("Preço (R$):"), 0, 2);
-        formGrid.add(txtPreco, 1, 2);
-        formGrid.add(btnSalvar, 1, 3);
-
-        Scene scene = new Scene(formGrid);
-        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
-        dialog.setScene(scene);
-        dialog.showAndWait();
+    if (produto != null) {
+        txtNome.setText(produto.getNome());
+        txtPreco.setText(String.format("%.2f", produto.getPreco())); // ALTERAÇÃO: Preço vem antes
+        txtCodBarras.setText(produto.getCodBarras());
     }
 
+    Button btnSalvar = new Button("Salvar");
+    btnSalvar.setDefaultButton(true); // Define como botão padrão
+    btnSalvar.setOnAction(e -> salvarProduto(produto, txtNome, txtCodBarras, txtPreco, dialog));
+
+    GridPane formGrid = new GridPane();
+    formGrid.setHgap(10);
+    formGrid.setVgap(10);
+    formGrid.setPadding(new Insets(10));
+
+    // ALTERAÇÃO: Nova ordem no GridPane
+    formGrid.add(new Label("Nome:"), 0, 0);
+    formGrid.add(txtNome, 1, 0);
+    formGrid.add(new Label("Preço (R$):"), 0, 1);     // ALTERAÇÃO: Preço na linha 1
+    formGrid.add(txtPreco, 1, 1);
+    formGrid.add(new Label("Código de Barras:"), 0, 2); // ALTERAÇÃO: Código de Barras na linha 2
+    formGrid.add(txtCodBarras, 1, 2);
+    formGrid.add(btnSalvar, 1, 3);
+
+    Scene scene = new Scene(formGrid);
+    scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
+    dialog.setScene(scene);
+    dialog.showAndWait();
+}
     /**
      * Salva ou atualiza um produto no banco de dados.
      * @param produto Produto a ser salvo ou atualizado
@@ -500,7 +501,7 @@ public class Produtos {
         }
 
         if (produto == null) {
-            inserirProduto(new Produto(0, nome, codBarras, preco));
+            inserirProduto(new Produto(0, nome, preco, codBarras));
         } else {
             produto.setNome(nome);
             produto.setCodBarras(codBarras);
@@ -548,12 +549,11 @@ public class Produtos {
                     alert.setContentText(mensagem);
                     alert.getDialogPane().getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
 
-                    ButtonType btnIrParaProduto = new ButtonType("Ir para o Produto", ButtonBar.ButtonData.OTHER);
                     ButtonType btnFechar = new ButtonType("Fechar", ButtonBar.ButtonData.CANCEL_CLOSE);
-                    alert.getButtonTypes().setAll(btnIrParaProduto, btnFechar);
+                    alert.getButtonTypes().setAll(btnFechar);
 
                     Optional<ButtonType> result = alert.showAndWait();
-                    if (result.isPresent() && result.get() == btnIrParaProduto) {
+                    if (result.isPresent()) {
                         selecionarProdutoNaTabela(idExistente);
                     }
                     return true;
@@ -589,8 +589,8 @@ public class Produtos {
              PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setString(1, produto.getNome());
-            ps.setString(2, produto.getCodBarras());
             ps.setDouble(3, produto.getPreco());
+            ps.setString(2, produto.getCodBarras());
 
             int rows = ps.executeUpdate();
             if (rows > 0) {
