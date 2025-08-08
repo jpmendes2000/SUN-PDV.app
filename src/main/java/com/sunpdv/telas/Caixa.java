@@ -20,7 +20,6 @@ import javafx.stage.Stage;
 
 public class Caixa {
 
-    // Classe interna para criar um Alert de confirmação com estilo CSS
     private static class CustomConfirmationAlert extends Alert {
         public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
             super(AlertType.CONFIRMATION);
@@ -35,7 +34,6 @@ public class Caixa {
         }
     }
 
-    // Método para criar botões laterais com ícone e efeito de hover (igual Configurar)
     private Button criarBotaoLateral(String texto, String caminhoIcone) {
         try {
             Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
@@ -102,7 +100,6 @@ public class Caixa {
         logoBox.setAlignment(Pos.CENTER);
         logoBox.setPadding(new Insets(20, 0, 20, 0));
 
-        Button btnNovaVenda = criarBotaoLateral("Nova Venda", "/img/icon/venda.png");
         Button btnVoltarHome = criarBotaoLateral("Home", "/img/icon/casa.png");
         Button btnSair = criarBotaoLateral("Sair do Sistema", "/img/icon/fechar.png");
 
@@ -123,10 +120,23 @@ public class Caixa {
 
         centerBox.getChildren().addAll(titulo);
 
-        // LAYOUT PRINCIPAL
+        // BOTÃO NOVA VENDA (para colocar no canto inferior direito)
+        Button btnNovaVenda = new Button("Nova Venda");
+        btnNovaVenda.setStyle(
+            "-fx-background-color: #e8ba23; -fx-text-fill: black; -fx-font-weight: bold; -fx-font-size: 14px; " +
+            "-fx-background-radius: 6px; -fx-padding: 10 50 10 50;"
+        );
+
+        // Container para o botão no canto inferior direito
+        StackPane bottomRightPane = new StackPane(btnNovaVenda);
+        bottomRightPane.setPadding(new Insets(20));
+        StackPane.setAlignment(btnNovaVenda, Pos.BOTTOM_RIGHT);
+
+        // Layout principal
         BorderPane root = new BorderPane();
         root.setLeft(leftMenu);
         root.setCenter(centerBox);
+        root.setBottom(bottomRightPane);
 
         Scene scene = new Scene(root, 1200, 700);
         scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
@@ -136,10 +146,6 @@ public class Caixa {
         stage.setFullScreen(true);
         stage.setResizable(true);
         stage.show();
-
-        VBox modulebox = new VBox(10, btnNovaVenda);
-        modulebox.setAlignment(Pos.TOP_LEFT);
-        modulebox.setPadding(new Insets(0, 0, 20, 0));
 
         // AÇÕES DOS BOTÕES
         btnNovaVenda.setOnAction(e -> {
