@@ -15,12 +15,6 @@
         <javafx.version>17.0.2</javafx.version>
     </properties>
 
-    <dependency>
-    <groupId>com.microsoft.sqlserver</groupId>
-    <artifactId>mssql-jdbc</artifactId>
-    <version>9.4.0.jre8</version>
-    </dependency>
-
     <dependencies>
         <!-- JavaFX Controls -->
         <dependency>
@@ -40,7 +34,7 @@
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
-            <version>12.4.2.jre11</version> <!-- A versão que você está utilizando -->
+            <version>12.4.2.jre11</version>
         </dependency>
     </dependencies>
 
@@ -67,5 +61,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

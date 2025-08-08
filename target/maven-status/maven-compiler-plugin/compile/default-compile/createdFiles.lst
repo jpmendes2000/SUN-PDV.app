@@ -1,5 +1,3 @@
-com/sunpdv/SecondaryController.class
+com\sunpdv\LoginApp.class
 module-info.class
-com/sunpdv/LoginApp.class
-com/AzureSQLConnection.class
-com/sunpdv/App.class
+com\sunpdv\App.class
