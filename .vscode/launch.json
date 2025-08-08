@@ -3,6 +3,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "App",
+            "request": "launch",
+            "mainClass": "com.sunpdv/com.sunpdv.App",
+            "projectName": "pdv"
+        },
+        {
+            "type": "java",
             "name": "LoginApp",
             "request": "launch",
             "mainClass": "com.sunpdv/com.sunpdv.LoginApp",
