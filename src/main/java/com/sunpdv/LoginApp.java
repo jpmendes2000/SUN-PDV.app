@@ -141,6 +141,13 @@ public class LoginApp extends Application {
         logoView.setFitWidth(100);
         logoView.setPreserveRatio(true);
 
+        Image logomini = new Image(getClass().getResourceAsStream("/img/logo/logominuscula.png"));
+        ImageView logoView3 = new ImageView(logomini);
+        logoView3.setFitWidth(100);
+        logoView3.setPreserveRatio(true);
+
+        stage.getIcons().add(logomini);
+
         VBox root = new VBox(15, logoView, emailLinha, senhaLinha, loginBtn, statusLabel);
         root.setAlignment(Pos.CENTER);
         root.setPadding(new Insets(20));
