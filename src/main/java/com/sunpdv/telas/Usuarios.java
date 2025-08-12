@@ -458,7 +458,7 @@ public class Usuarios {
         // Cria o contêiner principal do diálogo (VBox para layout vertical)
         VBox dialogVBox = new VBox(10); // Espaçamento vertical de 10px entre elementos
         dialogVBox.setPadding(new Insets(20)); // Define margens internas de 20px
-        dialogVBox.setStyle("-fx-background-color: #012d5c;"); // Define a cor de fundo azul escura
+        dialogVBox.setStyle("-fx-background-color: #006989;"); // Define a cor de fundo azul escura
         dialogVBox.setAlignment(Pos.CENTER); // Centraliza os elementos verticalmente
 
         // Cria o campo de texto para o nome do usuário
@@ -616,7 +616,7 @@ public class Usuarios {
 
         // Cria o botão Editar
         Button btnEditar = new Button("Editar");
-        btnEditar.setStyle("-fx-background-color: #0078d7; -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 5 10; -fx-background-radius: 4;"); // Estilo azul
+        btnEditar.setStyle("-fx-background-color: #0c5b74; -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 5 10; -fx-background-radius: 4;"); // Estilo azul
         btnEditar.setOnAction(e -> showEditUserDialog(user)); // Abre o diálogo de edição
 
         // Cria o botão para alternar o status

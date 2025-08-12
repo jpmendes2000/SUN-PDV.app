@@ -11,15 +11,15 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 public class Caixa {
 
-    // Classe interna para criar um Alert de confirmação com estilo CSS
     private static class CustomConfirmationAlert extends Alert {
         public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
             super(AlertType.CONFIRMATION);
@@ -27,7 +27,6 @@ public class Caixa {
             this.setTitle(title);
             this.setHeaderText(header);
             this.setContentText(content);
-            // Adiciona o CSS ao Alert
             Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
             stage.getScene().getStylesheets().add(
                 getClass().getResource("/img/css/style.css").toExternalForm()
@@ -35,51 +34,136 @@ public class Caixa {
         }
     }
 
-    // Método principal que exibe a tela Caixa
+    private Button criarBotaoLateral(String texto, String caminhoIcone) {
+        try {
+            Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
+            ImageView icon = new ImageView(img);
+            icon.setFitWidth(20);
+            icon.setFitHeight(20);
+
+            Label textLabel = new Label(texto);
+            textLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
+
+            StackPane indicatorContainer = new StackPane();
+            indicatorContainer.setMinWidth(3);
+            indicatorContainer.setMaxWidth(3);
+            indicatorContainer.setMinHeight(30);
+            indicatorContainer.setMaxHeight(30);
+            indicatorContainer.setStyle("-fx-background-color: transparent;");
+
+            HBox leftContent = new HBox(10, icon, textLabel);
+            leftContent.setAlignment(Pos.CENTER_LEFT);
+
+            HBox content = new HBox(leftContent, new Region(), indicatorContainer);
+            content.setAlignment(Pos.CENTER_LEFT);
+            HBox.setHgrow(content.getChildren().get(1), Priority.ALWAYS);
+
+            Button btn = new Button();
+            btn.setGraphic(content);
+            btn.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+            btn.setStyle("-fx-background-color: transparent;");
+            btn.setPrefWidth(280);
+            btn.setPrefHeight(42);
+
+            btn.setOnMouseEntered(e -> {
+                btn.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18));");
+                indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64);");
+            });
+            btn.setOnMouseExited(e -> {
+                btn.setStyle("-fx-background-color: transparent;");
+                indicatorContainer.setStyle("-fx-background-color: transparent;");
+            });
+
+            return btn;
+        } catch (Exception e) {
+            return new Button(texto);
+        }
+    }
+
     public void show(Stage stage) {
 
-        // Carrega o logo
+        // MENU LATERAL IGUAL AO "CONFIGURAR"
+        VBox leftMenu = new VBox();
+        leftMenu.setPrefWidth(280);
+        leftMenu.setStyle("-fx-background-color: #00536d;");
+
         Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
         ImageView logoView = new ImageView(logo);
-        logoView.setFitWidth(130);
+        logoView.setFitWidth(120);
         logoView.setPreserveRatio(true);
+        logoView.setStyle("-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 0);");
 
-        // Caixa do logo alinhada ao topo
-        VBox logoBox = new VBox(logoView);
-        logoBox.setPadding(new Insets(20));
-        logoBox.setAlignment(Pos.TOP_LEFT);
+        Label titulonaABA = new Label("Caixa");
+        titulonaABA.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 18px; -fx-font-weight: bold;");
 
-        // Botões da tela
+        VBox logoBox = new VBox(logoView, titulonaABA);
+        logoBox.setAlignment(Pos.CENTER);
+        logoBox.setPadding(new Insets(20, 0, 20, 0));
+
+        Button btnVoltarHome = criarBotaoLateral("Home", "/img/icon/casa.png");
+        Button btnSair = criarBotaoLateral("Sair do Sistema", "/img/icon/fechar.png");
+
+        VBox buttonBox = new VBox(10, btnVoltarHome, btnSair);
+        buttonBox.setAlignment(Pos.TOP_LEFT);
+        buttonBox.setPadding(new Insets(0, 0, 20, 0));
+
+        leftMenu.getChildren().addAll(logoBox, new Region(), buttonBox);
+        VBox.setVgrow(leftMenu.getChildren().get(1), Priority.ALWAYS);
+
+        // ÁREA CENTRAL DA TELA
+        VBox centerBox = new VBox();
+        centerBox.setAlignment(Pos.CENTER);
+        centerBox.setSpacing(20);
+
+        Label titulo = new Label("Módulo de Caixa");
+        titulo.setStyle("-fx-text-fill: #062e3aff; -fx-font-size: 24px; -fx-font-weight: bold;");
+
+        centerBox.getChildren().addAll(titulo);
+
+        // BOTÃO NOVA VENDA (para colocar no canto inferior direito)
         Button btnNovaVenda = new Button("Nova Venda");
-        Button btnVoltarHome = new Button("Home");
-        Button btnSair = new Button("Sair do Sistema");
+        btnNovaVenda.setStyle(
+            "-fx-background-color: #e8ba23; -fx-text-fill: black; -fx-font-weight: bold; -fx-font-size: 14px; " +
+            "-fx-background-radius: 6px; -fx-padding: 10 50 10 50;"
+        );
 
-        // Define largura padrão para os botões
-        double larguraPadrao = 250;
-        btnNovaVenda.setPrefWidth(larguraPadrao);
-        btnVoltarHome.setPrefWidth(larguraPadrao);
-        btnSair.setPrefWidth(larguraPadrao);
+        // Container para o botão no canto inferior direito
+        StackPane bottomRightPane = new StackPane(btnNovaVenda);
+        bottomRightPane.setPadding(new Insets(20));
+        StackPane.setAlignment(btnNovaVenda, Pos.BOTTOM_RIGHT);
 
-        // Ação de iniciar nova venda
+        // Layout principal
+        BorderPane root = new BorderPane();
+        root.setLeft(leftMenu);
+        root.setCenter(centerBox);
+        root.setBottom(bottomRightPane);
+
+        Scene scene = new Scene(root, 1200, 700);
+        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
+
+        stage.setScene(scene);
+        stage.setTitle("SUN PDV - Módulo de Caixa");
+        stage.setFullScreen(true);
+        stage.setResizable(true);
+        stage.show();
+
+        // AÇÕES DOS BOTÕES
         btnNovaVenda.setOnAction(e -> {
             System.out.println("Nova venda iniciada");
         });
 
-        // Ação de voltar à tela principal (ADM, MOD ou FUN)
         btnVoltarHome.setOnAction(e -> {
             try {
                 String cargo = AutenticarUser.getCargo();
-
-                // Direciona para a tela conforme o cargo
                 switch (cargo) {
                     case "Administrador":
-                        new TelaHomeADM(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar(stage);
+                        new TelaHomeADM(AutenticarUser.getNome(), cargo).mostrar(stage);
                         break;
                     case "Moderador":
-                        new TelaHomeMOD(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar(stage);
+                        new TelaHomeMOD(AutenticarUser.getNome(), cargo).mostrar(stage);
                         break;
-                    case "Funcionario":
-                        new TelaHomeFUN(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar(stage);
+                    case "Funcionário":
+                        new TelaHomeFUN(AutenticarUser.getNome(), cargo).mostrar(stage);
                         break;
                     default:
                         System.out.println("Cargo não reconhecido: " + cargo);
@@ -94,43 +178,18 @@ public class Caixa {
             }
         });
 
-        // Ação de sair do sistema
         btnSair.setOnAction(e -> {
             CustomConfirmationAlert alert = new CustomConfirmationAlert(
                 stage,
                 "Confirmação de Saída",
-                "Deseja realmente sair do sis\n" + //
-                                        "            stage.getScene().getStylesheets().add(tema?",
+                "Deseja realmente sair do sistema?",
                 ""
             );
-
             alert.showAndWait().ifPresent(response -> {
                 if (response == ButtonType.OK) {
                     stage.close();
                 }
             });
         });
-
-        // Caixa com os botões alinhada no centro inferior
-        VBox botoesBox = new VBox(15, btnNovaVenda, btnVoltarHome, btnSair);
-        botoesBox.setPadding(new Insets(40));
-        botoesBox.setAlignment(Pos.BOTTOM_LEFT);
-
-        // Layout principal com logo e botões
-        StackPane principal = new StackPane();
-        principal.getChildren().addAll(logoBox, botoesBox);
-        StackPane.setAlignment(logoBox, Pos.TOP_LEFT);
-        StackPane.setAlignment(botoesBox, Pos.CENTER);
-
-        // Cena com tamanho padrão e CSS
-        Scene scene = new Scene(principal, 1000, 600);
-        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
-
-        // Configura o Stage principal
-        stage.setScene(scene);
-        stage.setTitle("SUN PDV - Módulo de Caixa");
-        stage.setFullScreen(true);
-        stage.setResizable(true);
-        stage.show();
     }
 }
