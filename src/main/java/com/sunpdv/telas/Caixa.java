@@ -50,6 +50,8 @@ public class Caixa {
             indicatorContainer.setMinHeight(30);
             indicatorContainer.setMaxHeight(30);
             indicatorContainer.setStyle("-fx-background-color: transparent;");
+            indicatorContainer.setVisible(false);
+            indicatorContainer.setManaged(false); // não ocupa espaço quando invisível
 
             HBox leftContent = new HBox(10, icon, textLabel);
             leftContent.setAlignment(Pos.CENTER_LEFT);
@@ -68,10 +70,14 @@ public class Caixa {
             btn.setOnMouseEntered(e -> {
                 btn.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18));");
                 indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64);");
+                indicatorContainer.setVisible(true);
+                indicatorContainer.setManaged(true);
             });
             btn.setOnMouseExited(e -> {
                 btn.setStyle("-fx-background-color: transparent;");
                 indicatorContainer.setStyle("-fx-background-color: transparent;");
+                indicatorContainer.setVisible(false);
+                indicatorContainer.setManaged(false);
             });
 
             return btn;
@@ -82,7 +88,7 @@ public class Caixa {
 
     public void show(Stage stage) {
 
-        // MENU LATERAL IGUAL AO "CONFIGURAR"
+        // MENU LATERAL
         VBox leftMenu = new VBox();
         leftMenu.setPrefWidth(280);
         leftMenu.setStyle("-fx-background-color: #00536d;");
@@ -108,35 +114,35 @@ public class Caixa {
         buttonBox.setPadding(new Insets(0, 0, 20, 0));
 
         leftMenu.getChildren().addAll(logoBox, new Region(), buttonBox);
-        VBox.setVgrow(leftMenu.getChildren().get(1), Priority.ALWAYS);
+        VBox.setVgrow(leftMenu.getChildren().get(1), Priority.ALWAYS); // garante que estica até embaixo
 
-        // ÁREA CENTRAL DA TELA
-        VBox centerBox = new VBox();
-        centerBox.setAlignment(Pos.CENTER);
-        centerBox.setSpacing(20);
-
+        // ÁREA CENTRAL
         Label titulo = new Label("Módulo de Caixa");
         titulo.setStyle("-fx-text-fill: #062e3aff; -fx-font-size: 24px; -fx-font-weight: bold;");
 
-        centerBox.getChildren().addAll(titulo);
+        StackPane conteudoCentral = new StackPane(titulo);
+        conteudoCentral.setAlignment(Pos.CENTER);
 
-        // BOTÃO NOVA VENDA (para colocar no canto inferior direito)
+        // BOTÃO NOVA VENDA FIXO NO CANTO INFERIOR DIREITO
         Button btnNovaVenda = new Button("Nova Venda");
         btnNovaVenda.setStyle(
             "-fx-background-color: #e8ba23; -fx-text-fill: black; -fx-font-weight: bold; -fx-font-size: 14px; " +
-            "-fx-background-radius: 6px; -fx-padding: 10 50 10 50;"
+            "-fx-background-radius: 6px; -fx-padding: 10 60 10 60;"
         );
 
-        // Container para o botão no canto inferior direito
-        StackPane bottomRightPane = new StackPane(btnNovaVenda);
-        bottomRightPane.setPadding(new Insets(20));
-        StackPane.setAlignment(btnNovaVenda, Pos.BOTTOM_RIGHT);
+        AnchorPane containerCentral = new AnchorPane(conteudoCentral, btnNovaVenda);
+        AnchorPane.setTopAnchor(conteudoCentral, 0.0);
+        AnchorPane.setBottomAnchor(conteudoCentral, 0.0);
+        AnchorPane.setLeftAnchor(conteudoCentral, 0.0);
+        AnchorPane.setRightAnchor(conteudoCentral, 0.0);
+
+        AnchorPane.setBottomAnchor(btnNovaVenda, 20.0);
+        AnchorPane.setRightAnchor(btnNovaVenda, 20.0);
 
         // Layout principal
         BorderPane root = new BorderPane();
         root.setLeft(leftMenu);
-        root.setCenter(centerBox);
-        root.setBottom(bottomRightPane);
+        root.setCenter(containerCentral);
 
         Scene scene = new Scene(root, 1200, 700);
         scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
