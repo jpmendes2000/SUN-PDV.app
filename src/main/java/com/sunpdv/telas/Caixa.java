@@ -116,7 +116,7 @@ public class Caixa {
         centerBox.setSpacing(20);
 
         Label titulo = new Label("Módulo de Caixa");
-        titulo.setStyle("-fx-text-fill: #00536d; -fx-font-size: 24px; -fx-font-weight: bold;");
+        titulo.setStyle("-fx-text-fill: #062e3aff; -fx-font-size: 24px; -fx-font-weight: bold;");
 
         centerBox.getChildren().addAll(titulo);
 
