@@ -37,6 +37,7 @@ import java.util.Optional;
 public class Produtos {
 
     // Atributos da classe para controle da interface e dados
+    private Stage stage;
     private TableView<Produto> table;              // Tabela que exibe a lista de produtos
     private ObservableList<Produto> listaProdutos; // Lista observável para armazenar produtos
     private TextField campoPesquisa;               // Campo para filtrar produtos por nome ou código
@@ -56,12 +57,27 @@ public class Produtos {
     private Connection getConnection() throws SQLException {
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }
+    private static class CustomConfirmationAlert extends Alert {
+    public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
+        super(AlertType.CONFIRMATION);
+        this.initOwner(owner);
+        this.initModality(Modality.NONE); // Não bloqueia a janela pai
+        this.setTitle(title);
+        this.setHeaderText(header);
+        this.setContentText(content);
+        Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
+        stage.getScene().getStylesheets().add(
+            getClass().getResource("/img/css/style.css").toExternalForm()
+        );
+    }
+}
 
     /**
      * Exibe a tela de gerenciamento de produtos.
      * @param stage O palco (Stage) onde a tela será exibida
      */
     public void show(Stage stage) {
+        this.stage = stage;
         // Criação do layout principal usando BorderPane
         // BorderPane permite dividir a tela em cinco áreas: topo, inferior, esquerda, direita e centro
         BorderPane mainPane = new BorderPane();
@@ -220,7 +236,16 @@ public class Produtos {
         });
 
         btnVoltar.setOnAction(e -> voltarParaHome(stage)); // Volta para a tela inicial
-        btnSair.setOnAction(e -> confirmarSaida(stage)); // Confirma saída do sistema
+                
+        btnSair.setOnAction(e -> {
+            CustomConfirmationAlert alert = new CustomConfirmationAlert(stage, "Confirmação", "Deseja sair?", "Isso fechará o sistema.");
+            alert.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.OK) {
+                    stage.close();
+                }
+            });
+        });
+     // Confirma saída do sistema
 
         // Listener para seleção na tabela
         table.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
@@ -413,57 +438,56 @@ public class Produtos {
         table.setItems(filtrados);
     }
 
-    /**
- * Abre um formulário para adicionar ou editar um produto.
- * @param produto Produto a ser editado (null para adicionar novo)
- */
-private void abrirFormularioProduto(Produto produto) {
-    Stage dialog = new Stage();
-    dialog.initModality(Modality.APPLICATION_MODAL); // Modalidade para bloquear a janela principal
-    dialog.setTitle(produto == null ? "Adicionar Produto" : "Editar Produto");
+     /**
+     * Abre um formulário para adicionar ou editar um produto.
+     * @param produto Produto a ser editado (null para adicionar novo)
+     */
+    private void abrirFormularioProduto(Produto produto) {
+        Stage dialog = new Stage();
+        dialog.initModality(Modality.NONE); // Alterado para não bloquear a janela pai
+        dialog.initOwner(stage);
+        dialog.setTitle(produto == null ? "Adicionar Produto" : "Editar Produto");
 
-    TextField txtNome = new TextField();
-    txtNome.setPromptText("Nome do Produto");
-    txtNome.setPrefWidth(250);
+        TextField txtNome = new TextField();
+        txtNome.setPromptText("Nome do Produto");
+        txtNome.setPrefWidth(250);
 
-    // ALTERAÇÃO: Preço vem antes do Código de Barras
-    TextField txtPreco = new TextField();
-    txtPreco.setPromptText("Preço (R$)");
-    txtPreco.setPrefWidth(250);
+        TextField txtPreco = new TextField();
+        txtPreco.setPromptText("Preço (R$)");
+        txtPreco.setPrefWidth(250);
 
-    TextField txtCodBarras = new TextField();
-    txtCodBarras.setPromptText("Código de Barras");
-    txtCodBarras.setPrefWidth(250);
+        TextField txtCodBarras = new TextField();
+        txtCodBarras.setPromptText("Código de Barras");
+        txtCodBarras.setPrefWidth(250);
 
-    if (produto != null) {
-        txtNome.setText(produto.getNome());
-        txtPreco.setText(String.format("%.2f", produto.getPreco())); // ALTERAÇÃO: Preço vem antes
-        txtCodBarras.setText(produto.getCodBarras());
+        if (produto != null) {
+            txtNome.setText(produto.getNome());
+            txtPreco.setText(String.format("%.2f", produto.getPreco()));
+            txtCodBarras.setText(produto.getCodBarras());
+        }
+
+        Button btnSalvar = new Button("Salvar");
+        btnSalvar.setDefaultButton(true);
+        btnSalvar.setOnAction(e -> salvarProduto(produto, txtNome, txtCodBarras, txtPreco, dialog));
+
+        GridPane formGrid = new GridPane();
+        formGrid.setHgap(10);
+        formGrid.setVgap(10);
+        formGrid.setPadding(new Insets(10));
+
+        formGrid.add(new Label("Nome:"), 0, 0);
+        formGrid.add(txtNome, 1, 0);
+        formGrid.add(new Label("Preço (R$):"), 0, 1);
+        formGrid.add(txtPreco, 1, 1);
+        formGrid.add(new Label("Código de Barras:"), 0, 2);
+        formGrid.add(txtCodBarras, 1, 2);
+        formGrid.add(btnSalvar, 1, 3);
+
+        Scene scene = new Scene(formGrid);
+        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
+        dialog.setScene(scene);
+        dialog.showAndWait();
     }
-
-    Button btnSalvar = new Button("Salvar");
-    btnSalvar.setDefaultButton(true); // Define como botão padrão
-    btnSalvar.setOnAction(e -> salvarProduto(produto, txtNome, txtCodBarras, txtPreco, dialog));
-
-    GridPane formGrid = new GridPane();
-    formGrid.setHgap(10);
-    formGrid.setVgap(10);
-    formGrid.setPadding(new Insets(10));
-
-    // ALTERAÇÃO: Nova ordem no GridPane
-    formGrid.add(new Label("Nome:"), 0, 0);
-    formGrid.add(txtNome, 1, 0);
-    formGrid.add(new Label("Preço (R$):"), 0, 1);     // ALTERAÇÃO: Preço na linha 1
-    formGrid.add(txtPreco, 1, 1);
-    formGrid.add(new Label("Código de Barras:"), 0, 2); // ALTERAÇÃO: Código de Barras na linha 2
-    formGrid.add(txtCodBarras, 1, 2);
-    formGrid.add(btnSalvar, 1, 3);
-
-    Scene scene = new Scene(formGrid);
-    scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
-    dialog.setScene(scene);
-    dialog.showAndWait();
-}
     /**
      * Salva ou atualiza um produto no banco de dados.
      * @param produto Produto a ser salvo ou atualizado
@@ -699,11 +723,7 @@ private void abrirFormularioProduto(Produto produto) {
      * @param stage Palco a ser fechado
      */
     private void confirmarSaida(Stage stage) {
-        Alert alert = new Alert(AlertType.CONFIRMATION);
-        alert.setTitle("Confirmação de Saída");
-        alert.setHeaderText("Deseja realmente sair do sistema?");
-        alert.getDialogPane().getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
-
+        CustomConfirmationAlert alert = new CustomConfirmationAlert(stage, "Confirmação de Saída", "Deseja realmente sair do sistema?", null);
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
             stage.close();
@@ -732,6 +752,8 @@ private void abrirFormularioProduto(Produto produto) {
         Alert alert = new Alert(AlertType.ERROR);
         alert.setTitle(titulo);
         alert.setHeaderText(null);
+        alert.initModality(Modality.NONE); // Adicionar esta linha
+        alert.initOwner(stage);
         alert.setContentText(mensagem);
         alert.getDialogPane().getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
         alert.showAndWait();
