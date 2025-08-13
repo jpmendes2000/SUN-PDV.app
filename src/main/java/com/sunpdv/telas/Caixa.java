@@ -3,6 +3,7 @@ package com.sunpdv.telas;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import com.sunpdv.AutenticarUser;
 import com.sunpdv.home.TelaHomeADM;
@@ -32,6 +33,10 @@ public class Caixa {
     private VBox listaVendas;
     private TextField pesquisaField;
     private ComboBox<String> filtroPagamento;
+    private VBox novaVendaContainer;
+    private VBox historicoContainer;
+    private ToggleButton toggleViewButton;
+    private CheckBox clienteNaoIdentificadoCheck;
 
     private static class CustomConfirmationAlert extends Alert {
         public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
@@ -216,18 +221,18 @@ public class Caixa {
         alert.showAndWait();
     }
 
-    private void showNovaVendaDialog() {
-        Stage dialog = new Stage();
-        dialog.initModality(Modality.WINDOW_MODAL);
-        dialog.initOwner(stage);
-        dialog.setTitle("Nova Venda");
-
-        VBox dialogVBox = new VBox(10);
-        dialogVBox.setPadding(new Insets(20));
-        dialogVBox.setStyle("-fx-background-color: #006989;");
-        dialogVBox.setAlignment(Pos.CENTER);
-
+    private void setupNovaVendaUI() {
+        novaVendaContainer = new VBox(10);
+        novaVendaContainer.setPadding(new Insets(20));
+        
         // Seção de identificação do cliente
+        VBox clienteBox = new VBox(10);
+        clienteBox.setStyle("-fx-background-color: #00536d; -fx-padding: 15; -fx-background-radius: 5;");
+        
+        clienteNaoIdentificadoCheck = new CheckBox("Cliente não identificado");
+        clienteNaoIdentificadoCheck.setSelected(true);
+        clienteNaoIdentificadoCheck.setStyle("-fx-font-weight: bold;");
+        
         ToggleGroup clienteGroup = new ToggleGroup();
         RadioButton rbCPF = new RadioButton("CPF");
         rbCPF.setToggleGroup(clienteGroup);
@@ -239,9 +244,39 @@ public class Caixa {
         TextField documentoField = new TextField();
         documentoField.setPromptText("Número do documento");
         documentoField.setMaxWidth(300);
-
+        documentoField.setDisable(true);
+        
         HBox tipoDocumentoBox = new HBox(10, rbCPF, rbCNPJ, rbRG);
-        tipoDocumentoBox.setAlignment(Pos.CENTER);
+        tipoDocumentoBox.setDisable(true);
+        
+        // Listener para o checkbox de cliente não identificado
+        clienteNaoIdentificadoCheck.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            tipoDocumentoBox.setDisable(newVal);
+            documentoField.setDisable(newVal);
+            if (newVal) {
+                clienteGroup.selectToggle(null);
+                documentoField.clear();
+            }
+        });
+        
+        // Listener para validação de CPF
+        rbCPF.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal) {
+                documentoField.setPromptText("Digite o CPF (somente números)");
+            }
+        });
+        
+        documentoField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (rbCPF.isSelected() && !newVal.isEmpty()) {
+                if (!validarCPF(newVal)) {
+                    documentoField.setStyle("-fx-border-color: red;");
+                } else {
+                    documentoField.setStyle("-fx-border-color: green;");
+                }
+            } else {
+                documentoField.setStyle("");
+            }
+        });
 
         // Lista de produtos
         ListView<String> listaProdutos = new ListView<>();
@@ -284,7 +319,7 @@ public class Caixa {
 
         // Total da venda
         Label totalLabel = new Label("Total: R$ 0,00");
-        totalLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px;");
+        totalLabel.setStyle("-fx-text-fill: #c7eefaff; -fx-font-weight: bold; -fx-font-size: 16px;");
 
         // Botões
         Button btnFinalizar = new Button("Finalizar Venda");
@@ -301,48 +336,130 @@ public class Caixa {
                     return;
                 }
 
-                // Implementar lógica para salvar no banco de dados
-                salvarVendaNoBanco(documentoField.getText(), 
-                                 ((RadioButton)clienteGroup.getSelectedToggle()).getText(),
+                // Validar CPF se estiver preenchido
+                if (rbCPF.isSelected() && !documentoField.getText().isEmpty() && !validarCPF(documentoField.getText())) {
+                    showErrorAlert("CPF inválido", "O CPF digitado não é válido.");
+                    return;
+                }
+
+                String documento = clienteNaoIdentificadoCheck.isSelected() ? "" : documentoField.getText();
+                String tipoDocumento = clienteNaoIdentificadoCheck.isSelected() ? "" : 
+                                     (rbCPF.isSelected() ? "CPF" : (rbCNPJ.isSelected() ? "CNPJ" : "RG"));
+
+                salvarVendaNoBanco(documento, tipoDocumento,
                                  pagamentoCombo.getValue(),
                                  calcularTotal(listaProdutos),
                                  listaProdutos.getItems());
                 
-                dialog.close();
+                listaProdutos.getItems().clear();
+                totalLabel.setText("Total: R$ 0,00");
+                documentoField.clear();
+                clienteNaoIdentificadoCheck.setSelected(true);
+                pagamentoCombo.getSelectionModel().clearSelection();
+                
+                // Recarregar histórico
                 vendas = carregarVendas();
                 aplicarFiltros();
+                
+                showSuccessAlert("Venda finalizada", "Venda registrada com sucesso!");
             } catch (SQLException ex) {
                 ex.printStackTrace();
                 showErrorAlert("Erro ao finalizar venda", "Detalhes: " + ex.getMessage());
             }
         });
 
-        Button btnCancelar = new Button("Cancelar");
+        Button btnCancelar = new Button("Cancelar Venda");
         btnCancelar.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white;");
-        btnCancelar.setOnAction(e -> dialog.close());
+        btnCancelar.setOnAction(e -> {
+            listaProdutos.getItems().clear();
+            totalLabel.setText("Total: R$ 0,00");
+            documentoField.clear();
+            clienteNaoIdentificadoCheck.setSelected(true);
+            pagamentoCombo.getSelectionModel().clearSelection();
+        });
 
         HBox botoes = new HBox(10, btnFinalizar, btnCancelar);
         botoes.setAlignment(Pos.CENTER);
 
-        dialogVBox.getChildren().addAll(
+        clienteBox.getChildren().addAll(
+            clienteNaoIdentificadoCheck,
             new Label("Identificação do Cliente:"),
             tipoDocumentoBox,
-            documentoField,
+            documentoField
+        );
+
+        VBox produtosBox = new VBox(10);
+        produtosBox.setStyle("-fx-background-color: #00536d; -fx-padding: 15; -fx-background-radius: 5;");
+        produtosBox.getChildren().addAll(
             new Label("Produtos:"),
             listaProdutos,
             new Label("Adicionar Produto:"),
             new HBox(10, codigoProdutoField, new Label("Qtd:"), quantidadeSpinner),
-            btnAdicionar,
-            new Label("Forma de Pagamento:"),
-            pagamentoCombo,
-            totalLabel,
-            botoes
+            btnAdicionar
         );
 
-        Scene dialogScene = new Scene(dialogVBox, 600, 600);
-        dialogScene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
-        dialog.setScene(dialogScene);
-        dialog.showAndWait();
+        VBox pagamentoBox = new VBox(10);
+        pagamentoBox.setStyle("-fx-background-color: #00536d; -fx-padding: 15; -fx-background-radius: 5;");
+        pagamentoBox.getChildren().addAll(
+            new Label("Forma de Pagamento:"),
+            pagamentoCombo,
+            totalLabel
+        );
+
+        // Atualizar total quando itens mudarem
+        listaProdutos.getItems().addListener((javafx.collections.ListChangeListener.Change<? extends String> c) -> {
+            totalLabel.setText("Total: R$ " + String.format("%.2f", calcularTotal(listaProdutos)));
+        });
+
+        novaVendaContainer.getChildren().addAll(
+            clienteBox,
+            produtosBox,
+            pagamentoBox,
+            botoes
+        );
+    }
+
+    private boolean validarCPF(String cpf) {
+        // Remove caracteres não numéricos
+        cpf = cpf.replaceAll("[^0-9]", "");
+        
+        // Verifica se tem 11 dígitos
+        if (cpf.length() != 11) {
+            return false;
+        }
+        
+        // Verifica se todos os dígitos são iguais
+        if (cpf.matches("(\\d)\\1{10}")) {
+            return false;
+        }
+        
+        // Cálculo do primeiro dígito verificador
+        int soma = 0;
+        for (int i = 0; i < 9; i++) {
+            soma += (10 - i) * Character.getNumericValue(cpf.charAt(i));
+        }
+        int resto = soma % 11;
+        int digito1 = (resto < 2) ? 0 : (11 - resto);
+        
+        // Cálculo do segundo dígito verificador
+        soma = 0;
+        for (int i = 0; i < 10; i++) {
+            soma += (11 - i) * Character.getNumericValue(cpf.charAt(i));
+        }
+        resto = soma % 11;
+        int digito2 = (resto < 2) ? 0 : (11 - resto);
+        
+        // Verifica se os dígitos calculados conferem com os informados
+        return (Character.getNumericValue(cpf.charAt(9)) == digito1 && 
+               (Character.getNumericValue(cpf.charAt(10)) == digito2;
+    }
+
+    private void showSuccessAlert(String header, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Sucesso");
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 
     private String buscarProdutoPorCodigo(String codigo) throws SQLException {
@@ -398,7 +515,7 @@ public class Caixa {
             conn.setAutoCommit(false);
 
             // 1. Salvar o carrinho
-            String insertCarrinho = "INSERT INTO carrinho (ID_Produto, CodBarras, SubTotal) VALUES (?, ?, ?)";
+            String insertCarrinho = "INSERT INTO carrinho (ID_Produto, CodBarras, Quantidade, PrecoUnitario, SubTotal) VALUES (?, ?, ?, ?, ?)";
             PreparedStatement stmtCarrinho = conn.prepareStatement(insertCarrinho, Statement.RETURN_GENERATED_KEYS);
             
             // Para cada item, inserir no carrinho
@@ -406,9 +523,11 @@ public class Caixa {
                 String[] partes = item.split(" - ");
                 String nomeProduto = partes[0];
                 int quantidade = Integer.parseInt(partes[1].replace("Qtd: ", "").trim());
+                double precoTotal = Double.parseDouble(partes[3].replace("R$ ", "").trim());
+                double precoUnitario = precoTotal / quantidade;
                 
                 // Buscar ID e código de barras do produto
-                String queryProduto = "SELECT ID_Produto, Cod_Barras, Preco FROM produtos WHERE Nome = ?";
+                String queryProduto = "SELECT ID_Produto, Cod_Barras FROM produtos WHERE Nome = ?";
                 PreparedStatement stmtProduto = conn.prepareStatement(queryProduto);
                 stmtProduto.setString(1, nomeProduto);
                 ResultSet rsProduto = stmtProduto.executeQuery();
@@ -416,11 +535,12 @@ public class Caixa {
                 if (rsProduto.next()) {
                     int idProduto = rsProduto.getInt("ID_Produto");
                     String codBarras = rsProduto.getString("Cod_Barras");
-                    double preco = rsProduto.getDouble("Preco");
                     
                     stmtCarrinho.setInt(1, idProduto);
                     stmtCarrinho.setString(2, codBarras);
-                    stmtCarrinho.setDouble(3, preco * quantidade);
+                    stmtCarrinho.setInt(3, quantidade);
+                    stmtCarrinho.setDouble(4, precoUnitario);
+                    stmtCarrinho.setDouble(5, precoTotal);
                     stmtCarrinho.addBatch();
                 }
             }
@@ -440,7 +560,7 @@ public class Caixa {
             stmtVenda.executeUpdate();
 
             // 3. Se houver documento, salvar no cliente
-            if (!documento.isEmpty()) {
+            if (!documento.isEmpty() && !tipoDocumento.isEmpty()) {
                 String insertCliente = "INSERT INTO clientes (";
                 if (tipoDocumento.equals("CPF")) {
                     insertCliente += "cpf) VALUES (?)";
@@ -564,6 +684,42 @@ public class Caixa {
         dialog.showAndWait();
     }
 
+    private void setupHistoricoUI() {
+        historicoContainer = new VBox(10);
+        historicoContainer.setPadding(new Insets(20));
+
+        Label titulo = new Label("Histórico de Vendas");
+        titulo.setStyle("-fx-text-fill: #062e3aff; -fx-font-size: 24px; -fx-font-weight: bold;");
+
+        pesquisaField = new TextField();
+        pesquisaField.setPromptText("Pesquisar por ID da venda...");
+        pesquisaField.setMaxWidth(300);
+
+        filtroPagamento = new ComboBox<>();
+        filtroPagamento.getItems().add("Todos");
+        carregarFormasPagamento(filtroPagamento);
+        filtroPagamento.setValue("Todos");
+        filtroPagamento.setPrefWidth(150);
+
+        Label pagamentoLabel = new Label("Pagamento:");
+        pesquisaField.textProperty().addListener((obs, oldVal, newVal) -> aplicarFiltros());
+        filtroPagamento.setOnAction(e -> aplicarFiltros());
+
+        HBox filtroBox = new HBox(5, pesquisaField, pagamentoLabel, filtroPagamento);
+        filtroBox.setPadding(new Insets(5));
+        HBox.setMargin(filtroPagamento, new Insets(0, 10, 0, 0));
+        HBox.setMargin(pagamentoLabel, new Insets(0, 5, 0, 5));
+
+        listaVendas = new VBox(10);
+        listaVendas.setPadding(new Insets(20));
+
+        ScrollPane scroll = new ScrollPane(listaVendas);
+        scroll.setFitToWidth(true);
+        scroll.setStyle("-fx-background: #f4f4f4;");
+
+        historicoContainer.getChildren().addAll(titulo, filtroBox, scroll);
+    }
+
     public void show(Stage stage) {
         this.stage = stage;
         vendas = carregarVendas();
@@ -601,55 +757,40 @@ public class Caixa {
         leftMenu.getChildren().addAll(logoBox, new Region(), buttonBox);
         VBox.setVgrow(leftMenu.getChildren().get(1), Priority.ALWAYS);
 
-        Label titulo = new Label("Módulo de Caixa");
-        titulo.setStyle("-fx-text-fill: #062e3aff; -fx-font-size: 24px; -fx-font-weight: bold;");
+        // Configurar as duas views
+        setupNovaVendaUI();
+        setupHistoricoUI();
 
-        pesquisaField = new TextField();
-        pesquisaField.setPromptText("Pesquisar por ID da venda...");
-        pesquisaField.setMaxWidth(300);
+        // Botão para alternar entre as views
+        toggleViewButton = new ToggleButton("Nova Venda");
+        toggleViewButton.setStyle("-fx-background-color: #e8ba23; -fx-text-fill: black; -fx-font-weight: bold;");
+        toggleViewButton.setSelected(false);
+        toggleViewButton.setOnAction(e -> {
+            if (toggleViewButton.isSelected()) {
+                toggleViewButton.setText("Histórico");
+                novaVendaContainer.setVisible(true);
+                historicoContainer.setVisible(false);
+            } else {
+                toggleViewButton.setText("Nova Venda");
+                novaVendaContainer.setVisible(false);
+                historicoContainer.setVisible(true);
+            }
+        });
 
-        filtroPagamento = new ComboBox<>();
-        filtroPagamento.getItems().add("Todos");
-        carregarFormasPagamento(filtroPagamento);
-        filtroPagamento.setValue("Todos");
-        filtroPagamento.setPrefWidth(150);
+        // Container principal que alterna entre as views
+        StackPane centerContainer = new StackPane();
+        centerContainer.getChildren().addAll(historicoContainer, novaVendaContainer);
+        novaVendaContainer.setVisible(false);
 
-        Label pagamentoLabel = new Label("Pagamento:");
-        pesquisaField.textProperty().addListener((obs, oldVal, newVal) -> aplicarFiltros());
-        filtroPagamento.setOnAction(e -> aplicarFiltros());
-        HBox.setMargin(pesquisaField, new Insets(5, 10, 0, 10));
-        pesquisaField.setPrefWidth(1600);
+        // Posicionar o botão de alternância
+        AnchorPane containerCentral = new AnchorPane(centerContainer, toggleViewButton);
+        AnchorPane.setTopAnchor(centerContainer, 0.0);
+        AnchorPane.setBottomAnchor(centerContainer, 0.0);
+        AnchorPane.setLeftAnchor(centerContainer, 0.0);
+        AnchorPane.setRightAnchor(centerContainer, 0.0);
 
-        HBox filtroBox = new HBox(5, pesquisaField, pagamentoLabel, filtroPagamento);
-        filtroBox.setPadding(new Insets(5));
-        HBox.setMargin(filtroPagamento, new Insets(0, 10, 0, 0));
-        HBox.setMargin(pagamentoLabel, new Insets(0, 5, 0, 5));
-
-        listaVendas = new VBox(10);
-        listaVendas.setPadding(new Insets(20));
-
-        ScrollPane scroll = new ScrollPane(listaVendas);
-        scroll.setFitToWidth(true);
-        scroll.setStyle("-fx-background: #f4f4f4;");
-
-        Button btnNovaVenda = new Button("Nova Venda");
-        btnNovaVenda.setStyle(
-            "-fx-background-color: #e8ba23; -fx-text-fill: black; -fx-font-weight: bold; -fx-font-size: 14px; " +
-            "-fx-background-radius: 6px; -fx-padding: 10 60 10 60;"
-        );
-        btnNovaVenda.setOnAction(e -> showNovaVendaDialog());
-
-        VBox centerBox = new VBox(10, titulo, filtroBox, scroll);
-        centerBox.setPadding(new Insets(10));
-
-        AnchorPane containerCentral = new AnchorPane(centerBox, btnNovaVenda);
-        AnchorPane.setTopAnchor(centerBox, 0.0);
-        AnchorPane.setBottomAnchor(centerBox, 0.0);
-        AnchorPane.setLeftAnchor(centerBox, 0.0);
-        AnchorPane.setRightAnchor(centerBox, 0.0);
-
-        AnchorPane.setBottomAnchor(btnNovaVenda, 20.0);
-        AnchorPane.setRightAnchor(btnNovaVenda, 20.0);
+        AnchorPane.setTopAnchor(toggleViewButton, 10.0);
+        AnchorPane.setRightAnchor(toggleViewButton, 10.0);
 
         BorderPane root = new BorderPane();
         root.setLeft(leftMenu);
