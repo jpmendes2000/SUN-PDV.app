@@ -318,12 +318,13 @@ public class Caixa {
         carregarFormasPagamento(pagamentoCombo);
 
         // Total da venda
-        Label totalLabel = new Label("Total: R$ 0,00");
-        totalLabel.setStyle("-fx-text-fill: #c7eefaff; -fx-font-weight: bold; -fx-font-size: 16px;");
+        Label totalLabel = new Label("SUBTOTAL: R$ 0,00");
+        totalLabel.setStyle("-fx-text-fill: #c7eefaff; -fx-font-weight: bold; -fx-font-size: 30px;");
 
         // Botões
         Button btnFinalizar = new Button("Finalizar Venda");
         btnFinalizar.setStyle("-fx-background-color: #28a745; -fx-text-fill: white;");
+        btnFinalizar.setPadding(new Insets(100, 600, 100, 600));
         btnFinalizar.setOnAction(e -> {
             try {
                 if (listaProdutos.getItems().isEmpty()) {
@@ -352,7 +353,7 @@ public class Caixa {
                                  listaProdutos.getItems());
                 
                 listaProdutos.getItems().clear();
-                totalLabel.setText("Total: R$ 0,00");
+                totalLabel.setText("SUBTOTAL: R$ 0,00");
                 documentoField.clear();
                 clienteNaoIdentificadoCheck.setSelected(true);
                 pagamentoCombo.getSelectionModel().clearSelection();
@@ -372,7 +373,7 @@ public class Caixa {
         btnCancelar.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white;");
         btnCancelar.setOnAction(e -> {
             listaProdutos.getItems().clear();
-            totalLabel.setText("Total: R$ 0,00");
+            totalLabel.setText("SUBTOTAL: R$ 0,00");
             documentoField.clear();
             clienteNaoIdentificadoCheck.setSelected(true);
             pagamentoCombo.getSelectionModel().clearSelection();
@@ -591,7 +592,7 @@ public class Caixa {
 
     private VBox criarPainelVenda(Venda venda) {
         VBox painel = new VBox(5);
-        painel.setPadding(new Insets(10));
+        painel.setPadding(new Insets(20));
         painel.setStyle("-fx-background-color: #ffffff; -fx-border-color: #d3d3d3; -fx-border-radius: 5; -fx-background-radius: 5;");
 
         Label idLabel = new Label("Venda #" + venda.id);
