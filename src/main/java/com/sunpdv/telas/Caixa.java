@@ -31,7 +31,7 @@ public class Caixa {
     private List<Venda> vendas;
     private VBox listaVendas;
     private TextField pesquisaField;
-    private ComboBox<String> filtroStatus;
+    private ComboBox<String> filtroPagamento;
 
     private static class CustomConfirmationAlert extends Alert {
         public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
@@ -49,38 +49,31 @@ public class Caixa {
 
     private static class Venda {
         int id;
-        String cliente;
-        String data;
+        String formaPagamento;
+        double subtotal;
         double total;
-        String status;
+        String data;
         List<ItemVenda> itens;
 
-        public Venda(int id, String cliente, String data, double total, String status) {
+        public Venda(int id, String formaPagamento, double subtotal, double total, String data) {
             this.id = id;
-            this.cliente = cliente;
-            this.data = data;
+            this.formaPagamento = formaPagamento;
+            this.subtotal = subtotal;
             this.total = total;
-            this.status = status;
+            this.data = data;
             this.itens = new ArrayList<>();
-        }
-
-        public String getStatusColor() {
-            switch (status) {
-                case "Finalizada": return "green";
-                case "Cancelada": return "red";
-                case "Pendente": return "orange";
-                default: return "gray";
-            }
         }
     }
 
     private static class ItemVenda {
         String produto;
+        String codigoBarras;
         int quantidade;
         double preco;
 
-        public ItemVenda(String produto, int quantidade, double preco) {
+        public ItemVenda(String produto, String codigoBarras, int quantidade, double preco) {
             this.produto = produto;
+            this.codigoBarras = codigoBarras;
             this.quantidade = quantidade;
             this.preco = preco;
         }
@@ -140,10 +133,11 @@ public class Caixa {
 
     private List<Venda> carregarVendas() {
         List<Venda> vendas = new ArrayList<>();
-        String query = "SELECT v.ID_Venda, ISNULL(c.Nome, 'Consumidor') AS Cliente, " +
-                      "FORMAT(v.DataHora, 'dd/MM/yyyy HH:mm') AS Data, v.Total, v.Status " +
-                      "FROM Venda v LEFT JOIN Cliente c ON v.ID_Cliente = c.ID_Cliente " +
-                      "ORDER BY v.DataHora DESC";
+        String query = "SELECT v.ID_Vendas, p.Forma_Pagamento, v.Subtotal, v.Total, " +
+                      "CONVERT(VARCHAR, v.Data_Venda, 103) AS Data " +
+                      "FROM vendas v " +
+                      "JOIN pagamento p ON v.ID_Pagamento = p.ID_Pagamento " +
+                      "ORDER BY v.Data_Venda DESC";
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement stmt = conn.prepareStatement(query);
@@ -151,14 +145,13 @@ public class Caixa {
 
             while (rs.next()) {
                 Venda venda = new Venda(
-                    rs.getInt("ID_Venda"),
-                    rs.getString("Cliente"),
-                    rs.getString("Data"),
+                    rs.getInt("ID_Vendas"),
+                    rs.getString("Forma_Pagamento"),
+                    rs.getDouble("Subtotal"),
                     rs.getDouble("Total"),
-                    rs.getString("Status")
+                    rs.getString("Data")
                 );
                 
-                // Carrega os itens da venda
                 carregarItensVenda(venda);
                 vendas.add(venda);
             }
@@ -170,9 +163,10 @@ public class Caixa {
     }
 
     private void carregarItensVenda(Venda venda) throws SQLException {
-        String query = "SELECT p.Nome AS Produto, iv.Quantidade, iv.PrecoUnitario " +
-                       "FROM ItemVenda iv JOIN Produto p ON iv.ID_Produto = p.ID_Produto " +
-                       "WHERE iv.ID_Venda = ?";
+        String query = "SELECT p.Nome, p.Cod_Barras, c.Quantidade, c.PrecoUnitario " +
+                       "FROM carrinho c " +
+                       "JOIN produtos p ON c.ID_Produto = p.ID_Produto " +
+                       "WHERE c.ID_Carrinho = (SELECT ID_Carrinho FROM vendas WHERE ID_Vendas = ?)";
         
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -182,7 +176,8 @@ public class Caixa {
             
             while (rs.next()) {
                 venda.itens.add(new ItemVenda(
-                    rs.getString("Produto"),
+                    rs.getString("Nome"),
+                    rs.getString("Cod_Barras"),
                     rs.getInt("Quantidade"),
                     rs.getDouble("PrecoUnitario")
                 ));
@@ -192,16 +187,17 @@ public class Caixa {
 
     private void aplicarFiltros() {
         String textoBusca = pesquisaField.getText().toLowerCase().trim();
-        String statusSelecionado = filtroStatus.getValue();
+        String pagamentoSelecionado = filtroPagamento.getValue();
 
         listaVendas.getChildren().clear();
         boolean achou = false;
         
         for (Venda venda : vendas) {
-            boolean clienteMatch = venda.cliente.toLowerCase().contains(textoBusca);
-            boolean statusMatch = statusSelecionado.equals("Todos") || venda.status.equalsIgnoreCase(statusSelecionado);
+            boolean idMatch = String.valueOf(venda.id).contains(textoBusca);
+            boolean pagamentoMatch = pagamentoSelecionado.equals("Todos") || 
+                                   venda.formaPagamento.equalsIgnoreCase(pagamentoSelecionado);
 
-            if (clienteMatch && statusMatch) {
+            if (idMatch && pagamentoMatch) {
                 listaVendas.getChildren().add(criarPainelVenda(venda));
                 achou = true;
             }
@@ -231,10 +227,21 @@ public class Caixa {
         dialogVBox.setStyle("-fx-background-color: #006989;");
         dialogVBox.setAlignment(Pos.CENTER);
 
-        // Campo para cliente
-        TextField clienteField = new TextField();
-        clienteField.setPromptText("Nome do cliente (opcional)");
-        clienteField.setMaxWidth(400);
+        // Seção de identificação do cliente
+        ToggleGroup clienteGroup = new ToggleGroup();
+        RadioButton rbCPF = new RadioButton("CPF");
+        rbCPF.setToggleGroup(clienteGroup);
+        RadioButton rbCNPJ = new RadioButton("CNPJ");
+        rbCNPJ.setToggleGroup(clienteGroup);
+        RadioButton rbRG = new RadioButton("RG");
+        rbRG.setToggleGroup(clienteGroup);
+        
+        TextField documentoField = new TextField();
+        documentoField.setPromptText("Número do documento");
+        documentoField.setMaxWidth(300);
+
+        HBox tipoDocumentoBox = new HBox(10, rbCPF, rbCNPJ, rbRG);
+        tipoDocumentoBox.setAlignment(Pos.CENTER);
 
         // Lista de produtos
         ListView<String> listaProdutos = new ListView<>();
@@ -242,19 +249,38 @@ public class Caixa {
 
         // Campo para adicionar produto
         TextField codigoProdutoField = new TextField();
-        codigoProdutoField.setPromptText("Código ou nome do produto");
-        codigoProdutoField.setMaxWidth(400);
+        codigoProdutoField.setPromptText("Código de barras do produto");
+        codigoProdutoField.setMaxWidth(300);
+
+        Spinner<Integer> quantidadeSpinner = new Spinner<>(1, 100, 1);
+        quantidadeSpinner.setEditable(true);
 
         Button btnAdicionar = new Button("Adicionar Produto");
         btnAdicionar.setStyle("-fx-background-color: #28a745; -fx-text-fill: white;");
         btnAdicionar.setOnAction(e -> {
             String codigo = codigoProdutoField.getText().trim();
             if (!codigo.isEmpty()) {
-                // Aqui você implementaria a busca do produto no banco
-                listaProdutos.getItems().add("Produto: " + codigo + " - R$ 10,00");
-                codigoProdutoField.clear();
+                try {
+                    String produto = buscarProdutoPorCodigo(codigo);
+                    if (produto != null) {
+                        int quantidade = quantidadeSpinner.getValue();
+                        double preco = buscarPrecoProduto(codigo);
+                        listaProdutos.getItems().add(produto + " - Qtd: " + quantidade + " - R$ " + String.format("%.2f", preco * quantidade));
+                        codigoProdutoField.clear();
+                        quantidadeSpinner.getValueFactory().setValue(1);
+                    } else {
+                        showErrorAlert("Produto não encontrado", "Nenhum produto encontrado com o código: " + codigo);
+                    }
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    showErrorAlert("Erro ao buscar produto", "Detalhes: " + ex.getMessage());
+                }
             }
         });
+
+        // Forma de pagamento
+        ComboBox<String> pagamentoCombo = new ComboBox<>();
+        carregarFormasPagamento(pagamentoCombo);
 
         // Total da venda
         Label totalLabel = new Label("Total: R$ 0,00");
@@ -264,10 +290,31 @@ public class Caixa {
         Button btnFinalizar = new Button("Finalizar Venda");
         btnFinalizar.setStyle("-fx-background-color: #28a745; -fx-text-fill: white;");
         btnFinalizar.setOnAction(e -> {
-            // Implementar lógica para finalizar venda no banco
-            dialog.close();
-            vendas = carregarVendas();
-            aplicarFiltros();
+            try {
+                if (listaProdutos.getItems().isEmpty()) {
+                    showErrorAlert("Venda vazia", "Adicione pelo menos um produto para finalizar a venda.");
+                    return;
+                }
+
+                if (pagamentoCombo.getValue() == null) {
+                    showErrorAlert("Forma de pagamento", "Selecione uma forma de pagamento.");
+                    return;
+                }
+
+                // Implementar lógica para salvar no banco de dados
+                salvarVendaNoBanco(documentoField.getText(), 
+                                 ((RadioButton)clienteGroup.getSelectedToggle()).getText(),
+                                 pagamentoCombo.getValue(),
+                                 calcularTotal(listaProdutos),
+                                 listaProdutos.getItems());
+                
+                dialog.close();
+                vendas = carregarVendas();
+                aplicarFiltros();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                showErrorAlert("Erro ao finalizar venda", "Detalhes: " + ex.getMessage());
+            }
         });
 
         Button btnCancelar = new Button("Cancelar");
@@ -278,16 +325,148 @@ public class Caixa {
         botoes.setAlignment(Pos.CENTER);
 
         dialogVBox.getChildren().addAll(
-            new Label("Cliente:"), clienteField,
-            new Label("Produtos:"), listaProdutos,
-            new Label("Adicionar Produto:"), codigoProdutoField, btnAdicionar,
-            totalLabel, botoes
+            new Label("Identificação do Cliente:"),
+            tipoDocumentoBox,
+            documentoField,
+            new Label("Produtos:"),
+            listaProdutos,
+            new Label("Adicionar Produto:"),
+            new HBox(10, codigoProdutoField, new Label("Qtd:"), quantidadeSpinner),
+            btnAdicionar,
+            new Label("Forma de Pagamento:"),
+            pagamentoCombo,
+            totalLabel,
+            botoes
         );
 
-        Scene dialogScene = new Scene(dialogVBox, 500, 500);
+        Scene dialogScene = new Scene(dialogVBox, 600, 600);
         dialogScene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
         dialog.setScene(dialogScene);
         dialog.showAndWait();
+    }
+
+    private String buscarProdutoPorCodigo(String codigo) throws SQLException {
+        String query = "SELECT Nome FROM produtos WHERE Cod_Barras = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, codigo);
+            ResultSet rs = stmt.executeQuery();
+            return rs.next() ? rs.getString("Nome") : null;
+        }
+    }
+
+    private double buscarPrecoProduto(String codigo) throws SQLException {
+        String query = "SELECT Preco FROM produtos WHERE Cod_Barras = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, codigo);
+            ResultSet rs = stmt.executeQuery();
+            return rs.next() ? rs.getDouble("Preco") : 0;
+        }
+    }
+
+    private void carregarFormasPagamento(ComboBox<String> combo) {
+        String query = "SELECT Forma_Pagamento FROM pagamento";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                combo.getItems().add(rs.getString("Forma_Pagamento"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showErrorAlert("Erro ao carregar formas de pagamento", "Detalhes: " + e.getMessage());
+        }
+    }
+
+    private double calcularTotal(ListView<String> listaProdutos) {
+        double total = 0;
+        for (String item : listaProdutos.getItems()) {
+            String[] partes = item.split(" - ");
+            String valorStr = partes[partes.length - 1].replace("R$ ", "").trim();
+            total += Double.parseDouble(valorStr);
+        }
+        return total;
+    }
+
+    private void salvarVendaNoBanco(String documento, String tipoDocumento, 
+                                  String formaPagamento, double total, 
+                                  List<String> itens) throws SQLException {
+        Connection conn = null;
+        try {
+            conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            conn.setAutoCommit(false);
+
+            // 1. Salvar o carrinho
+            String insertCarrinho = "INSERT INTO carrinho (ID_Produto, CodBarras, SubTotal) VALUES (?, ?, ?)";
+            PreparedStatement stmtCarrinho = conn.prepareStatement(insertCarrinho, Statement.RETURN_GENERATED_KEYS);
+            
+            // Para cada item, inserir no carrinho
+            for (String item : itens) {
+                String[] partes = item.split(" - ");
+                String nomeProduto = partes[0];
+                int quantidade = Integer.parseInt(partes[1].replace("Qtd: ", "").trim());
+                
+                // Buscar ID e código de barras do produto
+                String queryProduto = "SELECT ID_Produto, Cod_Barras, Preco FROM produtos WHERE Nome = ?";
+                PreparedStatement stmtProduto = conn.prepareStatement(queryProduto);
+                stmtProduto.setString(1, nomeProduto);
+                ResultSet rsProduto = stmtProduto.executeQuery();
+                
+                if (rsProduto.next()) {
+                    int idProduto = rsProduto.getInt("ID_Produto");
+                    String codBarras = rsProduto.getString("Cod_Barras");
+                    double preco = rsProduto.getDouble("Preco");
+                    
+                    stmtCarrinho.setInt(1, idProduto);
+                    stmtCarrinho.setString(2, codBarras);
+                    stmtCarrinho.setDouble(3, preco * quantidade);
+                    stmtCarrinho.addBatch();
+                }
+            }
+            stmtCarrinho.executeBatch();
+            ResultSet rsCarrinho = stmtCarrinho.getGeneratedKeys();
+            int idCarrinho = rsCarrinho.next() ? rsCarrinho.getInt(1) : 0;
+
+            // 2. Salvar a venda
+            String insertVenda = "INSERT INTO vendas (Subtotal, ID_Pagamento, Total, Data_Venda, ID_Carrinho, ID_Login) " +
+                               "VALUES (?, (SELECT ID_Pagamento FROM pagamento WHERE Forma_Pagamento = ?), ?, GETDATE(), ?, ?)";
+            PreparedStatement stmtVenda = conn.prepareStatement(insertVenda);
+            stmtVenda.setDouble(1, total);
+            stmtVenda.setString(2, formaPagamento);
+            stmtVenda.setDouble(3, total);
+            stmtVenda.setInt(4, idCarrinho);
+            stmtVenda.setInt(5, AutenticarUser.getIdUsuario());
+            stmtVenda.executeUpdate();
+
+            // 3. Se houver documento, salvar no cliente
+            if (!documento.isEmpty()) {
+                String insertCliente = "INSERT INTO clientes (";
+                if (tipoDocumento.equals("CPF")) {
+                    insertCliente += "cpf) VALUES (?)";
+                } else if (tipoDocumento.equals("CNPJ")) {
+                    insertCliente += "cnpj) VALUES (?)";
+                } else {
+                    insertCliente += "RG) VALUES (?)";
+                }
+                
+                PreparedStatement stmtCliente = conn.prepareStatement(insertCliente);
+                stmtCliente.setString(1, documento);
+                stmtCliente.executeUpdate();
+            }
+
+            conn.commit();
+        } catch (SQLException e) {
+            if (conn != null) {
+                conn.rollback();
+            }
+            throw e;
+        } finally {
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
+        }
     }
 
     private VBox criarPainelVenda(Venda venda) {
@@ -298,38 +477,26 @@ public class Caixa {
         Label idLabel = new Label("Venda #" + venda.id);
         idLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #00536d;");
 
-        Label clienteLabel = new Label("Cliente: " + venda.cliente);
-        clienteLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #00536d;");
+        Label pagamentoLabel = new Label("Pagamento: " + venda.formaPagamento);
+        pagamentoLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #00536d;");
+
+        Label subtotalLabel = new Label("Subtotal: R$ " + String.format("%.2f", venda.subtotal));
+        subtotalLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #00536d;");
+
+        Label totalLabel = new Label("Total: R$ " + String.format("%.2f", venda.total));
+        totalLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #00536d; -fx-font-weight: bold;");
 
         Label dataLabel = new Label("Data: " + venda.data);
         dataLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #00536d;");
 
-        Label totalLabel = new Label("Total: R$ " + String.format("%.2f", venda.total));
-        totalLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #00536d;");
-
-        Label statusLabel = new Label("Status: " + venda.status);
-        statusLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: " + venda.getStatusColor() + ";");
-
-        // Botão para ver detalhes
         Button btnDetalhes = new Button("Detalhes");
         btnDetalhes.setStyle("-fx-background-color: #0c5b74; -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 5 10; -fx-background-radius: 4;");
         btnDetalhes.setOnAction(e -> showDetalhesVenda(venda));
 
-        // Botão para cancelar venda (se não estiver cancelada)
-        Button btnCancelar = null;
-        if (!venda.status.equals("Cancelada")) {
-            btnCancelar = new Button("Cancelar");
-            btnCancelar.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 5 10; -fx-background-radius: 4;");
-            btnCancelar.setOnAction(e -> cancelarVenda(venda));
-        }
-
         HBox botoes = new HBox(10, btnDetalhes);
-        if (btnCancelar != null) {
-            botoes.getChildren().add(btnCancelar);
-        }
         botoes.setAlignment(Pos.CENTER_RIGHT);
 
-        painel.getChildren().addAll(idLabel, clienteLabel, dataLabel, totalLabel, statusLabel, botoes);
+        painel.getChildren().addAll(idLabel, pagamentoLabel, subtotalLabel, totalLabel, dataLabel, botoes);
 
         return painel;
     }
@@ -348,20 +515,26 @@ public class Caixa {
         Label idLabel = new Label("Venda #" + venda.id);
         idLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px;");
 
-        Label clienteLabel = new Label("Cliente: " + venda.cliente);
-        clienteLabel.setStyle("-fx-text-fill: white;");
+        Label pagamentoLabel = new Label("Forma de Pagamento: " + venda.formaPagamento);
+        pagamentoLabel.setStyle("-fx-text-fill: white;");
 
         Label dataLabel = new Label("Data: " + venda.data);
         dataLabel.setStyle("-fx-text-fill: white;");
 
-        Label statusLabel = new Label("Status: " + venda.status);
-        statusLabel.setStyle("-fx-text-fill: " + venda.getStatusColor() + ";");
+        Label subtotalLabel = new Label("Subtotal: R$ " + String.format("%.2f", venda.subtotal));
+        subtotalLabel.setStyle("-fx-text-fill: white;");
+
+        Label totalLabel = new Label("Total: R$ " + String.format("%.2f", venda.total));
+        totalLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;");
 
         // Tabela de itens
         TableView<ItemVenda> tabelaItens = new TableView<>();
         
         TableColumn<ItemVenda, String> colProduto = new TableColumn<>("Produto");
         colProduto.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().produto));
+        
+        TableColumn<ItemVenda, String> colCodigo = new TableColumn<>("Código");
+        colCodigo.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().codigoBarras));
         
         TableColumn<ItemVenda, Integer> colQuantidade = new TableColumn<>("Quantidade");
         colQuantidade.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().quantidade).asObject());
@@ -372,56 +545,23 @@ public class Caixa {
         TableColumn<ItemVenda, Double> colTotal = new TableColumn<>("Total");
         colTotal.setCellValueFactory(cellData -> new javafx.beans.property.SimpleDoubleProperty(cellData.getValue().quantidade * cellData.getValue().preco).asObject());
         
-        tabelaItens.getColumns().addAll(colProduto, colQuantidade, colPreco, colTotal);
+        tabelaItens.getColumns().addAll(colProduto, colCodigo, colQuantidade, colPreco, colTotal);
         tabelaItens.getItems().addAll(venda.itens);
         tabelaItens.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
-        Label totalLabel = new Label("Total da Venda: R$ " + String.format("%.2f", venda.total));
-        totalLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;");
 
         Button btnFechar = new Button("Fechar");
         btnFechar.setStyle("-fx-background-color: #0c5b74; -fx-text-fill: white;");
         btnFechar.setOnAction(e -> dialog.close());
 
         dialogVBox.getChildren().addAll(
-            idLabel, clienteLabel, dataLabel, statusLabel,
-            new Label("Itens da Venda:"), tabelaItens, totalLabel, btnFechar
+            idLabel, pagamentoLabel, dataLabel, subtotalLabel, totalLabel,
+            new Label("Itens da Venda:"), tabelaItens, btnFechar
         );
 
-        Scene dialogScene = new Scene(dialogVBox, 600, 500);
+        Scene dialogScene = new Scene(dialogVBox, 700, 500);
         dialogScene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
         dialog.setScene(dialogScene);
         dialog.showAndWait();
-    }
-
-    private void cancelarVenda(Venda venda) {
-        CustomConfirmationAlert alert = new CustomConfirmationAlert(
-            stage,
-            "Confirmar Cancelamento",
-            "Deseja realmente cancelar a venda #" + venda.id + "?",
-            "Esta ação não pode ser desfeita."
-        );
-        
-        alert.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                String query = "UPDATE Venda SET Status = 'Cancelada' WHERE ID_Venda = ?";
-                
-                try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-                     PreparedStatement stmt = conn.prepareStatement(query)) {
-                    
-                    stmt.setInt(1, venda.id);
-                    int rowsAffected = stmt.executeUpdate();
-                    
-                    if (rowsAffected > 0) {
-                        vendas = carregarVendas();
-                        aplicarFiltros();
-                    }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                    showErrorAlert("Erro ao cancelar venda", "Detalhes: " + e.getMessage());
-                }
-            }
-        });
     }
 
     public void show(Stage stage) {
@@ -465,24 +605,25 @@ public class Caixa {
         titulo.setStyle("-fx-text-fill: #062e3aff; -fx-font-size: 24px; -fx-font-weight: bold;");
 
         pesquisaField = new TextField();
-        pesquisaField.setPromptText("Pesquisar cliente...");
+        pesquisaField.setPromptText("Pesquisar por ID da venda...");
         pesquisaField.setMaxWidth(300);
 
-        filtroStatus = new ComboBox<>();
-        filtroStatus.getItems().addAll("Todos", "Finalizada", "Cancelada", "Pendente");
-        filtroStatus.setValue("Todos");
-        filtroStatus.setPrefWidth(150);
+        filtroPagamento = new ComboBox<>();
+        filtroPagamento.getItems().add("Todos");
+        carregarFormasPagamento(filtroPagamento);
+        filtroPagamento.setValue("Todos");
+        filtroPagamento.setPrefWidth(150);
 
-        Label statusLabel = new Label("Status:");
+        Label pagamentoLabel = new Label("Pagamento:");
         pesquisaField.textProperty().addListener((obs, oldVal, newVal) -> aplicarFiltros());
-        filtroStatus.setOnAction(e -> aplicarFiltros());
+        filtroPagamento.setOnAction(e -> aplicarFiltros());
         HBox.setMargin(pesquisaField, new Insets(5, 10, 0, 10));
         pesquisaField.setPrefWidth(1600);
 
-        HBox filtroBox = new HBox(5, pesquisaField, statusLabel, filtroStatus);
+        HBox filtroBox = new HBox(5, pesquisaField, pagamentoLabel, filtroPagamento);
         filtroBox.setPadding(new Insets(5));
-        HBox.setMargin(filtroStatus, new Insets(0, 10, 0, 0));
-        HBox.setMargin(statusLabel, new Insets(0, 5, 0, 5));
+        HBox.setMargin(filtroPagamento, new Insets(0, 10, 0, 0));
+        HBox.setMargin(pagamentoLabel, new Insets(0, 5, 0, 5));
 
         listaVendas = new VBox(10);
         listaVendas.setPadding(new Insets(20));
