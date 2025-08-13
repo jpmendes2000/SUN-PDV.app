@@ -833,19 +833,12 @@ public class Caixa {
         });
 
         btnSair.setOnAction(e -> {
-            CustomConfirmationAlert alert = new CustomConfirmationAlert(
-                stage,
-                "Confirmação de Saída",
-                "Deseja realmente sair do sistema?",
-                ""
-            );
+            CustomConfirmationAlert alert = new CustomConfirmationAlert(stage, "Confirmação", "Deseja sair?", "Isso fechará o sistema.");
             alert.showAndWait().ifPresent(response -> {
                 if (response == ButtonType.OK) {
                     stage.close();
                 }
             });
         });
-
-        aplicarFiltros();
     }
 }
