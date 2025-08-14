@@ -59,7 +59,8 @@ sun-pdv/
 │   │   │    ├── 📜 AutenticarUser.java
 │   │   │    ├── 📜 log.java
 │   │   │    ├── 📜 module-info.java
-│   │   │    └── 📜 Produto.java
+│   │   │    ├── 📜 Produto.java
+│   │   │    └── 📜 TaxaPagamentoServive.java
 │   │   ├── 📂 telas/
 │   │   │    ├── 📂 home/
 │   │   │    │    ├── 📜 TelaHomeADM.java
