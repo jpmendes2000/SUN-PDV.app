@@ -1,6 +1,7 @@
 package com.sunpdv.telas.operacao;
 
 import com.sunpdv.model.AutenticarUser;
+import com.sunpdv.model.TaxaPagamentoService;
 import com.sunpdv.telas.home.TelaHomeADM;
 import com.sunpdv.telas.home.TelaHomeFUN;
 import com.sunpdv.telas.home.TelaHomeMOD;
@@ -14,6 +15,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -21,6 +23,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.*;
+import java.sql.SQLException;
 
 public class Configurar {
 
@@ -40,7 +43,7 @@ public class Configurar {
     // Método para criar botões laterais com ícone e efeito de hover
     private Button criarBotaoLateral(String texto, String caminhoIcone) {
         try {
-            // Carrega a imagem do ícone a partir do recurso
+            // Carrega a imagem do ícone
             Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
             ImageView icon = new ImageView(img);
             icon.setFitWidth(20);
@@ -67,7 +70,7 @@ public class Configurar {
             content.setAlignment(Pos.CENTER_LEFT);
             HBox.setHgrow(content.getChildren().get(1), Priority.ALWAYS);
 
-            // Configura o botão com o conteúdo gráfico
+            // Configura o botão
             Button btn = new Button();
             btn.setGraphic(content);
             btn.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
@@ -75,7 +78,7 @@ public class Configurar {
             btn.setPrefWidth(280);
             btn.setPrefHeight(42);
 
-            // Adiciona efeito de hover (fundo e barra amarela)
+            // Efeito de hover
             btn.setOnMouseEntered(e -> {
                 btn.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18));");
                 indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64);");
@@ -87,18 +90,17 @@ public class Configurar {
 
             return btn;
         } catch (Exception e) {
-            // Retorna um botão simples em caso de erro ao carregar o ícone
             return new Button(texto);
         }
     }
 
     public void show(Stage stage) {
-        // Cria a barra lateral (menu esquerdo) com fundo azul escuro
+        // Cria a barra lateral (menu esquerdo)
         VBox leftMenu = new VBox();
         leftMenu.setPrefWidth(280);
         leftMenu.setStyle("-fx-background-color: #00536d;");
 
-        // Configura o logo SUN PDV no topo do menu
+        // Configura o logo SUN PDV no topo
         Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(120);
@@ -112,7 +114,7 @@ public class Configurar {
         logoBox.setAlignment(Pos.CENTER);
         logoBox.setPadding(new Insets(20, 0, 20, 0));
 
-        // Adiciona botões Home e Sair ao menu
+        // Adiciona botões ao menu
         Button btnVoltarHome = criarBotaoLateral("Home", "/img/icon/casa.png");
         Button btnSair = criarBotaoLateral("Sair do Sistema", "/img/icon/fechar.png");
 
@@ -121,9 +123,9 @@ public class Configurar {
         buttonBox.setPadding(new Insets(0, 0, 20, 0));
 
         leftMenu.getChildren().addAll(logoBox, new Region(), buttonBox);
-        VBox.setVgrow(leftMenu.getChildren().get(1), Priority.ALWAYS); // Empurra os botões para baixo
+        VBox.setVgrow(leftMenu.getChildren().get(1), Priority.ALWAYS);
 
-        // Configura o contêiner da imagem (logo ou texto "Sem logo")
+        // Configura o contêiner da imagem (logo)
         ImageView imageLogo = new ImageView();
         imageLogo.setFitWidth(100);
         imageLogo.setPreserveRatio(true);
@@ -146,7 +148,7 @@ public class Configurar {
         }
         imageContainer.getChildren().addAll(imageLogo, semLogoLabel);
 
-        // Configura o layout da área de configuração de logo
+        // Configuração de Logo
         Label titulo = new Label("Configuração de Logo");
         titulo.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 18px; -fx-font-weight: bold;");
 
@@ -163,11 +165,57 @@ public class Configurar {
         HBox botoesLogo = new HBox(10, botoesStack, imageContainer);
         botoesLogo.setAlignment(Pos.CENTER_LEFT);
 
-        VBox configLayout = new VBox(10, titulo, botoesLogo);
+        // Configuração de Taxas de Pagamento
+        Label tituloTaxas = new Label("Configuração de Taxas de Pagamento");
+        tituloTaxas.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 18px; -fx-font-weight: bold;");
+
+        // Taxa para Cartão de Crédito
+        Label lblCredito = new Label("Taxa Crédito (%):");
+        lblCredito.setStyle("-fx-text-fill: #a9cce3;");
+        TextField txtCredito = new TextField();
+        txtCredito.setPrefWidth(100);
+        txtCredito.setPromptText("0.0");
+        
+        // Taxa para Cartão de Débito
+        Label lblDebito = new Label("Taxa Débito (%):");
+        lblDebito.setStyle("-fx-text-fill: #a9cce3;");
+        TextField txtDebito = new TextField();
+        txtDebito.setPrefWidth(100);
+        txtDebito.setPromptText("0.0");
+        
+        Button btnSalvarTaxas = new Button("Salvar Taxas");
+        btnSalvarTaxas.getStyleClass().add("BotaoConfig");
+
+        HBox creditoBox = new HBox(10, lblCredito, txtCredito);
+        creditoBox.setAlignment(Pos.CENTER_LEFT);
+        HBox debitoBox = new HBox(10, lblDebito, txtDebito);
+        debitoBox.setAlignment(Pos.CENTER_LEFT);
+        
+        VBox taxasBox = new VBox(10, creditoBox, debitoBox, btnSalvarTaxas);
+        taxasBox.setAlignment(Pos.CENTER_LEFT);
+        taxasBox.setPadding(new Insets(10, 0, 0, 0));
+
+        // Carrega as taxas atuais do banco de dados
+        try {
+            TaxaPagamentoService taxaService = new TaxaPagamentoService();
+            double taxaCredito = taxaService.obterTaxa("Crédito");
+            double taxaDebito = taxaService.obterTaxa("Débito");
+            
+            txtCredito.setText(String.valueOf(taxaCredito));
+            txtDebito.setText(String.valueOf(taxaDebito));
+        } catch (SQLException e) {
+            mostrarAlerta("Erro", "Não foi possível carregar as taxas atuais.", AlertType.ERROR);
+        }
+
+        // Layout principal das configurações
+        VBox configLayout = new VBox(20, 
+            new VBox(10, titulo, botoesLogo),
+            new VBox(10, tituloTaxas, taxasBox)
+        );
         configLayout.setAlignment(Pos.TOP_LEFT);
         configLayout.setPadding(new Insets(20, 0, 0, 30));
 
-        // Configura o layout principal
+        // Layout raiz
         BorderPane root = new BorderPane();
         root.setLeft(leftMenu);
         root.setCenter(configLayout);
@@ -180,7 +228,7 @@ public class Configurar {
         stage.setFullScreen(true);
         stage.show();
 
-        // Define as ações dos botões
+        // Ações dos botões
         btnSelecionarLogo.setOnAction(e -> {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Selecionar Imagem de Logo");
@@ -218,6 +266,25 @@ public class Configurar {
             }
         });
 
+        // Ação para salvar as taxas
+        btnSalvarTaxas.setOnAction(e -> {
+            try {
+                double credito = Double.parseDouble(txtCredito.getText());
+                double debito = Double.parseDouble(txtDebito.getText());
+                
+                TaxaPagamentoService service = new TaxaPagamentoService();
+                service.salvarTaxa("Crédito", credito);
+                service.salvarTaxa("Débito", debito);
+                
+                mostrarAlerta("Sucesso", "Taxas atualizadas com sucesso!", AlertType.INFORMATION);
+            } catch (NumberFormatException ex) {
+                mostrarAlerta("Erro", "Por favor, insira valores numéricos válidos.", AlertType.ERROR);
+            } catch (Exception ex) {
+                mostrarAlerta("Erro", "Não foi possível salvar as taxas.", AlertType.ERROR);
+                ex.printStackTrace();
+            }
+        });
+
         btnVoltarHome.setOnAction(e -> {
             try {
                 String cargo = AutenticarUser.getCargo();
@@ -250,7 +317,7 @@ public class Configurar {
         });
     }
 
-    // Método genérico para exibir alertas
+    // Método para exibir alertas
     private void mostrarAlerta(String titulo, String mensagem, AlertType tipo) {
         Alert alert = new Alert(tipo);
         alert.setTitle(titulo);
