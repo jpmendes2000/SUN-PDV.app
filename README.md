@@ -50,18 +50,23 @@
 ```bash
 sun-pdv/
 │
-├── src/
-│   └── main/
-│       └── java/com/sunpdv/
-│           ├── TelaLogin.java
-│           ├── TelaPrincipal.java
-│           └── utils/
-│               ├── Criptografia.java
-│               └── Conexao.java
+├── 📂 .vscode/
 │
-├── resources/
-│   └── styles/
-│       └── style.css
+├── 📂 src/main/
+│   ├── 📂 java/com/sunpdv/
+│   │   ├── 📂 connection/
+│   │   ├── 📂 model/
+│   │   ├── 📂 telas/
+│   │   │    ├── 📂 home/
+│   │   └── 📜 App.java 
+│   └── 📂 resources/
+│       ├── 📂 css/
+│       └── 📂 img/
 │
-├── README.md
-└── pom.xml (ou build.gradle)
+├── 📂 target/
+│
+├── 📜 .gitignore
+├── 📜 SUN-PDV.app.jar
+├── 📜 README.md
+├── 📜 Package-lock.json
+└── 📜 pom.xml
