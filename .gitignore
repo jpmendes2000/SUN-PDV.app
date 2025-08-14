@@ -1,0 +1,119 @@
+# Arquivos compilados e diretórios de build (Maven, Gradle, etc.)
+/target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+
+# Arquivos de log
+*.log
+logs/
+*.log.*
+log/
+
+# Arquivos temporários
+*.tmp
+*.bak
+*.swp
+*~.nib
+*.swp
+*~
+.DS_Store
+
+# Diretórios de build do Maven
+/target/
+/out/
+
+# Diretórios de build do Gradle
+/build/
+/.gradle/
+
+# Arquivos de configuração de IDEs
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# NetBeans
+/nbproject/
+nbactions.xml
+nb-configuration.xml
+
+# VS Code
+.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Arquivos de cache
+*.cache
+.cache/
+*.bak
+*.orig
+
+# Bancos de dados locais e arquivos de configuração sensíveis
+*.sql
+*.sqlite
+*.db
+*.properties
+application.properties
+application.yml
+application.yaml
+
+# Arquivos de ambiente virtual (se usar Python ou outras ferramentas)
+venv/
+.env/
+env/
+*.env
+
+# Arquivos de testes e cobertura
+/coverage/
+*.coverage
+*.lcov
+/test-results/
+
+# Arquivos de sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Outros arquivos gerados
+*.pid
+*.seed
+*.pid.lock
+
+# Arquivos de dependências locais
+node_modules/
+bower_components/
+
+# Arquivos de configuração de CI/CD
+.circleci/
+.github/workflows/*.yml
+*.travis.yml
+
+# Arquivos de documentação gerada
+/docs/_build/
+/site/
+
+# Arquivos de cache do Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# Outros arquivos temporários ou locais
+*.lock
+*.hprof
+*.idx
+*.pack
+*.gitkeep
