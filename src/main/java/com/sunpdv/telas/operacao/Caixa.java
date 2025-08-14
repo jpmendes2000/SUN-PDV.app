@@ -3,13 +3,7 @@ package com.sunpdv.telas.operacao;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
-
-import com.sunpdv.telas.home.TelaHomeADM;
-import com.sunpdv.telas.home.TelaHomeFUN;
-import com.sunpdv.telas.home.TelaHomeMOD;
-import com.sunpdv.model.AutenticarUser;
-
+import java.util.Optional;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
@@ -17,10 +11,16 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Modality;
+import com.sunpdv.AutenticarUser;
+import com.sunpdv.home.TelaHomeADM;
+import com.sunpdv.home.TelaHomeFUN;
+import com.sunpdv.home.TelaHomeMOD;
 
 public class Caixa {
 
@@ -37,6 +37,11 @@ public class Caixa {
     private VBox historicoContainer;
     private ToggleButton toggleViewButton;
     private CheckBox clienteNaoIdentificadoCheck;
+    private TextField primeiraFormaValor;
+    private ComboBox<String> primeiraFormaCombo;
+    private ComboBox<String> segundaFormaCombo;
+    private TextField segundaFormaValor;
+    private CheckBox usarSegundaFormaCheck;
 
     private static class CustomConfirmationAlert extends Alert {
         public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
@@ -47,7 +52,7 @@ public class Caixa {
             this.setContentText(content);
             Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
             stage.getScene().getStylesheets().add(
-                getClass().getResource("/css/style.css").toExternalForm()
+                getClass().getResource("/img/css/style.css").toExternalForm()
             );
         }
     }
@@ -100,8 +105,6 @@ public class Caixa {
             indicatorContainer.setMinHeight(30);
             indicatorContainer.setMaxHeight(30);
             indicatorContainer.setStyle("-fx-background-color: transparent;");
-            indicatorContainer.setVisible(false);
-            indicatorContainer.setManaged(false);
 
             HBox leftContent = new HBox(10, icon, textLabel);
             leftContent.setAlignment(Pos.CENTER_LEFT);
@@ -120,14 +123,10 @@ public class Caixa {
             btn.setOnMouseEntered(e -> {
                 btn.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18));");
                 indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64);");
-                indicatorContainer.setVisible(true);
-                indicatorContainer.setManaged(true);
             });
             btn.setOnMouseExited(e -> {
                 btn.setStyle("-fx-background-color: transparent;");
                 indicatorContainer.setStyle("-fx-background-color: transparent;");
-                indicatorContainer.setVisible(false);
-                indicatorContainer.setManaged(false);
             });
 
             return btn;
@@ -162,7 +161,7 @@ public class Caixa {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            showErrorAlert("Erro ao carregar vendas", "Detalhes: " + e.getMessage());
+            mostrarAlerta("Erro ao carregar vendas", "Detalhes: " + e.getMessage(), AlertType.ERROR);
         }
         return vendas;
     }
@@ -209,16 +208,10 @@ public class Caixa {
         }
         
         if (!achou) {
-            listaVendas.getChildren().add(new Label("Nenhuma venda corresponde à pesquisa."));
+            Label lblNenhumaVenda = new Label("Nenhuma venda corresponde à pesquisa.");
+            lblNenhumaVenda.setStyle("-fx-text-fill: #00536d; -fx-font-size: 14px;");
+            listaVendas.getChildren().add(lblNenhumaVenda);
         }
-    }
-
-    private void showErrorAlert(String header, String content) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Erro");
-        alert.setHeaderText(header);
-        alert.setContentText(content);
-        alert.showAndWait();
     }
 
     private void setupNovaVendaUI() {
@@ -231,15 +224,18 @@ public class Caixa {
         
         clienteNaoIdentificadoCheck = new CheckBox("Cliente não identificado");
         clienteNaoIdentificadoCheck.setSelected(true);
-        clienteNaoIdentificadoCheck.setStyle("-fx-font-weight: bold;");
+        clienteNaoIdentificadoCheck.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
         
         ToggleGroup clienteGroup = new ToggleGroup();
         RadioButton rbCPF = new RadioButton("CPF");
         rbCPF.setToggleGroup(clienteGroup);
+        rbCPF.setStyle("-fx-text-fill: white;");
         RadioButton rbCNPJ = new RadioButton("CNPJ");
         rbCNPJ.setToggleGroup(clienteGroup);
+        rbCNPJ.setStyle("-fx-text-fill: white;");
         RadioButton rbRG = new RadioButton("RG");
         rbRG.setToggleGroup(clienteGroup);
+        rbRG.setStyle("-fx-text-fill: white;");
         
         TextField documentoField = new TextField();
         documentoField.setPromptText("Número do documento");
@@ -249,7 +245,6 @@ public class Caixa {
         HBox tipoDocumentoBox = new HBox(10, rbCPF, rbCNPJ, rbRG);
         tipoDocumentoBox.setDisable(true);
         
-        // Listener para o checkbox de cliente não identificado
         clienteNaoIdentificadoCheck.selectedProperty().addListener((obs, oldVal, newVal) -> {
             tipoDocumentoBox.setDisable(newVal);
             documentoField.setDisable(newVal);
@@ -259,7 +254,6 @@ public class Caixa {
             }
         });
         
-        // Listener para validação de CPF
         rbCPF.selectedProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal) {
                 documentoField.setPromptText("Digite o CPF (somente números)");
@@ -279,66 +273,172 @@ public class Caixa {
         });
 
         // Lista de produtos
-        ListView<String> listaProdutos = new ListView<>();
+        ListView<ItemVenda> listaProdutos = new ListView<>();
         listaProdutos.setPrefHeight(200);
+        listaProdutos.setCellFactory(lv -> new ItemVendaCell());
+        
+        // Menu de contexto para itens
+        ContextMenu contextMenu = new ContextMenu();
+        MenuItem alterarQuantidadeItem = new MenuItem("Alterar Quantidade");
+        MenuItem removerItem = new MenuItem("Remover");
+        contextMenu.getItems().addAll(alterarQuantidadeItem, removerItem);
+        
+        listaProdutos.setContextMenu(contextMenu);
+        listaProdutos.setOnMouseClicked(e -> {
+            if (e.getButton() == MouseButton.SECONDARY) {
+                ItemVenda selected = listaProdutos.getSelectionModel().getSelectedItem();
+                if (selected != null) {
+                    contextMenu.show(listaProdutos, e.getScreenX(), e.getScreenY());
+                }
+            }
+        });
+        
+        alterarQuantidadeItem.setOnAction(e -> {
+            ItemVenda selected = listaProdutos.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                TextInputDialog dialog = new TextInputDialog(String.valueOf(selected.quantidade));
+                dialog.setTitle("Alterar Quantidade");
+                dialog.setHeaderText("Alterar quantidade de " + selected.produto);
+                dialog.setContentText("Nova quantidade:");
+                
+                Optional<String> result = dialog.showAndWait();
+                result.ifPresent(quantidadeStr -> {
+                    try {
+                        int novaQuantidade = Integer.parseInt(quantidadeStr);
+                        if (novaQuantidade > 0) {
+                            selected.quantidade = novaQuantidade;
+                            listaProdutos.refresh();
+                        } else {
+                            mostrarAlerta("Quantidade inválida", "A quantidade deve ser maior que zero.", AlertType.ERROR);
+                        }
+                    } catch (NumberFormatException ex) {
+                        mostrarAlerta("Valor inválido", "Digite um número válido para a quantidade.", AlertType.ERROR);
+                    }
+                });
+            }
+        });
+        
+        removerItem.setOnAction(e -> {
+            ItemVenda selected = listaProdutos.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                listaProdutos.getItems().remove(selected);
+            }
+        });
 
         // Campo para adicionar produto
         TextField codigoProdutoField = new TextField();
         codigoProdutoField.setPromptText("Código de barras do produto");
         codigoProdutoField.setMaxWidth(300);
-
-        Spinner<Integer> quantidadeSpinner = new Spinner<>(1, 100, 1);
-        quantidadeSpinner.setEditable(true);
-
-        Button btnAdicionar = new Button("Adicionar Produto");
-        btnAdicionar.setStyle("-fx-background-color: #28a745; -fx-text-fill: white;");
-        btnAdicionar.setOnAction(e -> {
-            String codigo = codigoProdutoField.getText().trim();
-            if (!codigo.isEmpty()) {
-                try {
-                    String produto = buscarProdutoPorCodigo(codigo);
-                    if (produto != null) {
-                        int quantidade = quantidadeSpinner.getValue();
-                        double preco = buscarPrecoProduto(codigo);
-                        listaProdutos.getItems().add(produto + " - Qtd: " + quantidade + " - R$ " + String.format("%.2f", preco * quantidade));
-                        codigoProdutoField.clear();
-                        quantidadeSpinner.getValueFactory().setValue(1);
-                    } else {
-                        showErrorAlert("Produto não encontrado", "Nenhum produto encontrado com o código: " + codigo);
-                    }
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                    showErrorAlert("Erro ao buscar produto", "Detalhes: " + ex.getMessage());
-                }
+        
+        // Adicionar produto ao pressionar Enter
+        codigoProdutoField.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER) {
+                adicionarProduto(codigoProdutoField, listaProdutos);
             }
         });
 
+        Spinner<Integer> quantidadeSpinner = new Spinner<>(1, 100, 1);
+        quantidadeSpinner.setEditable(true);
+        
+        Button btnAdicionar = new Button("Adicionar Produto");
+        btnAdicionar.setStyle("-fx-background-color: #28a745; -fx-text-fill: white;");
+        btnAdicionar.setOnAction(e -> adicionarProduto(codigoProdutoField, listaProdutos));
+
         // Forma de pagamento
-        ComboBox<String> pagamentoCombo = new ComboBox<>();
-        carregarFormasPagamento(pagamentoCombo);
+        primeiraFormaCombo = new ComboBox<>();
+        carregarFormasPagamento(primeiraFormaCombo);
+        
+        primeiraFormaValor = new TextField();
+        primeiraFormaValor.setPromptText("Valor");
+        primeiraFormaValor.setPrefWidth(100);
+        
+        // Segunda forma de pagamento
+        segundaFormaCombo = new ComboBox<>();
+        carregarFormasPagamento(segundaFormaCombo);
+        
+        segundaFormaValor = new TextField();
+        segundaFormaValor.setPromptText("Valor");
+        segundaFormaValor.setPrefWidth(100);
+        segundaFormaValor.setDisable(true);
+        segundaFormaCombo.setDisable(true);
+        
+        usarSegundaFormaCheck = new CheckBox("Usar segunda forma de pagamento");
+        usarSegundaFormaCheck.setStyle("-fx-text-fill: white;");
+        usarSegundaFormaCheck.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            segundaFormaCombo.setDisable(!newVal);
+            segundaFormaValor.setDisable(!newVal);
+            if (!newVal) {
+                segundaFormaCombo.getSelectionModel().clearSelection();
+                segundaFormaValor.clear();
+            }
+        });
 
         // Total da venda
-        Label totalLabel = new Label("Total: R$ 0,00");
-        totalLabel.setStyle("-fx-text-fill: #c7eefaff; -fx-font-weight: bold; -fx-font-size: 16px;");
+        Label totalLabel = new Label("SUBTOTAL: R$ 0,00");
+        totalLabel.setStyle("-fx-text-fill: #c7eefaff; -fx-font-weight: bold; -fx-font-size: 30px;");
+
+        // Botão para calcular troco
+        Button btnCalcularTroco = new Button("Calcular Troco");
+        btnCalcularTroco.setStyle("-fx-background-color: #0c5b74; -fx-text-fill: white;");
+        btnCalcularTroco.setOnAction(e -> {
+            try {
+                double total = calcularTotal(listaProdutos);
+                double valor1 = primeiraFormaValor.getText().isEmpty() ? 0 : Double.parseDouble(primeiraFormaValor.getText());
+                double valor2 = segundaFormaValor.getText().isEmpty() || !usarSegundaFormaCheck.isSelected() ? 0 : 
+                              Double.parseDouble(segundaFormaValor.getText());
+                
+                double troco = (valor1 + valor2) - total;
+                
+                if (troco > 0) {
+                    mostrarAlerta("Troco", String.format("Troco: R$ %.2f", troco), AlertType.INFORMATION);
+                } else if (troco == 0) {
+                    mostrarAlerta("Pagamento exato", "Valor pago igual ao total da venda.", AlertType.INFORMATION);
+                } else {
+                    mostrarAlerta("Pagamento insuficiente", 
+                        String.format("Faltam R$ %.2f para completar o pagamento.", Math.abs(troco)), AlertType.ERROR);
+                }
+            } catch (NumberFormatException ex) {
+                mostrarAlerta("Erro", "Digite valores válidos nos campos de pagamento.", AlertType.ERROR);
+            }
+        });
 
         // Botões
         Button btnFinalizar = new Button("Finalizar Venda");
         btnFinalizar.setStyle("-fx-background-color: #28a745; -fx-text-fill: white;");
+        btnFinalizar.setPadding(new Insets(10, 60, 10, 60));
         btnFinalizar.setOnAction(e -> {
             try {
                 if (listaProdutos.getItems().isEmpty()) {
-                    showErrorAlert("Venda vazia", "Adicione pelo menos um produto para finalizar a venda.");
+                    mostrarAlerta("Venda vazia", "Adicione pelo menos um produto para finalizar a venda.", AlertType.ERROR);
                     return;
                 }
 
-                if (pagamentoCombo.getValue() == null) {
-                    showErrorAlert("Forma de pagamento", "Selecione uma forma de pagamento.");
+                if (primeiraFormaCombo.getValue() == null) {
+                    mostrarAlerta("Forma de pagamento", "Selecione pelo menos uma forma de pagamento.", AlertType.ERROR);
                     return;
                 }
 
-                // Validar CPF se estiver preenchido
+                double totalVenda = calcularTotal(listaProdutos);
+                double valor1 = primeiraFormaValor.getText().isEmpty() ? 0 : Double.parseDouble(primeiraFormaValor.getText());
+                double valor2 = 0;
+                
+                if (usarSegundaFormaCheck.isSelected()) {
+                    if (segundaFormaCombo.getValue() == null) {
+                        mostrarAlerta("Forma de pagamento", "Selecione a segunda forma de pagamento.", AlertType.ERROR);
+                        return;
+                    }
+                    valor2 = segundaFormaValor.getText().isEmpty() ? 0 : Double.parseDouble(segundaFormaValor.getText());
+                }
+                
+                if ((valor1 + valor2) < totalVenda) {
+                    mostrarAlerta("Pagamento insuficiente", 
+                        String.format("Valor pago (R$ %.2f) é menor que o total da venda (R$ %.2f)", 
+                        (valor1 + valor2), totalVenda), AlertType.ERROR);
+                    return;
+                }
+
                 if (rbCPF.isSelected() && !documentoField.getText().isEmpty() && !validarCPF(documentoField.getText())) {
-                    showErrorAlert("CPF inválido", "O CPF digitado não é válido.");
+                    mostrarAlerta("CPF inválido", "O CPF digitado não é válido.", AlertType.ERROR);
                     return;
                 }
 
@@ -346,25 +446,30 @@ public class Caixa {
                 String tipoDocumento = clienteNaoIdentificadoCheck.isSelected() ? "" : 
                                      (rbCPF.isSelected() ? "CPF" : (rbCNPJ.isSelected() ? "CNPJ" : "RG"));
 
-                salvarVendaNoBanco(documento, tipoDocumento,
-                                 pagamentoCombo.getValue(),
-                                 calcularTotal(listaProdutos),
-                                 listaProdutos.getItems());
+                // Salvar venda no banco de dados
+                salvarVendaNoBanco(documento, tipoDocumento, listaProdutos, primeiraFormaCombo.getValue(), 
+                                   valor1, usarSegundaFormaCheck.isSelected() ? segundaFormaCombo.getValue() : null, 
+                                   valor2, totalVenda);
                 
+                // Limpar campos após venda
                 listaProdutos.getItems().clear();
-                totalLabel.setText("Total: R$ 0,00");
+                totalLabel.setText("SUBTOTAL: R$ 0,00");
                 documentoField.clear();
                 clienteNaoIdentificadoCheck.setSelected(true);
-                pagamentoCombo.getSelectionModel().clearSelection();
+                primeiraFormaCombo.getSelectionModel().clearSelection();
+                primeiraFormaValor.clear();
+                usarSegundaFormaCheck.setSelected(false);
                 
                 // Recarregar histórico
                 vendas = carregarVendas();
                 aplicarFiltros();
                 
-                showSuccessAlert("Venda finalizada", "Venda registrada com sucesso!");
+                mostrarAlerta("Venda finalizada", "Venda registrada com sucesso!", AlertType.INFORMATION);
             } catch (SQLException ex) {
                 ex.printStackTrace();
-                showErrorAlert("Erro ao finalizar venda", "Detalhes: " + ex.getMessage());
+                mostrarAlerta("Erro ao finalizar venda", "Detalhes: " + ex.getMessage(), AlertType.ERROR);
+            } catch (NumberFormatException ex) {
+                mostrarAlerta("Valor inválido", "Digite valores numéricos válidos para os pagamentos.", AlertType.ERROR);
             }
         });
 
@@ -372,13 +477,15 @@ public class Caixa {
         btnCancelar.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white;");
         btnCancelar.setOnAction(e -> {
             listaProdutos.getItems().clear();
-            totalLabel.setText("Total: R$ 0,00");
+            totalLabel.setText("SUBTOTAL: R$ 0,00");
             documentoField.clear();
             clienteNaoIdentificadoCheck.setSelected(true);
-            pagamentoCombo.getSelectionModel().clearSelection();
+            primeiraFormaCombo.getSelectionModel().clearSelection();
+            primeiraFormaValor.clear();
+            usarSegundaFormaCheck.setSelected(false);
         });
 
-        HBox botoes = new HBox(10, btnFinalizar, btnCancelar);
+        HBox botoes = new HBox(10, btnFinalizar, btnCancelar, btnCalcularTroco);
         botoes.setAlignment(Pos.CENTER);
 
         clienteBox.getChildren().addAll(
@@ -402,13 +509,22 @@ public class Caixa {
         pagamentoBox.setStyle("-fx-background-color: #00536d; -fx-padding: 15; -fx-background-radius: 5;");
         pagamentoBox.getChildren().addAll(
             new Label("Forma de Pagamento:"),
-            pagamentoCombo,
+            new HBox(10, new Label("1ª Forma:"), primeiraFormaCombo, primeiraFormaValor),
+            usarSegundaFormaCheck,
+            new HBox(10, new Label("2ª Forma:"), segundaFormaCombo, segundaFormaValor),
             totalLabel
         );
 
         // Atualizar total quando itens mudarem
-        listaProdutos.getItems().addListener((javafx.collections.ListChangeListener.Change<? extends String> c) -> {
-            totalLabel.setText("Total: R$ " + String.format("%.2f", calcularTotal(listaProdutos)));
+        listaProdutos.getItems().addListener((javafx.collections.ListChangeListener.Change<? extends ItemVenda> c) -> {
+            double total = calcularTotal(listaProdutos);
+            totalLabel.setText("TOTAL: R$ " + String.format("%.2f", total));
+            
+            // Atualizar automaticamente o valor da primeira forma de pagamento
+            if (primeiraFormaValor.getText().isEmpty() || 
+                (primeiraFormaValor.getText().equals("0") || primeiraFormaValor.getText().equals("0.00"))) {
+                primeiraFormaValor.setText(String.format("%.2f", total));
+            }
         });
 
         novaVendaContainer.getChildren().addAll(
@@ -419,21 +535,78 @@ public class Caixa {
         );
     }
 
+    private void adicionarProduto(TextField codigoProdutoField, ListView<ItemVenda> listaProdutos) {
+        String codigo = codigoProdutoField.getText().trim();
+        if (!codigo.isEmpty()) {
+            try {
+                String produto = buscarProdutoPorCodigo(codigo);
+                if (produto != null) {
+                    double preco = buscarPrecoProduto(codigo);
+                    
+                    // Verificar se o produto já está na lista
+                    Optional<ItemVenda> existente = listaProdutos.getItems().stream()
+                        .filter(item -> item.codigoBarras.equals(codigo))
+                        .findFirst();
+                    
+                    if (existente.isPresent()) {
+                        // Se já existe, apenas aumentar a quantidade
+                        ItemVenda item = existente.get();
+                        item.quantidade++;
+                        listaProdutos.refresh();
+                    } else {
+                        // Se não existe, adicionar novo item
+                        listaProdutos.getItems().add(new ItemVenda(produto, codigo, 1, preco));
+                    }
+                    
+                    codigoProdutoField.clear();
+                    codigoProdutoField.requestFocus();
+                } else {
+                    mostrarAlerta("Produto não encontrado", "Nenhum produto encontrado com o código: " + codigo, AlertType.ERROR);
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                mostrarAlerta("Erro ao buscar produto", "Detalhes: " + ex.getMessage(), AlertType.ERROR);
+            }
+        }
+    }
+
+    private class ItemVendaCell extends ListCell<ItemVenda> {
+        @Override
+        protected void updateItem(ItemVenda item, boolean empty) {
+            super.updateItem(item, empty);
+            
+            if (empty || item == null) {
+                setText(null);
+                setGraphic(null);
+            } else {
+                HBox hbox = new HBox(10);
+                Label nomeLabel = new Label(item.produto);
+                nomeLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: white;");
+                
+                Label detalhesLabel = new Label(
+                    String.format("Cód: %s | Qtd: %d | R$ %.2f (un) | R$ %.2f", 
+                                item.codigoBarras, item.quantidade, item.preco, 
+                                item.quantidade * item.preco)
+                );
+                detalhesLabel.setStyle("-fx-text-fill: white;");
+                
+                hbox.getChildren().addAll(nomeLabel, detalhesLabel);
+                setGraphic(hbox);
+            }
+        }
+    }
+
     private boolean validarCPF(String cpf) {
-        // Remove caracteres não numéricos
         cpf = cpf.replaceAll("[^0-9]", "");
         
-        // Verifica se tem 11 dígitos
         if (cpf.length() != 11) {
             return false;
         }
         
-        // Verifica se todos os dígitos são iguais
         if (cpf.matches("(\\d)\\1{10}")) {
             return false;
         }
         
-        // Cálculo do primeiro dígito verificador
         int soma = 0;
         for (int i = 0; i < 9; i++) {
             soma += (10 - i) * Character.getNumericValue(cpf.charAt(i));
@@ -441,7 +614,6 @@ public class Caixa {
         int resto = soma % 11;
         int digito1 = (resto < 2) ? 0 : (11 - resto);
         
-        // Cálculo do segundo dígito verificador
         soma = 0;
         for (int i = 0; i < 10; i++) {
             soma += (11 - i) * Character.getNumericValue(cpf.charAt(i));
@@ -449,17 +621,8 @@ public class Caixa {
         resto = soma % 11;
         int digito2 = (resto < 2) ? 0 : (11 - resto);
         
-        // Verifica se os dígitos calculados conferem com os informados
-        return Character.getNumericValue(cpf.charAt(9)) == digito1 && 
-               Character.getNumericValue(cpf.charAt(10)) == digito2;
-    }
-
-    private void showSuccessAlert(String header, String content) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Sucesso");
-        alert.setHeaderText(header);
-        alert.setContentText(content);
-        alert.showAndWait();
+        return (Character.getNumericValue(cpf.charAt(9)) == digito1 && 
+               (Character.getNumericValue(cpf.charAt(10)) == digito2);
     }
 
     private String buscarProdutoPorCodigo(String codigo) throws SQLException {
@@ -492,23 +655,19 @@ public class Caixa {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            showErrorAlert("Erro ao carregar formas de pagamento", "Detalhes: " + e.getMessage());
+            mostrarAlerta("Erro ao carregar formas de pagamento", "Detalhes: " + e.getMessage(), AlertType.ERROR);
         }
     }
 
-    private double calcularTotal(ListView<String> listaProdutos) {
-        double total = 0;
-        for (String item : listaProdutos.getItems()) {
-            String[] partes = item.split(" - ");
-            String valorStr = partes[partes.length - 1].replace("R$ ", "").trim();
-            total += Double.parseDouble(valorStr);
-        }
-        return total;
+    private double calcularTotal(ListView<ItemVenda> listaProdutos) {
+        return listaProdutos.getItems().stream()
+            .mapToDouble(item -> item.quantidade * item.preco)
+            .sum();
     }
 
-    private void salvarVendaNoBanco(String documento, String tipoDocumento, 
-                                  String formaPagamento, double total, 
-                                  List<String> itens) throws SQLException {
+    private void salvarVendaNoBanco(String documento, String tipoDocumento, ListView<ItemVenda> itens, 
+                                  String formaPagamento1, double valor1, String formaPagamento2, 
+                                  double valor2, double total) throws SQLException {
         Connection conn = null;
         try {
             conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
@@ -518,29 +677,20 @@ public class Caixa {
             String insertCarrinho = "INSERT INTO carrinho (ID_Produto, CodBarras, Quantidade, PrecoUnitario, SubTotal) VALUES (?, ?, ?, ?, ?)";
             PreparedStatement stmtCarrinho = conn.prepareStatement(insertCarrinho, Statement.RETURN_GENERATED_KEYS);
             
-            // Para cada item, inserir no carrinho
-            for (String item : itens) {
-                String[] partes = item.split(" - ");
-                String nomeProduto = partes[0];
-                int quantidade = Integer.parseInt(partes[1].replace("Qtd: ", "").trim());
-                double precoTotal = Double.parseDouble(partes[3].replace("R$ ", "").trim());
-                double precoUnitario = precoTotal / quantidade;
-                
-                // Buscar ID e código de barras do produto
-                String queryProduto = "SELECT ID_Produto, Cod_Barras FROM produtos WHERE Nome = ?";
+            for (ItemVenda item : itens.getItems()) {
+                String queryProduto = "SELECT ID_Produto FROM produtos WHERE Cod_Barras = ?";
                 PreparedStatement stmtProduto = conn.prepareStatement(queryProduto);
-                stmtProduto.setString(1, nomeProduto);
+                stmtProduto.setString(1, item.codigoBarras);
                 ResultSet rsProduto = stmtProduto.executeQuery();
                 
                 if (rsProduto.next()) {
                     int idProduto = rsProduto.getInt("ID_Produto");
-                    String codBarras = rsProduto.getString("Cod_Barras");
                     
                     stmtCarrinho.setInt(1, idProduto);
-                    stmtCarrinho.setString(2, codBarras);
-                    stmtCarrinho.setInt(3, quantidade);
-                    stmtCarrinho.setDouble(4, precoUnitario);
-                    stmtCarrinho.setDouble(5, precoTotal);
+                    stmtCarrinho.setString(2, item.codigoBarras);
+                    stmtCarrinho.setInt(3, item.quantidade);
+                    stmtCarrinho.setDouble(4, item.preco);
+                    stmtCarrinho.setDouble(5, item.quantidade * item.preco);
                     stmtCarrinho.addBatch();
                 }
             }
@@ -548,31 +698,26 @@ public class Caixa {
             ResultSet rsCarrinho = stmtCarrinho.getGeneratedKeys();
             int idCarrinho = rsCarrinho.next() ? rsCarrinho.getInt(1) : 0;
 
-            // 2. Salvar a venda
+            // 2. Salvar a venda (usando apenas a primeira forma de pagamento na tabela vendas)
+            String queryPagamento = "SELECT ID_Pagamento FROM pagamento WHERE Forma_Pagamento = ?";
+            PreparedStatement stmtPagamento = conn.prepareStatement(queryPagamento);
+            stmtPagamento.setString(1, formaPagamento1);
+            ResultSet rsPagamento = stmtPagamento.executeQuery();
+            int idPagamento = rsPagamento.next() ? rsPagamento.getInt("ID_Pagamento") : 0;
+
             String insertVenda = "INSERT INTO vendas (Subtotal, ID_Pagamento, Total, Data_Venda, ID_Carrinho, ID_Login) " +
-                               "VALUES (?, (SELECT ID_Pagamento FROM pagamento WHERE Forma_Pagamento = ?), ?, GETDATE(), ?, ?)";
+                               "VALUES (?, ?, ?, GETDATE(), ?, ?)";
             PreparedStatement stmtVenda = conn.prepareStatement(insertVenda);
             stmtVenda.setDouble(1, total);
-            stmtVenda.setString(2, formaPagamento);
+            stmtVenda.setInt(2, idPagamento);
             stmtVenda.setDouble(3, total);
             stmtVenda.setInt(4, idCarrinho);
-            // stmtVenda.setInt(5, AutenticarUser.getIdUsuario());     ARRUMAR AQUI DEPOIS
+            stmtVenda.setInt(5, AutenticarUser.getIdUsuario());
             stmtVenda.executeUpdate();
-
-            // 3. Se houver documento, salvar no cliente
+            
+            // Se houver documento, salvar no cliente (opcional)
             if (!documento.isEmpty() && !tipoDocumento.isEmpty()) {
-                String insertCliente = "INSERT INTO clientes (";
-                if (tipoDocumento.equals("CPF")) {
-                    insertCliente += "cpf) VALUES (?)";
-                } else if (tipoDocumento.equals("CNPJ")) {
-                    insertCliente += "cnpj) VALUES (?)";
-                } else {
-                    insertCliente += "RG) VALUES (?)";
-                }
-                
-                PreparedStatement stmtCliente = conn.prepareStatement(insertCliente);
-                stmtCliente.setString(1, documento);
-                stmtCliente.executeUpdate();
+                // Implementação opcional conforme necessidade
             }
 
             conn.commit();
@@ -610,8 +755,8 @@ public class Caixa {
         dataLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #00536d;");
 
         Button btnDetalhes = new Button("Detalhes");
-        btnDetalhes.setStyle("-fx-background-color: #0c5b74; -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 5 10; -fx-background-radius: 4;");
-        btnDetalhes.setOnAction(e -> showDetalhesVenda(venda));
+        btnDetalhes.setStyle("-fx-background-color: #0c5b74; -fx-text-fill: white; -fx-font-size: 12px;");
+        btnDetalhes.setOnAction(e -> mostrarDetalhesVenda(venda));
 
         HBox botoes = new HBox(10, btnDetalhes);
         botoes.setAlignment(Pos.CENTER_RIGHT);
@@ -621,7 +766,7 @@ public class Caixa {
         return painel;
     }
 
-    private void showDetalhesVenda(Venda venda) {
+    private void mostrarDetalhesVenda(Venda venda) {
         Stage dialog = new Stage();
         dialog.initModality(Modality.WINDOW_MODAL);
         dialog.initOwner(stage);
@@ -630,7 +775,6 @@ public class Caixa {
         VBox dialogVBox = new VBox(10);
         dialogVBox.setPadding(new Insets(20));
         dialogVBox.setStyle("-fx-background-color: #006989;");
-        dialogVBox.setAlignment(Pos.CENTER);
 
         Label idLabel = new Label("Venda #" + venda.id);
         idLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px;");
@@ -678,8 +822,7 @@ public class Caixa {
             new Label("Itens da Venda:"), tabelaItens, btnFechar
         );
 
-        Scene dialogScene = new Scene(dialogVBox, 700, 500);
-        dialogScene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        Scene dialogScene = new Scene(dialogVBox, 600, 400);
         dialog.setScene(dialogScene);
         dialog.showAndWait();
     }
@@ -705,19 +848,25 @@ public class Caixa {
         pesquisaField.textProperty().addListener((obs, oldVal, newVal) -> aplicarFiltros());
         filtroPagamento.setOnAction(e -> aplicarFiltros());
 
-        HBox filtroBox = new HBox(5, pesquisaField, pagamentoLabel, filtroPagamento);
+        HBox filtroBox = new HBox(10, pesquisaField, pagamentoLabel, filtroPagamento);
         filtroBox.setPadding(new Insets(5));
-        HBox.setMargin(filtroPagamento, new Insets(0, 10, 0, 0));
-        HBox.setMargin(pagamentoLabel, new Insets(0, 5, 0, 5));
 
         listaVendas = new VBox(10);
-        listaVendas.setPadding(new Insets(20));
+        listaVendas.setPadding(new Insets(10));
 
         ScrollPane scroll = new ScrollPane(listaVendas);
         scroll.setFitToWidth(true);
         scroll.setStyle("-fx-background: #f4f4f4;");
 
         historicoContainer.getChildren().addAll(titulo, filtroBox, scroll);
+    }
+
+    private void mostrarAlerta(String titulo, String mensagem, AlertType tipo) {
+        Alert alert = new Alert(tipo);
+        alert.setTitle(titulo);
+        alert.setHeaderText(null);
+        alert.setContentText(mensagem);
+        alert.showAndWait();
     }
 
     public void show(Stage stage) {
@@ -797,12 +946,11 @@ public class Caixa {
         root.setCenter(containerCentral);
 
         Scene scene = new Scene(root, 1200, 700);
-        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
 
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Módulo de Caixa");
         stage.setFullScreen(true);
-        stage.setResizable(true);
         stage.show();
 
         btnVoltarHome.setOnAction(e -> {
@@ -823,11 +971,7 @@ public class Caixa {
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Erro");
-                alert.setHeaderText(null);
-                alert.setContentText("Erro ao retornar para a tela principal.");
-                alert.showAndWait();
+                mostrarAlerta("Erro", "Erro ao retornar para a tela principal.", AlertType.ERROR);
             }
         });
 
