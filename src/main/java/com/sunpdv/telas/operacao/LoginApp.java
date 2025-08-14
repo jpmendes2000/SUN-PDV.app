@@ -1,4 +1,4 @@
-package com.sunpdv;
+package com.sunpdv.telas.operacao;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -11,9 +11,10 @@ import java.util.Base64;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
-import com.sunpdv.home.TelaHomeADM;
-import com.sunpdv.home.TelaHomeMOD;
-import com.sunpdv.home.TelaHomeFUN;
+import com.sunpdv.model.AutenticarUser;
+import com.sunpdv.telas.home.TelaHomeADM;
+import com.sunpdv.telas.home.TelaHomeFUN;
+import com.sunpdv.telas.home.TelaHomeMOD;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.ScaleTransition;
@@ -153,7 +154,7 @@ public class LoginApp extends Application {
         root.setPadding(new Insets(20));
 
         Scene scene = new Scene(root, 680, 380);
-        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
         loginBtn.setOnMouseEntered(e -> {
             ScaleTransition st = new ScaleTransition(Duration.millis(150), loginBtn);

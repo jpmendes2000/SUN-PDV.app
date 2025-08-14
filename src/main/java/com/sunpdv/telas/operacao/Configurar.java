@@ -1,9 +1,9 @@
-package com.sunpdv.telas;
+package com.sunpdv.telas.operacao;
 
-import com.sunpdv.AutenticarUser;
-import com.sunpdv.home.TelaHomeADM;
-import com.sunpdv.home.TelaHomeFUN;
-import com.sunpdv.home.TelaHomeMOD;
+import com.sunpdv.model.AutenticarUser;
+import com.sunpdv.telas.home.TelaHomeADM;
+import com.sunpdv.telas.home.TelaHomeFUN;
+import com.sunpdv.telas.home.TelaHomeMOD;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -33,7 +33,7 @@ public class Configurar {
             this.setHeaderText(header);
             this.setContentText(content);
             Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
-            stage.getScene().getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
+            stage.getScene().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
         }
     }
 
@@ -173,7 +173,7 @@ public class Configurar {
         root.setCenter(configLayout);
 
         Scene scene = new Scene(root, 1200, 700);
-        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Configurações");

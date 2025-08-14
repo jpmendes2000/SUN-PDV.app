@@ -1,10 +1,10 @@
-package com.sunpdv.telas;
+package com.sunpdv.telas.operacao;
 
-import com.sunpdv.AutenticarUser;
-import com.sunpdv.home.TelaHomeADM;
-import com.sunpdv.home.TelaHomeFUN;
-import com.sunpdv.home.TelaHomeMOD;
+import com.sunpdv.model.AutenticarUser;
 import com.sunpdv.model.Produto;
+import com.sunpdv.telas.home.TelaHomeADM;
+import com.sunpdv.telas.home.TelaHomeFUN;
+import com.sunpdv.telas.home.TelaHomeMOD;
 
 import javafx.animation.PauseTransition;
 import javafx.beans.property.SimpleStringProperty;
@@ -67,7 +67,7 @@ public class Produtos {
         this.setContentText(content);
         Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
         stage.getScene().getStylesheets().add(
-            getClass().getResource("/img/css/style.css").toExternalForm()
+            getClass().getResource("/css/style.css").toExternalForm()
         );
     }
 }
@@ -259,7 +259,7 @@ public class Produtos {
 
         // Configuração da cena e exibição do palco
         Scene scene = new Scene(mainPane, 1200, 800); // Define tamanho da janela
-        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm()); // Adiciona estilo CSS
+        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm()); // Adiciona estilo CSS
         stage.setScene(scene);
         stage.setTitle("Gerenciamento de Produtos"); // Define o título da janela
         stage.setFullScreen(true); // Ativa tela cheia
@@ -484,7 +484,7 @@ public class Produtos {
         formGrid.add(btnSalvar, 1, 3);
 
         Scene scene = new Scene(formGrid);
-        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
         dialog.setScene(scene);
         dialog.showAndWait();
     }
@@ -571,7 +571,7 @@ public class Produtos {
                     alert.setTitle("Produto Existente");
                     alert.setHeaderText("Conflito ao salvar produto");
                     alert.setContentText(mensagem);
-                    alert.getDialogPane().getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
+                    alert.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
                     ButtonType btnFechar = new ButtonType("Fechar", ButtonBar.ButtonData.CANCEL_CLOSE);
                     alert.getButtonTypes().setAll(btnFechar);
@@ -671,7 +671,7 @@ public class Produtos {
         confirm.setTitle("Confirmação");
         confirm.setHeaderText("Deseja apagar o produto: " + produto.getNome() + "?");
         confirm.setContentText("Esta ação não pode ser desfeita.");
-        confirm.getDialogPane().getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
+        confirm.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
@@ -755,7 +755,7 @@ public class Produtos {
         alert.initModality(Modality.NONE); // Adicionar esta linha
         alert.initOwner(stage);
         alert.setContentText(mensagem);
-        alert.getDialogPane().getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
+        alert.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
         alert.showAndWait();
     }
 }
