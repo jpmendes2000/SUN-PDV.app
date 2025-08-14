@@ -1,12 +1,12 @@
 // IMPORTS NECESSÁRIOS
 
-package com.sunpdv.home;
+package com.sunpdv.telas.home;
 
-import com.sunpdv.AutenticarUser;
-import com.sunpdv.telas.Caixa;
-import com.sunpdv.telas.Configurar;
-import com.sunpdv.telas.Produtos;
-import com.sunpdv.telas.Usuarios;
+import com.sunpdv.model.AutenticarUser;
+import com.sunpdv.telas.operacao.Caixa;
+import com.sunpdv.telas.operacao.Configurar;
+import com.sunpdv.telas.operacao.Produtos;
+import com.sunpdv.telas.operacao.Usuarios;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -26,12 +26,12 @@ import javafx.stage.Stage;
 
 import java.io.File;
 
-public class TelaHomeFUN {
+public class TelaHomeMOD {
 
     private String nome;
     private String cargo;
 
-    public TelaHomeFUN(String nome, String cargo) {
+    public TelaHomeMOD(String nome, String cargo) {
         this.nome = nome;
         this.cargo = cargo;
     }
@@ -47,7 +47,7 @@ public class TelaHomeFUN {
 
             Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
             stage.getScene().getStylesheets().add(
-                TelaHomeADM.class.getResource("/img/css/style.css").toExternalForm()
+                TelaHomeADM.class.getResource("/css/style.css").toExternalForm()
             );
         }
     }
@@ -164,7 +164,7 @@ public class TelaHomeFUN {
             });
         });
 
-        VBox buttonBox = new VBox(10, btnVendas, btnSair);
+        VBox buttonBox = new VBox(10, btnVendas, btnProdutos, btnSair);
         buttonBox.setAlignment(Pos.TOP_LEFT);
         buttonBox.setPadding(new Insets(0, 0, 20, 0));
 
@@ -207,12 +207,12 @@ public class TelaHomeFUN {
         layout.setCenter(conteudoComMensagem);
 
         Scene scene = new Scene(layout, 1200, 800);
-        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Painel Administrativo");
         stage.setFullScreen(true);
         stage.setResizable(true);
-        stage.show();;
+        stage.show();
     }
 }

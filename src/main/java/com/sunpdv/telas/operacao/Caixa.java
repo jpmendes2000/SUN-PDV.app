@@ -1,14 +1,14 @@
-package com.sunpdv.telas;
+package com.sunpdv.telas.operacao;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import com.sunpdv.AutenticarUser;
-import com.sunpdv.home.TelaHomeADM;
-import com.sunpdv.home.TelaHomeFUN;
-import com.sunpdv.home.TelaHomeMOD;
+import com.sunpdv.telas.home.TelaHomeADM;
+import com.sunpdv.telas.home.TelaHomeFUN;
+import com.sunpdv.telas.home.TelaHomeMOD;
+import com.sunpdv.model.AutenticarUser;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -47,7 +47,7 @@ public class Caixa {
             this.setContentText(content);
             Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
             stage.getScene().getStylesheets().add(
-                getClass().getResource("/img/css/style.css").toExternalForm()
+                getClass().getResource("/css/style.css").toExternalForm()
             );
         }
     }
@@ -450,8 +450,8 @@ public class Caixa {
         int digito2 = (resto < 2) ? 0 : (11 - resto);
         
         // Verifica se os dígitos calculados conferem com os informados
-        return (Character.getNumericValue(cpf.charAt(9)) == digito1 && 
-               (Character.getNumericValue(cpf.charAt(10)) == digito2;
+        return Character.getNumericValue(cpf.charAt(9)) == digito1 && 
+               Character.getNumericValue(cpf.charAt(10)) == digito2;
     }
 
     private void showSuccessAlert(String header, String content) {
@@ -556,7 +556,7 @@ public class Caixa {
             stmtVenda.setString(2, formaPagamento);
             stmtVenda.setDouble(3, total);
             stmtVenda.setInt(4, idCarrinho);
-            stmtVenda.setInt(5, AutenticarUser.getIdUsuario());
+            // stmtVenda.setInt(5, AutenticarUser.getIdUsuario());     ARRUMAR AQUI DEPOIS
             stmtVenda.executeUpdate();
 
             // 3. Se houver documento, salvar no cliente
@@ -679,7 +679,7 @@ public class Caixa {
         );
 
         Scene dialogScene = new Scene(dialogVBox, 700, 500);
-        dialogScene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
+        dialogScene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
         dialog.setScene(dialogScene);
         dialog.showAndWait();
     }
@@ -797,7 +797,7 @@ public class Caixa {
         root.setCenter(containerCentral);
 
         Scene scene = new Scene(root, 1200, 700);
-        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Módulo de Caixa");

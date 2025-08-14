@@ -1,4 +1,4 @@
-package com.sunpdv;
+package com.sunpdv.model;
 
 import java.util.HashMap;
 import java.util.Map;

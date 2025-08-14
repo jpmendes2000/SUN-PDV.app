@@ -1,12 +1,12 @@
 // IMPORTS NECESSÁRIOS
 
-package com.sunpdv.home;
+package com.sunpdv.telas.home;
 
-import com.sunpdv.AutenticarUser;
-import com.sunpdv.telas.Caixa;
-import com.sunpdv.telas.Configurar;
-import com.sunpdv.telas.Produtos;
-import com.sunpdv.telas.Usuarios;
+import com.sunpdv.model.AutenticarUser;
+import com.sunpdv.telas.operacao.Caixa;
+import com.sunpdv.telas.operacao.Configurar;
+import com.sunpdv.telas.operacao.Produtos;
+import com.sunpdv.telas.operacao.Usuarios;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -26,12 +26,12 @@ import javafx.stage.Stage;
 
 import java.io.File;
 
-public class TelaHomeMOD {
+public class TelaHomeADM {
 
     private String nome;
     private String cargo;
 
-    public TelaHomeMOD(String nome, String cargo) {
+    public TelaHomeADM(String nome, String cargo) {
         this.nome = nome;
         this.cargo = cargo;
     }
@@ -47,7 +47,7 @@ public class TelaHomeMOD {
 
             Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
             stage.getScene().getStylesheets().add(
-                TelaHomeADM.class.getResource("/img/css/style.css").toExternalForm()
+                TelaHomeADM.class.getResource("/css/style.css").toExternalForm()
             );
         }
     }
@@ -164,12 +164,14 @@ public class TelaHomeMOD {
             });
         });
 
-        VBox buttonBox = new VBox(10, btnVendas, btnProdutos, btnSair);
-        buttonBox.setAlignment(Pos.TOP_LEFT);
+        VBox buttonBox = new VBox(10, btnVendas, btnProdutos, btnUsuarios, btnConfigurar, btnSair);
+        buttonBox.setAlignment(Pos.BOTTOM_LEFT);
         buttonBox.setPadding(new Insets(0, 0, 20, 0));
 
-        leftMenu.getChildren().addAll(logoBox, new Region(), buttonBox);
-        VBox.setVgrow(leftMenu.getChildren().get(1), Priority.ALWAYS);
+        Region espaco = new Region();
+        VBox.setVgrow(espaco, Priority.ALWAYS);
+
+        leftMenu.getChildren().addAll(logoBox, espaco, buttonBox);
 
         // Conteúdo central - logo do mercado configurada (se existir)
         StackPane centro = new StackPane();
@@ -197,17 +199,19 @@ public class TelaHomeMOD {
 
         StackPane posMensagem = new StackPane(mensagemFixa);
         posMensagem.setAlignment(Pos.BOTTOM_RIGHT);
-        posMensagem.setPadding(new Insets(0, 20, 20, 0));
+        posMensagem.setPadding(new Insets(0, 20, 20, 280));
 
         // Layout principal
         BorderPane layout = new BorderPane();
         layout.setLeft(leftMenu);
+        leftMenu.setPrefHeight(Double.MAX_VALUE);
         layout.setCenter(centro);
         StackPane conteudoComMensagem = new StackPane(centro, posMensagem);
         layout.setCenter(conteudoComMensagem);
 
+
         Scene scene = new Scene(layout, 1200, 800);
-        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Painel Administrativo");

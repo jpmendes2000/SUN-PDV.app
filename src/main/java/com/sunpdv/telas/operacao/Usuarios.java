@@ -1,10 +1,10 @@
-package com.sunpdv.telas;
+package com.sunpdv.telas.operacao;
 
-// Importações necessárias para a interface gráfica JavaFX, manipulação de banco de dados SQL e coleções Java
-import com.sunpdv.AutenticarUser; // Classe para autenticação de usuário
-import com.sunpdv.home.TelaHomeADM; // Tela inicial para administradores
-import com.sunpdv.home.TelaHomeFUN; // Tela inicial para funcionários
-import com.sunpdv.home.TelaHomeMOD; // Tela inicial para moderadores
+import com.sunpdv.model.AutenticarUser;
+import com.sunpdv.telas.home.TelaHomeADM;
+import com.sunpdv.telas.home.TelaHomeFUN;
+import com.sunpdv.telas.home.TelaHomeMOD;
+
 import javafx.geometry.Insets; // Para definir margens e preenchimento nos layouts
 import javafx.geometry.Pos; // Para alinhamento de componentes
 import javafx.geometry.Rectangle2D; // Para obter dimensões da tela
@@ -54,7 +54,7 @@ public class Usuarios {
             Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
             // Adiciona o arquivo CSS para estilização
             stage.getScene().getStylesheets().add(
-                getClass().getResource("/img/css/style.css").toExternalForm()
+                getClass().getResource("/css/style.css").toExternalForm()
             );
         }
     }
@@ -350,7 +350,7 @@ public class Usuarios {
 
         // Cria a cena principal
         Scene scene = new Scene(layout, 1200, 800);
-        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm()); // Aplica o CSS
+        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm()); // Aplica o CSS
 
         // Configura a janela principal
         stage.setScene(scene);
@@ -590,7 +590,7 @@ public class Usuarios {
 
         // Cria a cena do diálogo com largura 400px e altura 400px
         Scene dialogScene = new Scene(dialogVBox, 400, 400);
-        dialogScene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm()); // Aplica o CSS
+        dialogScene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm()); // Aplica o CSS
         dialog.setScene(dialogScene); // Define a cena na janela
         dialog.showAndWait(); // Exibe o diálogo e aguarda interação
     }

@@ -1,6 +1,56 @@
 {
     "version": "0.2.0",
     "configurations": [
+        
+
+        {
+            "version": "0.2.0",
+            "configurations": [
+                {
+                    "type": "java",
+                    "name": "Launch LoginApp",
+                    "request": "launch",
+                    "mainClass": "com.sunpdv.telas.operacao.LoginApp",
+                    "projectName": "SUN-PDV",
+                    "vmArgs": "--module-path \"C:\\javafx-sdk\\lib\" --add-modules javafx.controls,javafx.fxml"
+                }
+            ]
+        },
+        {
+            "type": "java",
+            "name": "LoginApp",
+            "request": "launch",
+            "mainClass": "com.sunpdv.telas.operacao.LoginApp",
+            "projectName": "pdv"
+        },
+        {
+            "type": "java",
+            "name": "LoginApp",
+            "request": "launch",
+            "mainClass": "com.sunpdv/com.sunpdv.telas.operacao.LoginApp",
+            "projectName": "pdv"
+        },
+        {
+            "type": "java",
+            "name": "LoginApp",
+            "request": "launch",
+            "mainClass": "com.sunpdv.telas.log.LoginApp",
+            "projectName": "pdv"
+        },
+        {
+            "type": "java",
+            "name": "LoginApp",
+            "request": "launch",
+            "mainClass": "com.sunpdv/com.sunpdv.telas.log.LoginApp",
+            "projectName": "pdv"
+        },
+        {
+            "type": "java",
+            "name": "LoginApp",
+            "request": "launch",
+            "mainClass": "com.sunpdv/com.sunpdv.telas.LoginApp",
+            "projectName": "pdv"
+        },
         {
             "type": "java",
             "name": "Caixa",
