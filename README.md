@@ -2,13 +2,12 @@
 
 <p align="center">
   <strong>Sistema de Ponto de Venda (PDV)</strong><br>
-  Uma aplicação Java completa com JavaFX, JDBC e MySQL, feita para controle de produtos, usuários e autenticação segura.
+  Uma aplicação Java completa com JavaFX, JDBC e SQL Server, feita para controle de produtos, usuários e autenticação segura.
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Java-17-red?style=for-the-badge&logo=openjdk" />
+  <img src="https://img.shields.io/badge/Java-21-red?style=for-the-badge&logo=openjdk" />
   <img src="https://img.shields.io/badge/JavaFX-Framework-blue?style=for-the-badge&logo=java" />
-  <img src="https://img.shields.io/badge/MySQL-Database-orange?style=for-the-badge&logo=mysql" />
   <img src="https://img.shields.io/badge/Secure-Login-green?style=for-the-badge&logo=lock" />
 </p>
 
@@ -16,7 +15,7 @@
 
 ## 📸 Demonstração
 
-<img src="https://github.com/seuusuario/sun-pdv/assets/demo.png" alt="Tela de Login" width="700" />
+<img src="src/main/resources/img/tela-login.png" alt="Tela de Login" width="700" />
 
 ---
 
@@ -26,7 +25,7 @@
 - 🧍‍♂️ **Gestão de Usuários** com diferentes níveis de acesso
 - 📦 **Controle de Produtos**: entrada e saída com código de barras
 - 📊 **Interface Moderna** com JavaFX + CSS externo
-- ☁️ **Banco de Dados em Nuvem** (MySQL/Azure)
+- ☁️ **Banco de Dados em Nuvem** (SQL Sever/Azure)
 - ⏳ **Bloqueio Temporário** após tentativas inválidas
 - 🔄 **Feedback Visual** com animações de transição
 
@@ -36,10 +35,10 @@
 
 | Tecnologia | Descrição |
 |------------|-----------|
-| `Java 17` | Linguagem base do projeto |
+| `Java 21` | Linguagem base do projeto |
 | `JavaFX` | Framework gráfico para UI moderna |
-| `MySQL` | Banco de dados relacional |
-| `JDBC` | Conexão entre Java e MySQL |
+| `SQL Server` | Banco de dados relacional |
+| `JDBC` | Conexão entre Java e banco de dados |
 | `CSS` | Estilização da interface via arquivo externo |
 | `Azure` | Hospedagem em nuvem do banco de dados |
 
@@ -55,12 +54,27 @@ sun-pdv/
 ├── 📂 src/main/
 │   ├── 📂 java/com/sunpdv/
 │   │   ├── 📂 connection/
+│   │   │    └── 📜 ConexaoDB.java
 │   │   ├── 📂 model/
+│   │   │    ├── 📜 AutenticarUser.java
+│   │   │    ├── 📜 log.java
+│   │   │    ├── 📜 module-info.java
+│   │   │    └── 📜 Produto.java
 │   │   ├── 📂 telas/
 │   │   │    ├── 📂 home/
+│   │   │    │    ├── 📜 TelaHomeADM.java
+│   │   │    │    ├── 📜 TelaHomeFUN.java
+│   │   │    │    └── 📜 TelaHomeMOD.java
+│   │   │    └── 📂 operacao/
+│   │   │    │    ├── 📜 Caixa.java
+│   │   │    │    ├── 📜 Configurar.java
+│   │   │    │    ├── 📜 LoginApp.java
+│   │   │    │    ├── 📜 Produtos.java
+│   │   │    │    └── 📜 Usuarios.java
 │   │   └── 📜 App.java 
 │   └── 📂 resources/
 │       ├── 📂 css/
+│       │    └── 📜 style.css
 │       └── 📂 img/
 │
 ├── 📂 target/
