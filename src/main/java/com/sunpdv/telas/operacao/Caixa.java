@@ -43,6 +43,7 @@ public class Caixa {
     private ComboBox<String> segundaFormaCombo;
     private TextField segundaFormaValor;
     private CheckBox usarSegundaFormaCheck;
+    private TextField codigoProdutoField;
 
     private static class CustomConfirmationAlert extends Alert {
         public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
@@ -88,6 +89,14 @@ public class Caixa {
             this.quantidade = quantidade;
             this.preco = preco;
         }
+    }
+
+    public Caixa() {
+        // Inicializa os containers principais
+        novaVendaContainer = new VBox(10);
+        historicoContainer = new VBox(10);
+        listaVendas = new VBox(10);
+        vendas = new ArrayList<>();
     }
 
     private Button criarBotaoLateral(String texto, String caminhoIcone) {
@@ -199,7 +208,7 @@ public class Caixa {
         
         for (Venda venda : vendas) {
             boolean idMatch = String.valueOf(venda.id).contains(textoBusca);
-            boolean pagamentoMatch = pagamentoSelecionado.equals("Todos") || 
+            boolean pagamentoMatch = pagamentoSelecionado == null || pagamentoSelecionado.equals("Todos") || 
                                    venda.formaPagamento.equalsIgnoreCase(pagamentoSelecionado);
 
             if (idMatch && pagamentoMatch) {
@@ -216,16 +225,17 @@ public class Caixa {
     }
 
     private void setupNovaVendaUI() {
-        novaVendaContainer = new VBox(10);
-        novaVendaContainer.setPadding(new Insets(20));
-        
-        // Seção de identificação do cliente
-        VBox clienteBox = new VBox(10);
-        clienteBox.setStyle("-fx-background-color: #00536d; -fx-padding: 15; -fx-background-radius: 5;");
-        
+        // Inicializa todos os componentes primeiro
         clienteNaoIdentificadoCheck = new CheckBox("Cliente não identificado");
         clienteNaoIdentificadoCheck.setSelected(true);
         clienteNaoIdentificadoCheck.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
+        
+        usarSegundaFormaCheck = new CheckBox("Usar segunda forma de pagamento");
+        usarSegundaFormaCheck.setStyle("-fx-text-fill: white;");
+
+        // Seção de identificação do cliente
+        VBox clienteBox = new VBox(10);
+        clienteBox.setStyle("-fx-background-color: #00536d; -fx-padding: 15; -fx-background-radius: 5;");
         
         ToggleGroup clienteGroup = new ToggleGroup();
         RadioButton rbCPF = new RadioButton("CPF");
@@ -275,7 +285,7 @@ public class Caixa {
 
         // Lista de produtos
         ListView<ItemVenda> listaProdutos = new ListView<>();
-        listaProdutos.setPrefHeight(200);
+        listaProdutos.setPrefHeight(300);
         listaProdutos.setCellFactory(lv -> new ItemVendaCell());
         
         // Menu de contexto para itens
@@ -327,53 +337,86 @@ public class Caixa {
         });
 
         // Campo para adicionar produto
-        TextField codigoProdutoField = new TextField();
-        codigoProdutoField.setPromptText("Código de barras do produto");
-        codigoProdutoField.setMaxWidth(300);
+        HBox adicionarProdutoBox = new HBox(10);
+        adicionarProdutoBox.setAlignment(Pos.CENTER_LEFT);
         
-        // Adicionar produto ao pressionar Enter
-        codigoProdutoField.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.ENTER) {
-                adicionarProduto(codigoProdutoField, listaProdutos);
+        codigoProdutoField = new TextField();
+        codigoProdutoField.setPromptText("Código de barras do produto");
+        HBox.setHgrow(codigoProdutoField, Priority.ALWAYS);
+        
+        Spinner<Integer> quantidadeSpinner = new Spinner<>(1, 100, 1);
+        quantidadeSpinner.setPrefWidth(80);
+        quantidadeSpinner.setEditable(true);
+        
+        Button btnAdicionar = new Button("Adicionar");
+        btnAdicionar.setStyle("-fx-background-color: #28a745; -fx-text-fill: white;");
+        btnAdicionar.setOnAction(e -> {
+            String codigo = codigoProdutoField.getText().trim();
+            if (!codigo.isEmpty()) {
+                try {
+                    String produto = buscarProdutoPorCodigo(codigo);
+                    if (produto != null) {
+                        double preco = buscarPrecoProduto(codigo);
+                        int quantidade = quantidadeSpinner.getValue();
+                        
+                        Optional<ItemVenda> existente = listaProdutos.getItems().stream()
+                            .filter(item -> item.codigoBarras.equals(codigo))
+                            .findFirst();
+                        
+                        if (existente.isPresent()) {
+                            ItemVenda item = existente.get();
+                            item.quantidade += quantidade;
+                            listaProdutos.refresh();
+                        } else {
+                            listaProdutos.getItems().add(new ItemVenda(produto, codigo, quantidade, preco));
+                        }
+                        
+                        codigoProdutoField.clear();
+                        codigoProdutoField.requestFocus();
+                    } else {
+                        mostrarAlerta("Produto não encontrado", "Nenhum produto encontrado com o código: " + codigo, AlertType.ERROR);
+                    }
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    mostrarAlerta("Erro ao buscar produto", "Detalhes: " + ex.getMessage(), AlertType.ERROR);
+                }
             }
         });
 
-        Spinner<Integer> quantidadeSpinner = new Spinner<>(1, 100, 1);
-        quantidadeSpinner.setEditable(true);
-        
-        Button btnAdicionar = new Button("Adicionar Produto");
-        btnAdicionar.setStyle("-fx-background-color: #28a745; -fx-text-fill: white;");
-        btnAdicionar.setOnAction(e -> adicionarProduto(codigoProdutoField, listaProdutos));
+        adicionarProdutoBox.getChildren().addAll(
+            new Label("Código:"), codigoProdutoField,
+            new Label("Qtd:"), quantidadeSpinner, btnAdicionar
+        );
 
         // Forma de pagamento
+        VBox pagamentoBox = new VBox(10);
+        pagamentoBox.setStyle("-fx-background-color: #00536d; -fx-padding: 15; -fx-background-radius: 5;");
+        
         primeiraFormaCombo = new ComboBox<>();
         carregarFormasPagamento(primeiraFormaCombo);
         
         primeiraFormaValor = new TextField();
         primeiraFormaValor.setPromptText("Valor");
-        primeiraFormaValor.setPrefWidth(100);
+        primeiraFormaValor.setPrefWidth(120);
         
         // Segunda forma de pagamento
+        VBox segundaFormaBox = new VBox(5);
         segundaFormaCombo = new ComboBox<>();
         carregarFormasPagamento(segundaFormaCombo);
         
         segundaFormaValor = new TextField();
         segundaFormaValor.setPromptText("Valor");
-        segundaFormaValor.setPrefWidth(100);
-        segundaFormaValor.setDisable(true);
-        segundaFormaCombo.setDisable(true);
+        segundaFormaValor.setPrefWidth(120);
         
-        usarSegundaFormaCheck = new CheckBox("Usar segunda forma de pagamento");
-        usarSegundaFormaCheck.setStyle("-fx-text-fill: white;");
-        usarSegundaFormaCheck.selectedProperty().addListener((obs, oldVal, newVal) -> {
-            segundaFormaCombo.setDisable(!newVal);
-            segundaFormaValor.setDisable(!newVal);
-            if (!newVal) {
-                segundaFormaCombo.getSelectionModel().clearSelection();
-                segundaFormaValor.clear();
-            }
-        });
-
+        HBox segundaFormaHBox = new HBox(10, new Label("2ª Forma:"), segundaFormaCombo, segundaFormaValor);
+        segundaFormaBox.getChildren().add(segundaFormaHBox);
+        
+        // Configura os bindings DEPOIS de inicializar os componentes
+        segundaFormaBox.visibleProperty().bind(usarSegundaFormaCheck.selectedProperty());
+        segundaFormaBox.managedProperty().bind(usarSegundaFormaCheck.selectedProperty());
+        
+        HBox primeiraFormaHBox = new HBox(10, new Label("1ª Forma:"), primeiraFormaCombo, primeiraFormaValor);
+        
         // Total da venda
         Label totalLabel = new Label("SUBTOTAL: R$ 0,00");
         totalLabel.setStyle("-fx-text-fill: #c7eefaff; -fx-font-weight: bold; -fx-font-size: 30px;");
@@ -500,19 +543,15 @@ public class Caixa {
         produtosBox.setStyle("-fx-background-color: #00536d; -fx-padding: 15; -fx-background-radius: 5;");
         produtosBox.getChildren().addAll(
             new Label("Produtos:"),
-            listaProdutos,
-            new Label("Adicionar Produto:"),
-            new HBox(10, codigoProdutoField, new Label("Qtd:"), quantidadeSpinner),
-            btnAdicionar
+            adicionarProdutoBox,
+            listaProdutos
         );
 
-        VBox pagamentoBox = new VBox(10);
-        pagamentoBox.setStyle("-fx-background-color: #00536d; -fx-padding: 15; -fx-background-radius: 5;");
         pagamentoBox.getChildren().addAll(
             new Label("Forma de Pagamento:"),
-            new HBox(10, new Label("1ª Forma:"), primeiraFormaCombo, primeiraFormaValor),
+            primeiraFormaHBox,
             usarSegundaFormaCheck,
-            new HBox(10, new Label("2ª Forma:"), segundaFormaCombo, segundaFormaValor),
+            segundaFormaBox,
             totalLabel
         );
 
@@ -534,41 +573,6 @@ public class Caixa {
             pagamentoBox,
             botoes
         );
-    }
-
-    private void adicionarProduto(TextField codigoProdutoField, ListView<ItemVenda> listaProdutos) {
-        String codigo = codigoProdutoField.getText().trim();
-        if (!codigo.isEmpty()) {
-            try {
-                String produto = buscarProdutoPorCodigo(codigo);
-                if (produto != null) {
-                    double preco = buscarPrecoProduto(codigo);
-                    
-                    // Verificar se o produto já está na lista
-                    Optional<ItemVenda> existente = listaProdutos.getItems().stream()
-                        .filter(item -> item.codigoBarras.equals(codigo))
-                        .findFirst();
-                    
-                    if (existente.isPresent()) {
-                        // Se já existe, apenas aumentar a quantidade
-                        ItemVenda item = existente.get();
-                        item.quantidade++;
-                        listaProdutos.refresh();
-                    } else {
-                        // Se não existe, adicionar novo item
-                        listaProdutos.getItems().add(new ItemVenda(produto, codigo, 1, preco));
-                    }
-                    
-                    codigoProdutoField.clear();
-                    codigoProdutoField.requestFocus();
-                } else {
-                    mostrarAlerta("Produto não encontrado", "Nenhum produto encontrado com o código: " + codigo, AlertType.ERROR);
-                }
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-                mostrarAlerta("Erro ao buscar produto", "Detalhes: " + ex.getMessage(), AlertType.ERROR);
-            }
-        }
     }
 
     private class ItemVendaCell extends ListCell<ItemVenda> {
@@ -713,7 +717,7 @@ public class Caixa {
             stmtVenda.setInt(2, idPagamento);
             stmtVenda.setDouble(3, total);
             stmtVenda.setInt(4, idCarrinho);
-            stmtVenda.setInt(5, AutenticarUser.getIdPermissao());
+            stmtVenda.setInt(5, AutenticarUser.getIdUsuario());
             stmtVenda.executeUpdate();
             
             // Se houver documento, salvar no cliente (opcional)
@@ -872,7 +876,13 @@ public class Caixa {
 
     public void show(Stage stage) {
         this.stage = stage;
+        
+        // Inicializa os dados
         vendas = carregarVendas();
+        
+        // Configura a UI
+        setupNovaVendaUI();
+        setupHistoricoUI();
 
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
         stage.setX(screenBounds.getMinX());
@@ -884,32 +894,34 @@ public class Caixa {
         leftMenu.setPrefWidth(280);
         leftMenu.setStyle("-fx-background-color: #00536d;");
 
-        Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
-        ImageView logoView = new ImageView(logo);
-        logoView.setFitWidth(120);
-        logoView.setPreserveRatio(true);
-        logoView.setStyle("-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 0);");
+        try {
+            Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
+            ImageView logoView = new ImageView(logo);
+            logoView.setFitWidth(120);
+            logoView.setPreserveRatio(true);
+            logoView.setStyle("-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 0);");
 
-        Label titulonaABA = new Label("Caixa");
-        titulonaABA.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 18px; -fx-font-weight: bold;");
+            Label titulonaABA = new Label("Caixa");
+            titulonaABA.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 18px; -fx-font-weight: bold;");
 
-        VBox logoBox = new VBox(logoView, titulonaABA);
-        logoBox.setAlignment(Pos.CENTER);
-        logoBox.setPadding(new Insets(20, 0, 20, 0));
+            VBox logoBox = new VBox(logoView, titulonaABA);
+            logoBox.setAlignment(Pos.CENTER);
+            logoBox.setPadding(new Insets(20, 0, 20, 0));
 
-        Button btnVoltarHome = criarBotaoLateral("Home", "/img/icon/casa.png");
-        Button btnSair = criarBotaoLateral("Sair do Sistema", "/img/icon/fechar.png");
+            Button btnVoltarHome = criarBotaoLateral("Home", "/img/icon/casa.png");
+            Button btnSair = criarBotaoLateral("Sair do Sistema", "/img/icon/fechar.png");
 
-        VBox buttonBox = new VBox(10, btnVoltarHome, btnSair);
-        buttonBox.setAlignment(Pos.TOP_LEFT);
-        buttonBox.setPadding(new Insets(0, 0, 20, 0));
+            VBox buttonBox = new VBox(10, btnVoltarHome, btnSair);
+            buttonBox.setAlignment(Pos.TOP_LEFT);
+            buttonBox.setPadding(new Insets(0, 0, 20, 0));
 
-        leftMenu.getChildren().addAll(logoBox, new Region(), buttonBox);
-        VBox.setVgrow(leftMenu.getChildren().get(1), Priority.ALWAYS);
+            leftMenu.getChildren().addAll(logoBox, new Region(), buttonBox);
+            VBox.setVgrow(leftMenu.getChildren().get(1), Priority.ALWAYS);
 
-        // Configurar as duas views
-        setupNovaVendaUI();
-        setupHistoricoUI();
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar recursos: " + e.getMessage());
+            leftMenu.getChildren().add(new Label("Erro ao carregar recursos"));
+        }
 
         // Botão para alternar entre as views
         toggleViewButton = new ToggleButton("Nova Venda");
@@ -947,12 +959,21 @@ public class Caixa {
         root.setCenter(containerCentral);
 
         Scene scene = new Scene(root, 1200, 700);
-        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        
+        try {
+            scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        } catch (NullPointerException e) {
+            System.err.println("Erro ao carregar CSS: " + e.getMessage());
+        }
 
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Módulo de Caixa");
         stage.setFullScreen(true);
         stage.show();
+
+        // Configura os eventos dos botões
+        Button btnVoltarHome = (Button) ((VBox) leftMenu.getChildren().get(2)).getChildren().get(0);
+        Button btnSair = (Button) ((VBox) leftMenu.getChildren().get(2)).getChildren().get(1);
 
         btnVoltarHome.setOnAction(e -> {
             try {
