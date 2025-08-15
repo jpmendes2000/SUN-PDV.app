@@ -5,6 +5,8 @@ import com.sunpdv.telas.home.TelaHomeADM;
 import com.sunpdv.telas.home.TelaHomeFUN;
 import com.sunpdv.telas.home.TelaHomeMOD;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.geometry.Insets; // Para definir margens e preenchimento nos layouts
 import javafx.geometry.Pos; // Para alinhamento de componentes
 import javafx.geometry.Rectangle2D; // Para obter dimensões da tela
@@ -15,8 +17,11 @@ import javafx.scene.image.ImageView; // Para exibir imagens na interface
 import javafx.scene.layout.*; // Para layouts como VBox, HBox, BorderPane
 import javafx.stage.Screen; // Para obter informações da tela do dispositivo
 import javafx.stage.Stage; // Para criar janelas (palcos) da aplicação
+import javafx.util.Duration;
 import javafx.stage.Modality; // Para definir comportamento modal das janelas
 import java.sql.*; // Para conexão com banco de dados SQL Server
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList; // Para listas dinâmicas
 import java.util.List; // Para interface de listas
 
@@ -234,24 +239,62 @@ public class Usuarios {
 
         // Cria o menu lateral
         VBox leftMenu = new VBox();
-        leftMenu.setPrefWidth(280); // Define a largura do menu
-        leftMenu.setStyle("-fx-background-color: #00536d;"); // Define a cor de fundo
+        leftMenu.setPrefWidth(280);
+        leftMenu.setStyle("-fx-background-color: #00536d;");
 
         // Carrega o logo da aplicação
         Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
         ImageView logoView = new ImageView(logo);
-        logoView.setFitWidth(120); // Define a largura do logo
-        logoView.setPreserveRatio(true); // Mantém a proporção
-        logoView.setStyle("-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 0);"); // Adiciona sombra
+        logoView.setFitWidth(120);
+        logoView.setPreserveRatio(true);
+        logoView.setStyle("-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 0);");
 
         // Cria o título da tela
         Label titulonaABA = new Label("Gerenciamento de Usuários");
-        titulonaABA.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 18px; -fx-font-weight: bold;"); // Estiliza o título
+        titulonaABA.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 18px; -fx-font-weight: bold;");
 
         // Organiza o logo e o título em um VBox
-        VBox logoBox = new VBox(logoView, titulonaABA);
-        logoBox.setAlignment(Pos.CENTER); // Centraliza os elementos
-        logoBox.setPadding(new Insets(20, 0, 20, 0)); // Define margens
+        VBox logoBox = new VBox(10, logoView, titulonaABA);
+        logoBox.setAlignment(Pos.CENTER);
+        logoBox.setPadding(new Insets(20, 0, 5, 0));
+
+        // Labels para hora e data
+        Label horaLabel = new Label();
+        horaLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 16px; -fx-font-weight: bold;");
+        horaLabel.setAlignment(Pos.CENTER);
+        horaLabel.setMaxWidth(Double.MAX_VALUE);
+
+        Label dataLabel = new Label();
+        dataLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 14px; -fx-font-weight: bold;");
+        dataLabel.setAlignment(Pos.CENTER);
+        dataLabel.setMaxWidth(Double.MAX_VALUE);
+
+        // VBox para organizar hora acima da data
+        VBox dataHoraBox = new VBox(5, horaLabel, dataLabel);
+        dataHoraBox.setAlignment(Pos.CENTER);
+        dataHoraBox.setPadding(new Insets(0, 0, 5, 0));
+
+        // Formatadores para hora e data
+        DateTimeFormatter horaFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+        DateTimeFormatter dataFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        // Definir texto inicial
+        LocalDateTime now = LocalDateTime.now();
+        horaLabel.setText(now.format(horaFormatter));
+        dataLabel.setText(now.format(dataFormatter));
+
+        // Atualizar hora e data
+        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+            LocalDateTime currentTime = LocalDateTime.now();
+            horaLabel.setText(currentTime.format(horaFormatter));
+            dataLabel.setText(currentTime.format(dataFormatter));
+        }));
+        timeline.setCycleCount(Timeline.INDEFINITE);
+        timeline.play();
+
+        // Espaço para empurrar os botões para baixo
+        Region espaco = new Region();
+        VBox.setVgrow(espaco, Priority.ALWAYS);
 
         // Cria botões laterais para navegação
         Button btnHome = criarBotaoLateral("Home", "/img/icon/casa.png");
@@ -260,9 +303,7 @@ public class Usuarios {
         // Define a ação do botão Home
         btnHome.setOnAction(e -> {
             try {
-                // Obtém o cargo do usuário autenticado
                 String cargo = AutenticarUser.getCargo();
-                // Navega para a tela correspondente ao cargo
                 switch (cargo) {
                     case "Administrador":
                         new TelaHomeADM(AutenticarUser.getNome(), cargo).mostrar(stage);
@@ -277,7 +318,6 @@ public class Usuarios {
                         System.out.println("Cargo não reconhecido: " + cargo);
                 }
             } catch (Exception ex) {
-                // Em caso de erro, exibe mensagem no console e um alerta
                 ex.printStackTrace();
                 showErrorAlert("Falha ao carregar tela inicial", "Detalhes: " + ex.getMessage());
             }
@@ -285,23 +325,25 @@ public class Usuarios {
 
         // Define a ação do botão Sair
         btnSair.setOnAction(e -> {
-            // Cria um alerta de confirmação personalizado
             CustomConfirmationAlert alert = new CustomConfirmationAlert(stage, "Confirmação", "Deseja sair?", "Isso fechará o sistema.");
             alert.showAndWait().ifPresent(response -> {
                 if (response == ButtonType.OK) {
-                    stage.close(); // Fecha a aplicação se confirmado
+                    stage.close();
                 }
             });
         });
 
         // Organiza os botões em um VBox
         VBox buttonBox = new VBox(10, btnHome, btnSair);
-        buttonBox.setAlignment(Pos.TOP_LEFT); // Alinha os botões à esquerda
-        buttonBox.setPadding(new Insets(0, 0, 20, 0)); // Define margens
+        buttonBox.setAlignment(Pos.BOTTOM_LEFT);
+        buttonBox.setPadding(new Insets(0, 0, 20, 0));
 
-        // Adiciona o logo e os botões ao menu lateral
-        leftMenu.getChildren().addAll(logoBox, new Region(), buttonBox);
-        VBox.setVgrow(leftMenu.getChildren().get(1), Priority.ALWAYS); // Faz o Region crescer para preencher o espaço
+        // Adicionar elementos ao menu lateral, com dataHoraBox abaixo do logoBox
+        leftMenu.getChildren().addAll(logoBox, dataHoraBox, espaco, buttonBox);
+
+        // Conteúdo central - logo do mercado configurada (se existir)
+        StackPane centro = new StackPane();
+        centro.setPadding(new Insets(20));
 
         // Cria o campo de pesquisa
         pesquisaField = new TextField();

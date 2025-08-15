@@ -6,6 +6,8 @@ import com.sunpdv.telas.home.TelaHomeADM;
 import com.sunpdv.telas.home.TelaHomeFUN;
 import com.sunpdv.telas.home.TelaHomeMOD;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -21,9 +23,12 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.io.*;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class Configurar {
 
@@ -110,20 +115,58 @@ public class Configurar {
         Label titulonaABA = new Label("Configurações");
         titulonaABA.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 18px; -fx-font-weight: bold;");
 
-        VBox logoBox = new VBox(logoView, titulonaABA);
+        VBox logoBox = new VBox(10, logoView, titulonaABA);
         logoBox.setAlignment(Pos.CENTER);
-        logoBox.setPadding(new Insets(20, 0, 20, 0));
+        logoBox.setPadding(new Insets(20, 0, 5, 0));
+
+        // Labels para hora e data
+        Label horaLabel = new Label();
+        horaLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 16px; -fx-font-weight: bold;");
+        horaLabel.setAlignment(Pos.CENTER);
+        horaLabel.setMaxWidth(Double.MAX_VALUE);
+
+        Label dataLabel = new Label();
+        dataLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 14px; -fx-font-weight: bold;");
+        dataLabel.setAlignment(Pos.CENTER);
+        dataLabel.setMaxWidth(Double.MAX_VALUE);
+
+        // VBox para organizar hora acima da data
+        VBox dataHoraBox = new VBox(5, horaLabel, dataLabel);
+        dataHoraBox.setAlignment(Pos.CENTER);
+        dataHoraBox.setPadding(new Insets(0, 0, 5, 0));
+
+        // Formatadores para hora e data
+        DateTimeFormatter horaFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+        DateTimeFormatter dataFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        // Definir texto inicial
+        LocalDateTime now = LocalDateTime.now();
+        horaLabel.setText(now.format(horaFormatter));
+        dataLabel.setText(now.format(dataFormatter));
+
+        // Atualizar hora e data a cada segundo
+        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+            LocalDateTime currentTime = LocalDateTime.now();
+            horaLabel.setText(currentTime.format(horaFormatter));
+            dataLabel.setText(currentTime.format(dataFormatter));
+        }));
+        timeline.setCycleCount(Timeline.INDEFINITE);
+        timeline.play();
+
+        // Espaço para empurrar os botões para baixo
+        Region espaco = new Region();
+        VBox.setVgrow(espaco, Priority.ALWAYS);
 
         // Adiciona botões ao menu
         Button btnVoltarHome = criarBotaoLateral("Home", "/img/icon/casa.png");
         Button btnSair = criarBotaoLateral("Sair do Sistema", "/img/icon/fechar.png");
 
         VBox buttonBox = new VBox(10, btnVoltarHome, btnSair);
-        buttonBox.setAlignment(Pos.TOP_LEFT);
+        buttonBox.setAlignment(Pos.BOTTOM_LEFT);
         buttonBox.setPadding(new Insets(0, 0, 20, 0));
 
-        leftMenu.getChildren().addAll(logoBox, new Region(), buttonBox);
-        VBox.setVgrow(leftMenu.getChildren().get(1), Priority.ALWAYS);
+        // Adicionar elementos ao menu lateral, com dataHoraBox abaixo do logoBox
+        leftMenu.getChildren().addAll(logoBox, dataHoraBox, espaco, buttonBox);
 
         // Configura o contêiner da imagem (logo)
         ImageView imageLogo = new ImageView();
