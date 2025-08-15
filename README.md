@@ -13,6 +13,13 @@
 
 ---
 
+#006989
+#0c5b74
+#1c414d
+
+#e8b923
+#c09727
+
 ## 📸 Demonstração
 
 <img src="src/main/resources/img/tela-login.png" alt="Tela de Login" width="700" />
