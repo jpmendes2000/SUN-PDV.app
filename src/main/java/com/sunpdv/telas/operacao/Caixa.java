@@ -4,6 +4,8 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
@@ -18,10 +20,13 @@ import javafx.scene.layout.*;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Modality;
+import javafx.util.Duration;
 import com.sunpdv.model.AutenticarUser;
 import com.sunpdv.telas.home.TelaHomeADM;
 import com.sunpdv.telas.home.TelaHomeFUN;
 import com.sunpdv.telas.home.TelaHomeMOD;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class Caixa {
 
@@ -880,32 +885,105 @@ public class Caixa {
         stage.setWidth(screenBounds.getWidth());
         stage.setHeight(screenBounds.getHeight());
 
+                // Menu lateral
         VBox leftMenu = new VBox();
         leftMenu.setPrefWidth(280);
         leftMenu.setStyle("-fx-background-color: #00536d;");
 
+        // Logo SUN PDV
         Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(120);
         logoView.setPreserveRatio(true);
-        logoView.setStyle("-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 0);");
 
+        // Cria o título da tela
         Label titulonaABA = new Label("Caixa");
         titulonaABA.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 18px; -fx-font-weight: bold;");
 
-        VBox logoBox = new VBox(logoView, titulonaABA);
+        VBox logoBox = new VBox(10, logoView, titulonaABA);
         logoBox.setAlignment(Pos.CENTER);
-        logoBox.setPadding(new Insets(20, 0, 20, 0));
+        logoBox.setPadding(new Insets(20, 0, 5, 0)); // Espaço mínimo abaixo do logotipo
 
+        // Labels para hora e data
+        Label horaLabel = new Label();
+        horaLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 16px; -fx-font-weight: bold;");
+        horaLabel.setAlignment(Pos.CENTER);
+        horaLabel.setMaxWidth(Double.MAX_VALUE);
+
+        Label dataLabel = new Label();
+        dataLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 14px; -fx-font-weight: bold;");
+        dataLabel.setAlignment(Pos.CENTER);
+        dataLabel.setMaxWidth(Double.MAX_VALUE);
+
+        // VBox para organizar hora acima da data
+        VBox dataHoraBox = new VBox(5, horaLabel, dataLabel);
+        dataHoraBox.setAlignment(Pos.CENTER);
+        dataHoraBox.setPadding(new Insets(0, 0, 5, 0)); // Espaço mínimo abaixo do dataHoraBox
+
+        // Formatadores para hora e data
+        DateTimeFormatter horaFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+        DateTimeFormatter dataFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        // Definir texto inicial
+        LocalDateTime now = LocalDateTime.now();
+        horaLabel.setText(now.format(horaFormatter));
+        dataLabel.setText(now.format(dataFormatter));
+
+        // Atualizar hora e data
+        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+            LocalDateTime currentTime = LocalDateTime.now();
+            horaLabel.setText(currentTime.format(horaFormatter));
+            dataLabel.setText(currentTime.format(dataFormatter));
+        }));
+        timeline.setCycleCount(Timeline.INDEFINITE);
+        timeline.play();
+
+        // Espaço para empurrar os botões para baixo
+        Region espaco = new Region();
+        VBox.setVgrow(espaco, Priority.ALWAYS);
+
+        // Botões do menu
         Button btnVoltarHome = criarBotaoLateral("Home", "/img/icon/casa.png");
         Button btnSair = criarBotaoLateral("Sair do Sistema", "/img/icon/fechar.png");
 
+        // Ações dos botões
+        btnVoltarHome.setOnAction(e -> {
+            try {
+                String cargo = AutenticarUser.getCargo();
+                switch (cargo) {
+                    case "Administrador":
+                        new TelaHomeADM(AutenticarUser.getNome(), cargo).mostrar(stage);
+                        break;
+                    case "Moderador":
+                        new TelaHomeMOD(AutenticarUser.getNome(), cargo).mostrar(stage);
+                        break;
+                    case "Funcionário":
+                        new TelaHomeFUN(AutenticarUser.getNome(), cargo).mostrar(stage);
+                        break;
+                    default:
+                        System.out.println("Cargo não reconhecido: " + cargo);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                mostrarAlerta("Erro", "Erro ao retornar para a tela principal.", AlertType.ERROR);
+            }
+        });
+
+        btnSair.setOnAction(e -> {
+            CustomConfirmationAlert alert = new CustomConfirmationAlert(stage, "Confirmação", "Deseja sair?", "Isso fechará o sistema.");
+            alert.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.OK) {
+                    stage.close();
+                }
+            });
+        });
+
         VBox buttonBox = new VBox(10, btnVoltarHome, btnSair);
-        buttonBox.setAlignment(Pos.TOP_LEFT);
+        buttonBox.setAlignment(Pos.BOTTOM_LEFT);
         buttonBox.setPadding(new Insets(0, 0, 20, 0));
 
-        leftMenu.getChildren().addAll(logoBox, new Region(), buttonBox);
-        VBox.setVgrow(leftMenu.getChildren().get(1), Priority.ALWAYS);
+        // Adicionar elementos ao menu lateral, com dataHoraBox abaixo do logo
+        leftMenu.getChildren().addAll(logoBox, dataHoraBox, espaco, buttonBox);
 
         // Configurar as duas views
         setupNovaVendaUI();

@@ -23,7 +23,11 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-
+import javafx.animation.Timeline;
+import javafx.animation.KeyFrame;
+import javafx.util.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.io.File;
 
 public class TelaHomeADM {
@@ -136,6 +140,43 @@ public class TelaHomeADM {
         logoBox.setAlignment(Pos.CENTER);
         logoBox.setPadding(new Insets(20, 0, 20, 0));
 
+        // Labels para hora e data
+        Label horaLabel = new Label();
+        horaLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 16px; -fx-font-weight: bold;");
+        horaLabel.setAlignment(Pos.CENTER);
+        horaLabel.setMaxWidth(Double.MAX_VALUE);
+
+        Label dataLabel = new Label();
+        dataLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 14px; -fx-font-weight: bold;");
+        dataLabel.setAlignment(Pos.CENTER);
+        dataLabel.setMaxWidth(Double.MAX_VALUE);
+
+        // VBox para organizar hora acima da data
+        VBox dataHoraBox = new VBox(5, horaLabel, dataLabel);
+        dataHoraBox.setAlignment(Pos.CENTER);
+
+        // Formatadores para hora e data
+        DateTimeFormatter horaFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+        DateTimeFormatter dataFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        // Definir texto inicial
+        LocalDateTime now = LocalDateTime.now();
+        horaLabel.setText(now.format(horaFormatter));
+        dataLabel.setText(now.format(dataFormatter));
+
+        // Atualizar hora e data
+        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+            LocalDateTime currentTime = LocalDateTime.now();
+            horaLabel.setText(currentTime.format(horaFormatter));
+            dataLabel.setText(currentTime.format(dataFormatter));
+        }));
+        timeline.setCycleCount(Timeline.INDEFINITE);
+        timeline.play();
+
+        // Espaço inferior para centralizar verticalmente
+        Region espaco = new Region();
+        VBox.setVgrow(espaco, Priority.ALWAYS);
+
         // Botões do menu
         Button btnVendas = criarBotaoLateral("Vendas", "/img/icon/carrinho-de-compras.png");
         Button btnProdutos = criarBotaoLateral("Gerenciar Produtos", "/img/icon/lista.png");
@@ -168,10 +209,7 @@ public class TelaHomeADM {
         buttonBox.setAlignment(Pos.BOTTOM_LEFT);
         buttonBox.setPadding(new Insets(0, 0, 20, 0));
 
-        Region espaco = new Region();
-        VBox.setVgrow(espaco, Priority.ALWAYS);
-
-        leftMenu.getChildren().addAll(logoBox, espaco, buttonBox);
+        leftMenu.getChildren().addAll(logoBox, dataHoraBox, espaco, buttonBox);
 
         // Conteúdo central - logo do mercado configurada (se existir)
         StackPane centro = new StackPane();

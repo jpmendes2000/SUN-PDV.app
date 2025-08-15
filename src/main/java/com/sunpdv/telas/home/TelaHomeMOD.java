@@ -8,6 +8,8 @@ import com.sunpdv.telas.operacao.Configurar;
 import com.sunpdv.telas.operacao.Produtos;
 import com.sunpdv.telas.operacao.Usuarios;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
@@ -23,8 +25,11 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.io.File;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class TelaHomeMOD {
 
@@ -134,7 +139,45 @@ public class TelaHomeMOD {
 
         VBox logoBox = new VBox(logoView);
         logoBox.setAlignment(Pos.CENTER);
-        logoBox.setPadding(new Insets(20, 0, 20, 0));
+        logoBox.setPadding(new Insets(20, 0, 5, 0));
+
+// Labels para hora e data
+        Label horaLabel = new Label();
+        horaLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 16px; -fx-font-weight: bold;");
+        horaLabel.setAlignment(Pos.CENTER);
+        horaLabel.setMaxWidth(Double.MAX_VALUE);
+
+        Label dataLabel = new Label();
+        dataLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 14px; -fx-font-weight: bold;");
+        dataLabel.setAlignment(Pos.CENTER);
+        dataLabel.setMaxWidth(Double.MAX_VALUE);
+
+        // VBox para organizar hora acima da data
+        VBox dataHoraBox = new VBox(5, horaLabel, dataLabel);
+        dataHoraBox.setAlignment(Pos.CENTER);
+        dataHoraBox.setPadding(new Insets(0, 0, 5, 0)); // Espaço mínimo abaixo do dataHoraBox
+
+        // Formatadores para hora e data
+        DateTimeFormatter horaFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+        DateTimeFormatter dataFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        // Definir texto inicial
+        LocalDateTime now = LocalDateTime.now();
+        horaLabel.setText(now.format(horaFormatter));
+        dataLabel.setText(now.format(dataFormatter));
+
+        // Atualizar hora e data
+        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+            LocalDateTime currentTime = LocalDateTime.now();
+            horaLabel.setText(currentTime.format(horaFormatter));
+            dataLabel.setText(currentTime.format(dataFormatter));
+        }));
+        timeline.setCycleCount(Timeline.INDEFINITE);
+        timeline.play();
+
+        // Espaço para empurrar os botões para baixo
+        Region espaco = new Region();
+        VBox.setVgrow(espaco, Priority.ALWAYS);
 
         // Botões do menu
         Button btnVendas = criarBotaoLateral("Vendas", "/img/icon/carrinho-de-compras.png");
@@ -164,13 +207,13 @@ public class TelaHomeMOD {
             });
         });
 
-        VBox buttonBox = new VBox(10, btnVendas, btnProdutos, btnSair);
+        VBox buttonBox = new VBox(10, btnVendas, btnSair);
         buttonBox.setAlignment(Pos.TOP_LEFT);
         buttonBox.setPadding(new Insets(0, 0, 20, 0));
 
-        leftMenu.getChildren().addAll(logoBox, new Region(), buttonBox);
-        VBox.setVgrow(leftMenu.getChildren().get(1), Priority.ALWAYS);
-
+        // Adicionar elementos ao menu lateral, com dataHoraBox abaixo do logo
+        leftMenu.getChildren().addAll(logoBox, dataHoraBox, espaco, buttonBox);
+        
         // Conteúdo central - logo do mercado configurada (se existir)
         StackPane centro = new StackPane();
         centro.setPadding(new Insets(20));
