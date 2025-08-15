@@ -13,14 +13,15 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.*;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Modality;
-import com.sunpdv.AutenticarUser;
-import com.sunpdv.home.TelaHomeADM;
-import com.sunpdv.home.TelaHomeFUN;
-import com.sunpdv.home.TelaHomeMOD;
+import com.sunpdv.model.AutenticarUser;
+import com.sunpdv.telas.home.TelaHomeADM;
+import com.sunpdv.telas.home.TelaHomeFUN;
+import com.sunpdv.telas.home.TelaHomeMOD;
 
 public class Caixa {
 
@@ -52,7 +53,7 @@ public class Caixa {
             this.setContentText(content);
             Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
             stage.getScene().getStylesheets().add(
-                getClass().getResource("/img/css/style.css").toExternalForm()
+                getClass().getResource("/css/style.css").toExternalForm()
             );
         }
     }
@@ -622,7 +623,7 @@ public class Caixa {
         int digito2 = (resto < 2) ? 0 : (11 - resto);
         
         return (Character.getNumericValue(cpf.charAt(9)) == digito1 && 
-               (Character.getNumericValue(cpf.charAt(10)) == digito2);
+               Character.getNumericValue(cpf.charAt(10)) == digito2);
     }
 
     private String buscarProdutoPorCodigo(String codigo) throws SQLException {
@@ -712,7 +713,7 @@ public class Caixa {
             stmtVenda.setInt(2, idPagamento);
             stmtVenda.setDouble(3, total);
             stmtVenda.setInt(4, idCarrinho);
-            stmtVenda.setInt(5, AutenticarUser.getIdUsuario());
+            stmtVenda.setInt(5, AutenticarUser.getIdPermissao());
             stmtVenda.executeUpdate();
             
             // Se houver documento, salvar no cliente (opcional)
@@ -946,7 +947,7 @@ public class Caixa {
         root.setCenter(containerCentral);
 
         Scene scene = new Scene(root, 1200, 700);
-        scene.getStylesheets().add(getClass().getResource("/img/css/style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Módulo de Caixa");
