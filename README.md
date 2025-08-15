@@ -25,7 +25,7 @@
 - 🧍‍♂️ **Gestão de Usuários** com diferentes níveis de acesso
 - 📦 **Controle de Produtos**: entrada e saída com código de barras
 - 📊 **Interface Moderna** com JavaFX + CSS externo
-- ☁️ **Banco de Dados em Nuvem** (SQL Sever/Azure)
+- 🗄️ **Banco de Dados local** (SQL Sever)
 - ⏳ **Bloqueio Temporário** após tentativas inválidas
 - 🔄 **Feedback Visual** com animações de transição
 
@@ -40,7 +40,6 @@
 | `SQL Server` | Banco de dados relacional |
 | `JDBC` | Conexão entre Java e banco de dados |
 | `CSS` | Estilização da interface via arquivo externo |
-| `Azure` | Hospedagem em nuvem do banco de dados |
 
 ---
 
