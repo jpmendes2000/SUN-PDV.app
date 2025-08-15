@@ -672,6 +672,8 @@ public class Produtos {
         confirm.setHeaderText("Deseja apagar o produto: " + produto.getNome() + "?");
         confirm.setContentText("Esta ação não pode ser desfeita.");
         confirm.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        confirm.initModality(Modality.NONE); // Não bloqueia a janela pai
+        confirm.initOwner(stage);
 
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
