@@ -156,6 +156,15 @@ public class LoginApp extends Application {
         Scene scene = new Scene(root, 680, 380);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
+        scene.setOnKeyPressed(event -> {
+            if (event.getCode() == javafx.scene.input.KeyCode.ENTER) {
+                if (!loginBtn.isDisabled()) {
+                    loginBtn.fire();
+                }
+                event.consume();
+            }
+        });
+
         loginBtn.setOnMouseEntered(e -> {
             ScaleTransition st = new ScaleTransition(Duration.millis(150), loginBtn);
             st.setToX(1.05);

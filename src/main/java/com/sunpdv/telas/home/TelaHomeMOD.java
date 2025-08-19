@@ -207,7 +207,7 @@ public class TelaHomeMOD {
             });
         });
 
-        VBox buttonBox = new VBox(10, btnVendas, btnSair);
+        VBox buttonBox = new VBox(10, btnVendas, btnProdutos,  btnConfigurar, btnSair);
         buttonBox.setAlignment(Pos.TOP_LEFT);
         buttonBox.setPadding(new Insets(0, 0, 20, 0));
 
@@ -252,6 +252,17 @@ public class TelaHomeMOD {
         Scene scene = new Scene(layout, 1200, 800);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
+        scene.setOnKeyPressed(event -> {
+            if (event.getCode() == javafx.scene.input.KeyCode.ESCAPE) {
+                if (!btnSair.isDisabled()) {
+                    btnSair.fire();
+                }
+                event.consume();
+            }
+        });
+
+        stage.setFullScreenExitHint("");
+        stage.setFullScreenExitKeyCombination(javafx.scene.input.KeyCombination.NO_MATCH);
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Painel Administrativo");
         stage.setFullScreen(true);

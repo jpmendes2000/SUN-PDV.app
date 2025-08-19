@@ -13,6 +13,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.control.Alert.AlertType;
@@ -1044,8 +1045,30 @@ public class Caixa {
             System.err.println("Erro ao carregar CSS: " + e.getMessage());
         }
 
+        scene.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ESCAPE) {
+                // Impedir que o evento seja processado pelo sistema (evita sair do fullscreen)
+                event.consume();
+                
+                // Executar a mesma ação do botão sair
+                CustomConfirmationAlert alert = new CustomConfirmationAlert(
+                    stage, 
+                    "Confirmação", 
+                    "Deseja sair?", 
+                    "Isso fechará o sistema."
+                );
+                alert.showAndWait().ifPresent(response -> {
+                    if (response == ButtonType.OK) {
+                        stage.close();
+                    }
+                });
+            }
+        });
+
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Módulo de Caixa");
+        stage.setFullScreenExitHint(""); // Remove a mensagem de ESC
+        stage.setFullScreenExitKeyCombination(javafx.scene.input.KeyCombination.NO_MATCH);
         stage.setFullScreen(true);
         stage.show();
     }

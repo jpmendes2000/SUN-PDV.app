@@ -392,9 +392,19 @@ public class Usuarios {
 
         // Cria a cena principal
         Scene scene = new Scene(layout, 1200, 800);
-        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm()); // Aplica o CSS
+        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
-        // Configura a janela principal
+        scene.setOnKeyPressed(event -> {
+            if (event.getCode() == javafx.scene.input.KeyCode.ESCAPE) {
+                if (!btnSair.isDisabled()) {
+                    btnSair.fire();
+                }
+                event.consume();
+            }
+        });
+
+        stage.setFullScreenExitHint("");
+        stage.setFullScreenExitKeyCombination(javafx.scene.input.KeyCombination.NO_MATCH);
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Gerenciamento de Usuários"); // Define o título
         stage.setFullScreen(true); // Define tela cheia
