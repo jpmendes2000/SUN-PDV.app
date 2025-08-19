@@ -41,14 +41,12 @@ public class Caixa {
     private ComboBox<String> filtroPagamento;
     private VBox novaVendaContainer;
     private VBox historicoContainer;
-    private ToggleButton toggleViewButton;
     private CheckBox clienteNaoIdentificadoCheck;
-    private TextField primeiraFormaValor;
-    private ComboBox<String> primeiraFormaCombo;
-    private ComboBox<String> segundaFormaCombo;
-    private TextField segundaFormaValor;
-    private CheckBox usarSegundaFormaCheck;
     private TextField codigoProdutoField;
+    private Label totalLabel; // Movido para o topo
+    private Button toggleButton; // Botão único para alternar entre telas
+    private boolean isHistoricoAtivo = true; // Histórico como padrão
+    private ListView<ItemVenda> listaProdutos; // Para acesso global
 
     private static class CustomConfirmationAlert extends Alert {
         public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
@@ -153,10 +151,10 @@ public class Caixa {
     private List<Venda> carregarVendas() {
         List<Venda> vendas = new ArrayList<>();
         String query = "SELECT v.ID_Vendas, p.Forma_Pagamento, v.Subtotal, v.Total, " +
-                      "CONVERT(VARCHAR, v.Data_Venda, 103) AS Data " +
+                      "CONVERT(VARCHAR, v.DataHora_Venda, 103) AS Data " +
                       "FROM vendas v " +
                       "JOIN pagamento p ON v.ID_Pagamento = p.ID_Pagamento " +
-                      "ORDER BY v.Data_Venda DESC";
+                      "ORDER BY v.DataHora_Venda DESC";
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement stmt = conn.prepareStatement(query);
@@ -234,13 +232,19 @@ public class Caixa {
         clienteNaoIdentificadoCheck = new CheckBox("Cliente não identificado");
         clienteNaoIdentificadoCheck.setSelected(true);
         clienteNaoIdentificadoCheck.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
-        
-        usarSegundaFormaCheck = new CheckBox("Usar segunda forma de pagamento");
-        usarSegundaFormaCheck.setStyle("-fx-text-fill: white;");
 
-        // Seção de identificação do cliente
-        VBox clienteBox = new VBox(10);
-        clienteBox.setStyle("-fx-background-color: #00536d; -fx-padding: 15; -fx-background-radius: 5;");
+        // Total da venda - agora no topo
+        totalLabel = new Label("SUBTOTAL: R$ 0,00");
+        totalLabel.setStyle("-fx-text-fill: #c7eefaff; -fx-font-weight: bold; -fx-font-size: 30px;");
+
+        // Seção de identificação do cliente + Total
+        VBox clienteBox = new VBox(15);
+        clienteBox.setStyle("-fx-background-color: #00536d; -fx-padding: 20; -fx-background-radius: 5;");
+        
+        // Container para o subtotal
+        HBox subtotalContainer = new HBox();
+        subtotalContainer.setAlignment(Pos.CENTER);
+        subtotalContainer.getChildren().add(totalLabel);
         
         ToggleGroup clienteGroup = new ToggleGroup();
         RadioButton rbCPF = new RadioButton("CPF");
@@ -288,9 +292,9 @@ public class Caixa {
             }
         });
 
-        // Lista de produtos
-        ListView<ItemVenda> listaProdutos = new ListView<>();
-        listaProdutos.setPrefHeight(300);
+        // Lista de produtos - agora como variável de instância
+        listaProdutos = new ListView<>();
+        listaProdutos.setPrefHeight(450); // Aumentada a altura
         listaProdutos.setCellFactory(lv -> new ItemVendaCell());
         
         // Menu de contexto para itens
@@ -393,65 +397,7 @@ public class Caixa {
             new Label("Qtd:"), quantidadeSpinner, btnAdicionar
         );
 
-        // Forma de pagamento
-        VBox pagamentoBox = new VBox(10);
-        pagamentoBox.setStyle("-fx-background-color: #00536d; -fx-padding: 15; -fx-background-radius: 5;");
-        
-        primeiraFormaCombo = new ComboBox<>();
-        carregarFormasPagamento(primeiraFormaCombo);
-        
-        primeiraFormaValor = new TextField();
-        primeiraFormaValor.setPromptText("Valor");
-        primeiraFormaValor.setPrefWidth(120);
-        
-        // Segunda forma de pagamento
-        VBox segundaFormaBox = new VBox(5);
-        segundaFormaCombo = new ComboBox<>();
-        carregarFormasPagamento(segundaFormaCombo);
-        
-        segundaFormaValor = new TextField();
-        segundaFormaValor.setPromptText("Valor");
-        segundaFormaValor.setPrefWidth(120);
-        
-        HBox segundaFormaHBox = new HBox(10, new Label("2ª Forma:"), segundaFormaCombo, segundaFormaValor);
-        segundaFormaBox.getChildren().add(segundaFormaHBox);
-        
-        // Configura os bindings DEPOIS de inicializar os componentes
-        segundaFormaBox.visibleProperty().bind(usarSegundaFormaCheck.selectedProperty());
-        segundaFormaBox.managedProperty().bind(usarSegundaFormaCheck.selectedProperty());
-        
-        HBox primeiraFormaHBox = new HBox(10, new Label("1ª Forma:"), primeiraFormaCombo, primeiraFormaValor);
-        
-        // Total da venda
-        Label totalLabel = new Label("SUBTOTAL: R$ 0,00");
-        totalLabel.setStyle("-fx-text-fill: #c7eefaff; -fx-font-weight: bold; -fx-font-size: 30px;");
-
-        // Botão para calcular troco
-        Button btnCalcularTroco = new Button("Calcular Troco");
-        btnCalcularTroco.setStyle("-fx-background-color: #0c5b74; -fx-text-fill: white;");
-        btnCalcularTroco.setOnAction(e -> {
-            try {
-                double total = calcularTotal(listaProdutos);
-                double valor1 = primeiraFormaValor.getText().isEmpty() ? 0 : Double.parseDouble(primeiraFormaValor.getText());
-                double valor2 = segundaFormaValor.getText().isEmpty() || !usarSegundaFormaCheck.isSelected() ? 0 : 
-                              Double.parseDouble(segundaFormaValor.getText());
-                
-                double troco = (valor1 + valor2) - total;
-                
-                if (troco > 0) {
-                    mostrarAlerta("Troco", String.format("Troco: R$ %.2f", troco), AlertType.INFORMATION);
-                } else if (troco == 0) {
-                    mostrarAlerta("Pagamento exato", "Valor pago igual ao total da venda.", AlertType.INFORMATION);
-                } else {
-                    mostrarAlerta("Pagamento insuficiente", 
-                        String.format("Faltam R$ %.2f para completar o pagamento.", Math.abs(troco)), AlertType.ERROR);
-                }
-            } catch (NumberFormatException ex) {
-                mostrarAlerta("Erro", "Digite valores válidos nos campos de pagamento.", AlertType.ERROR);
-            }
-        });
-
-        // Botões
+        // Botões (apenas Finalizar e Cancelar)
         Button btnFinalizar = new Button("Finalizar Venda");
         btnFinalizar.setStyle("-fx-background-color: #28a745; -fx-text-fill: white;");
         btnFinalizar.setPadding(new Insets(10, 60, 10, 60));
@@ -462,29 +408,7 @@ public class Caixa {
                     return;
                 }
 
-                if (primeiraFormaCombo.getValue() == null) {
-                    mostrarAlerta("Forma de pagamento", "Selecione pelo menos uma forma de pagamento.", AlertType.ERROR);
-                    return;
-                }
-
                 double totalVenda = calcularTotal(listaProdutos);
-                double valor1 = primeiraFormaValor.getText().isEmpty() ? 0 : Double.parseDouble(primeiraFormaValor.getText());
-                double valor2 = 0;
-                
-                if (usarSegundaFormaCheck.isSelected()) {
-                    if (segundaFormaCombo.getValue() == null) {
-                        mostrarAlerta("Forma de pagamento", "Selecione a segunda forma de pagamento.", AlertType.ERROR);
-                        return;
-                    }
-                    valor2 = segundaFormaValor.getText().isEmpty() ? 0 : Double.parseDouble(segundaFormaValor.getText());
-                }
-                
-                if ((valor1 + valor2) < totalVenda) {
-                    mostrarAlerta("Pagamento insuficiente", 
-                        String.format("Valor pago (R$ %.2f) é menor que o total da venda (R$ %.2f)", 
-                        (valor1 + valor2), totalVenda), AlertType.ERROR);
-                    return;
-                }
 
                 if (rbCPF.isSelected() && !documentoField.getText().isEmpty() && !validarCPF(documentoField.getText())) {
                     mostrarAlerta("CPF inválido", "O CPF digitado não é válido.", AlertType.ERROR);
@@ -495,30 +419,23 @@ public class Caixa {
                 String tipoDocumento = clienteNaoIdentificadoCheck.isSelected() ? "" : 
                                      (rbCPF.isSelected() ? "CPF" : (rbCNPJ.isSelected() ? "CNPJ" : "RG"));
 
-                // Salvar venda no banco de dados
-                salvarVendaNoBanco(documento, tipoDocumento, listaProdutos, primeiraFormaCombo.getValue(), 
-                                   valor1, usarSegundaFormaCheck.isSelected() ? segundaFormaCombo.getValue() : null, 
-                                   valor2, totalVenda);
+                // Por enquanto, salvamos sem forma de pagamento (será implementado em outra tela)
+                // salvarVendaNoBanco(documento, tipoDocumento, listaProdutos, null, 0, null, 0, totalVenda);
                 
                 // Limpar campos após venda
                 listaProdutos.getItems().clear();
                 totalLabel.setText("SUBTOTAL: R$ 0,00");
                 documentoField.clear();
                 clienteNaoIdentificadoCheck.setSelected(true);
-                primeiraFormaCombo.getSelectionModel().clearSelection();
-                primeiraFormaValor.clear();
-                usarSegundaFormaCheck.setSelected(false);
                 
                 // Recarregar histórico
                 vendas = carregarVendas();
                 aplicarFiltros();
                 
-                mostrarAlerta("Venda finalizada", "Venda registrada com sucesso!", AlertType.INFORMATION);
-            } catch (SQLException ex) {
+                mostrarAlerta("Venda registrada", "Produtos adicionados ao carrinho! Finalize o pagamento na próxima tela.", AlertType.INFORMATION);
+            } catch (Exception ex) {
                 ex.printStackTrace();
-                mostrarAlerta("Erro ao finalizar venda", "Detalhes: " + ex.getMessage(), AlertType.ERROR);
-            } catch (NumberFormatException ex) {
-                mostrarAlerta("Valor inválido", "Digite valores numéricos válidos para os pagamentos.", AlertType.ERROR);
+                mostrarAlerta("Erro ao registrar venda", "Detalhes: " + ex.getMessage(), AlertType.ERROR);
             }
         });
 
@@ -529,21 +446,21 @@ public class Caixa {
             totalLabel.setText("SUBTOTAL: R$ 0,00");
             documentoField.clear();
             clienteNaoIdentificadoCheck.setSelected(true);
-            primeiraFormaCombo.getSelectionModel().clearSelection();
-            primeiraFormaValor.clear();
-            usarSegundaFormaCheck.setSelected(false);
         });
 
-        HBox botoes = new HBox(10, btnFinalizar, btnCancelar, btnCalcularTroco);
+        HBox botoes = new HBox(10, btnFinalizar, btnCancelar);
         botoes.setAlignment(Pos.CENTER);
 
+        // Adicionar componentes ao clienteBox
         clienteBox.getChildren().addAll(
+            subtotalContainer, // Subtotal no topo
             clienteNaoIdentificadoCheck,
             new Label("Identificação do Cliente:"),
             tipoDocumentoBox,
             documentoField
         );
 
+        // Container de produtos
         VBox produtosBox = new VBox(10);
         produtosBox.setStyle("-fx-background-color: #00536d; -fx-padding: 15; -fx-background-radius: 5;");
         produtosBox.getChildren().addAll(
@@ -552,30 +469,15 @@ public class Caixa {
             listaProdutos
         );
 
-        pagamentoBox.getChildren().addAll(
-            new Label("Forma de Pagamento:"),
-            primeiraFormaHBox,
-            usarSegundaFormaCheck,
-            segundaFormaBox,
-            totalLabel
-        );
-
         // Atualizar total quando itens mudarem
         listaProdutos.getItems().addListener((javafx.collections.ListChangeListener.Change<? extends ItemVenda> c) -> {
             double total = calcularTotal(listaProdutos);
-            totalLabel.setText("TOTAL: R$ " + String.format("%.2f", total));
-            
-            // Atualizar automaticamente o valor da primeira forma de pagamento
-            if (primeiraFormaValor.getText().isEmpty() || 
-                (primeiraFormaValor.getText().equals("0") || primeiraFormaValor.getText().equals("0.00"))) {
-                primeiraFormaValor.setText(String.format("%.2f", total));
-            }
+            totalLabel.setText("SUBTOTAL: R$ " + String.format("%.2f", total));
         });
 
         novaVendaContainer.getChildren().addAll(
             clienteBox,
             produtosBox,
-            pagamentoBox,
             botoes
         );
     }
@@ -655,93 +557,10 @@ public class Caixa {
         }
     }
 
-    private void carregarFormasPagamento(ComboBox<String> combo) {
-        String query = "SELECT Forma_Pagamento FROM pagamento";
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-             PreparedStatement stmt = conn.prepareStatement(query);
-             ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                combo.getItems().add(rs.getString("Forma_Pagamento"));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            mostrarAlerta("Erro ao carregar formas de pagamento", "Detalhes: " + e.getMessage(), AlertType.ERROR);
-        }
-    }
-
     private double calcularTotal(ListView<ItemVenda> listaProdutos) {
         return listaProdutos.getItems().stream()
             .mapToDouble(item -> item.quantidade * item.preco)
             .sum();
-    }
-
-    private void salvarVendaNoBanco(String documento, String tipoDocumento, ListView<ItemVenda> itens, 
-                                  String formaPagamento1, double valor1, String formaPagamento2, 
-                                  double valor2, double total) throws SQLException {
-        Connection conn = null;
-        try {
-            conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-            conn.setAutoCommit(false);
-
-            // 1. Salvar o carrinho
-            String insertCarrinho = "INSERT INTO carrinho (ID_Produto, CodBarras, Quantidade, PrecoUnitario, SubTotal) VALUES (?, ?, ?, ?, ?)";
-            PreparedStatement stmtCarrinho = conn.prepareStatement(insertCarrinho, Statement.RETURN_GENERATED_KEYS);
-            
-            for (ItemVenda item : itens.getItems()) {
-                String queryProduto = "SELECT ID_Produto FROM produtos WHERE Cod_Barras = ?";
-                PreparedStatement stmtProduto = conn.prepareStatement(queryProduto);
-                stmtProduto.setString(1, item.codigoBarras);
-                ResultSet rsProduto = stmtProduto.executeQuery();
-                
-                if (rsProduto.next()) {
-                    int idProduto = rsProduto.getInt("ID_Produto");
-                    
-                    stmtCarrinho.setInt(1, idProduto);
-                    stmtCarrinho.setString(2, item.codigoBarras);
-                    stmtCarrinho.setInt(3, item.quantidade);
-                    stmtCarrinho.setDouble(4, item.preco);
-                    stmtCarrinho.setDouble(5, item.quantidade * item.preco);
-                    stmtCarrinho.addBatch();
-                }
-            }
-            stmtCarrinho.executeBatch();
-            ResultSet rsCarrinho = stmtCarrinho.getGeneratedKeys();
-            int idCarrinho = rsCarrinho.next() ? rsCarrinho.getInt(1) : 0;
-
-            // 2. Salvar a venda (usando apenas a primeira forma de pagamento na tabela vendas)
-            String queryPagamento = "SELECT ID_Pagamento FROM pagamento WHERE Forma_Pagamento = ?";
-            PreparedStatement stmtPagamento = conn.prepareStatement(queryPagamento);
-            stmtPagamento.setString(1, formaPagamento1);
-            ResultSet rsPagamento = stmtPagamento.executeQuery();
-            int idPagamento = rsPagamento.next() ? rsPagamento.getInt("ID_Pagamento") : 0;
-
-            String insertVenda = "INSERT INTO vendas (Subtotal, ID_Pagamento, Total, Data_Venda, ID_Carrinho, ID_Login) " +
-                               "VALUES (?, ?, ?, GETDATE(), ?, ?)";
-            PreparedStatement stmtVenda = conn.prepareStatement(insertVenda);
-            stmtVenda.setDouble(1, total);
-            stmtVenda.setInt(2, idPagamento);
-            stmtVenda.setDouble(3, total);
-            stmtVenda.setInt(4, idCarrinho);
-            stmtVenda.setInt(5, AutenticarUser.getIdPermissao());
-            stmtVenda.executeUpdate();
-            
-            // Se houver documento, salvar no cliente (opcional)
-            if (!documento.isEmpty() && !tipoDocumento.isEmpty()) {
-                // Implementação opcional conforme necessidade
-            }
-
-            conn.commit();
-        } catch (SQLException e) {
-            if (conn != null) {
-                conn.rollback();
-            }
-            throw e;
-        } finally {
-            if (conn != null) {
-                conn.setAutoCommit(true);
-                conn.close();
-            }
-        }
     }
 
     private VBox criarPainelVenda(Venda venda) {
@@ -871,12 +690,57 @@ public class Caixa {
         historicoContainer.getChildren().addAll(titulo, filtroBox, scroll);
     }
 
+    private void carregarFormasPagamento(ComboBox<String> combo) {
+        String query = "SELECT Forma_Pagamento FROM pagamento";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                combo.getItems().add(rs.getString("Forma_Pagamento"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            mostrarAlerta("Erro ao carregar formas de pagamento", "Detalhes: " + e.getMessage(), AlertType.ERROR);
+        }
+    }
+
     private void mostrarAlerta(String titulo, String mensagem, AlertType tipo) {
         Alert alert = new Alert(tipo);
         alert.setTitle(titulo);
         alert.setHeaderText(null);
         alert.setContentText(mensagem);
         alert.showAndWait();
+    }
+
+    private void alternarTela() {
+        if (isHistoricoAtivo) {
+            // Mudando para Nova Venda
+            mostrarNovaVenda();
+            toggleButton.setText("Histórico");
+            isHistoricoAtivo = false;
+        } else {
+            // Mudando para Histórico
+            mostrarHistorico();
+            toggleButton.setText("Nova Venda");
+            isHistoricoAtivo = true;
+        }
+    }
+
+    private void mostrarNovaVenda() {
+        novaVendaContainer.setVisible(true);
+        historicoContainer.setVisible(false);
+        // Focar no campo de código quando abrir nova venda
+        if (codigoProdutoField != null) {
+            codigoProdutoField.requestFocus();
+        }
+    }
+
+    private void mostrarHistorico() {
+        novaVendaContainer.setVisible(false);
+        historicoContainer.setVisible(true);
+        // Recarregar dados quando mostrar histórico
+        vendas = carregarVendas();
+        aplicarFiltros();
     }
 
     public void show(Stage stage) {
@@ -930,7 +794,7 @@ public class Caixa {
             // VBox para organizar hora acima da data
             VBox dataHoraBox = new VBox(5, horaLabel, dataLabel);
             dataHoraBox.setAlignment(Pos.CENTER);
-            dataHoraBox.setPadding(new Insets(0, 0, 5, 0));
+            dataHoraBox.setPadding(new Insets(0, 0, 20, 0));
 
             // Formatadores para hora e data
             DateTimeFormatter horaFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
@@ -950,15 +814,18 @@ public class Caixa {
             timeline.setCycleCount(Timeline.INDEFINITE);
             timeline.play();
 
-            // Espaço para empurrar os botões para baixo
-            Region espaco = new Region();
-            VBox.setVgrow(espaco, Priority.ALWAYS);
-
-            // Botões do menu
+            // Botão único para alternar entre as telas
+            toggleButton = criarBotaoLateral("", "/img/icon/casa.png");
+            toggleButton.setOnAction(e -> alternarTela());
+            
             Button btnVoltarHome = criarBotaoLateral("Home", "/img/icon/casa.png");
             Button btnSair = criarBotaoLateral("Sair do Sistema", "/img/icon/fechar.png");
 
-            // Ações dos botões
+            // Espaço para empurrar os botões de navegação para baixo
+            Region espaco = new Region();
+            VBox.setVgrow(espaco, Priority.ALWAYS);
+
+            // Ações dos botões - removendo as ações antigas de nova venda e histórico
             btnVoltarHome.setOnAction(e -> {
                 try {
                     String cargo = AutenticarUser.getCargo();
@@ -990,51 +857,32 @@ public class Caixa {
                 });
             });
 
-            VBox buttonBox = new VBox(10, btnVoltarHome, btnSair);
-            buttonBox.setAlignment(Pos.BOTTOM_LEFT);
-            buttonBox.setPadding(new Insets(0, 0, 20, 0));
+            // Organizar botões do menu - apenas o botão toggle
+            VBox menuButtonsBox = new VBox(10, toggleButton);
+            menuButtonsBox.setAlignment(Pos.CENTER_LEFT);
+            menuButtonsBox.setPadding(new Insets(0, 0, 10, 0));
+
+            VBox navigationButtonsBox = new VBox(10, btnVoltarHome, btnSair);
+            navigationButtonsBox.setAlignment(Pos.BOTTOM_LEFT);
+            navigationButtonsBox.setPadding(new Insets(0, 0, 20, 0));
 
             // Adicionar elementos ao menu lateral
-            leftMenu.getChildren().addAll(logoBox, dataHoraBox, espaco, buttonBox);
+            leftMenu.getChildren().addAll(logoBox, dataHoraBox, menuButtonsBox, espaco, navigationButtonsBox);
         } catch (Exception e) {
             System.err.println("Erro ao carregar recursos: " + e.getMessage());
             leftMenu.getChildren().add(new Label("Erro ao carregar recursos"));
         }
 
-        // Botão para alternar entre as views
-        toggleViewButton = new ToggleButton("Nova Venda");
-        toggleViewButton.setStyle("-fx-background-color: #e8ba23; -fx-text-fill: black; -fx-font-weight: bold;");
-        toggleViewButton.setSelected(false);
-        toggleViewButton.setOnAction(e -> {
-            if (toggleViewButton.isSelected()) {
-                toggleViewButton.setText("Histórico");
-                novaVendaContainer.setVisible(true);
-                historicoContainer.setVisible(false);
-            } else {
-                toggleViewButton.setText("Nova Venda");
-                novaVendaContainer.setVisible(false);
-                historicoContainer.setVisible(true);
-            }
-        });
-
         // Container principal que alterna entre as views
         StackPane centerContainer = new StackPane();
         centerContainer.getChildren().addAll(historicoContainer, novaVendaContainer);
-        novaVendaContainer.setVisible(false);
-
-        // Posicionar o botão de alternância
-        AnchorPane containerCentral = new AnchorPane(centerContainer, toggleViewButton);
-        AnchorPane.setTopAnchor(centerContainer, 0.0);
-        AnchorPane.setBottomAnchor(centerContainer, 0.0);
-        AnchorPane.setLeftAnchor(centerContainer, 0.0);
-        AnchorPane.setRightAnchor(centerContainer, 0.0);
-
-        AnchorPane.setTopAnchor(toggleViewButton, 10.0);
-        AnchorPane.setRightAnchor(toggleViewButton, 10.0);
+        
+        // Iniciar com histórico visível (padrão)
+        mostrarHistorico();
 
         BorderPane root = new BorderPane();
         root.setLeft(leftMenu);
-        root.setCenter(containerCentral);
+        root.setCenter(centerContainer);
 
         Scene scene = new Scene(root, 1200, 700);
         
