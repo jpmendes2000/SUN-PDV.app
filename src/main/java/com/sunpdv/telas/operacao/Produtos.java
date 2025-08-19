@@ -84,7 +84,7 @@ public class Produtos {
         this.stage = stage;
         // Criação do layout principal usando BorderPane
         // BorderPane permite dividir a tela em cinco áreas: topo, inferior, esquerda, direita e centro
-        BorderPane mainPane = new BorderPane();
+        BorderPane layout = new BorderPane();
 
         // Configuração da área esquerda (menu lateral)
         VBox leftMenu = new VBox();
@@ -272,8 +272,8 @@ public class Produtos {
         contentGrid.add(scrollTable, 0, 1, 2, 1); // Adiciona ao GridPane na linha 1, colunas 0-1
 
         // Configuração do layout principal
-        mainPane.setLeft(leftMenu); // Define o menu lateral à esquerda
-        mainPane.setCenter(contentGrid); // Define o conteúdo central
+        layout.setLeft(leftMenu); // Define o menu lateral à esquerda
+        layout.setCenter(contentGrid); // Define o conteúdo central
 
         // Associa ações aos botões
         btnAdd.setOnAction(e -> abrirFormularioProduto(null)); // Abre formulário para adicionar
@@ -307,8 +307,20 @@ public class Produtos {
         carregarProdutos();
 
         // Configuração da cena e exibição do palco
-        Scene scene = new Scene(mainPane, 1200, 800); // Define tamanho da janela
-        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm()); // Adiciona estilo CSS
+        Scene scene = new Scene(layout, 1200, 800);
+        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+
+        scene.setOnKeyPressed(event -> {
+            if (event.getCode() == javafx.scene.input.KeyCode.ESCAPE) {
+                if (!btnSair.isDisabled()) {
+                    btnSair.fire();
+                }
+                event.consume();
+            }
+        });
+
+        stage.setFullScreenExitHint("");
+        stage.setFullScreenExitKeyCombination(javafx.scene.input.KeyCombination.NO_MATCH);
         stage.setScene(scene);
         stage.setTitle("Gerenciamento de Produtos"); // Define o título da janela
         stage.setFullScreen(true); // Ativa tela cheia

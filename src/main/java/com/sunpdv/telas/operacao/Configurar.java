@@ -213,17 +213,17 @@ public class Configurar {
         tituloTaxas.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 18px; -fx-font-weight: bold;");
 
         // Taxa para Cartão de Crédito
-        Label lblCredito = new Label("Taxa Crédito (%):");
+        Label lblCredito = new Label("Taxa Crédito");
         lblCredito.setStyle("-fx-text-fill: #a9cce3;");
         TextField txtCredito = new TextField();
-        txtCredito.setPrefWidth(100);
+        txtCredito.setPrefWidth(50);
         txtCredito.setPromptText("0.0");
         
         // Taxa para Cartão de Débito
-        Label lblDebito = new Label("Taxa Débito (%):");
+        Label lblDebito = new Label("Taxa Débito ");
         lblDebito.setStyle("-fx-text-fill: #a9cce3;");
         TextField txtDebito = new TextField();
-        txtDebito.setPrefWidth(100);
+        txtDebito.setPrefWidth(50);
         txtDebito.setPromptText("0.0");
         
         Button btnSalvarTaxas = new Button("Salvar Taxas");
@@ -259,13 +259,24 @@ public class Configurar {
         configLayout.setPadding(new Insets(20, 0, 0, 30));
 
         // Layout raiz
-        BorderPane root = new BorderPane();
-        root.setLeft(leftMenu);
-        root.setCenter(configLayout);
+        BorderPane layout = new BorderPane();
+        layout.setLeft(leftMenu);
+        layout.setCenter(configLayout);
 
-        Scene scene = new Scene(root, 1200, 700);
+        Scene scene = new Scene(layout, 1200, 800);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
+        scene.setOnKeyPressed(event -> {
+            if (event.getCode() == javafx.scene.input.KeyCode.ESCAPE) {
+                if (!btnSair.isDisabled()) {
+                    btnSair.fire();
+                }
+                event.consume();
+            }
+        });
+
+        stage.setFullScreenExitHint("");
+        stage.setFullScreenExitKeyCombination(javafx.scene.input.KeyCombination.NO_MATCH);   
         stage.setScene(scene);
         stage.setTitle("SUN PDV - Configurações");
         stage.setFullScreen(true);
@@ -358,6 +369,7 @@ public class Configurar {
                 }
             });
         });
+        btnSair.setDisable(false); // Garante que o botão está habilitado
     }
 
     // Método para exibir alertas
