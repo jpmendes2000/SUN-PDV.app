@@ -103,7 +103,7 @@ public class Caixa {
         vendas = new ArrayList<>();
     }
 
-    private Button criarBotaoLateral(String texto, String caminhoIcone) {
+     private Button criarBotaoLateral(String texto, String caminhoIcone) {
         try {
             Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
             ImageView icon = new ImageView(img);
@@ -120,35 +120,37 @@ public class Caixa {
             indicatorContainer.setMaxHeight(30);
             indicatorContainer.setStyle("-fx-background-color: transparent;");
 
+            // CORREÇÃO: Texto antes da barra (como no botão Home)
             HBox leftContent = new HBox(10, icon, textLabel);
             leftContent.setAlignment(Pos.CENTER_LEFT);
 
-            HBox content = new HBox(leftContent, new Region(), indicatorContainer);
+            HBox content = new HBox(indicatorContainer, leftContent); // Barra primeiro, depois conteúdo
             content.setAlignment(Pos.CENTER_LEFT);
-            HBox.setHgrow(content.getChildren().get(1), Priority.ALWAYS);
+            content.setSpacing(10);
 
             Button btn = new Button();
             btn.setGraphic(content);
             btn.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-            btn.setStyle("-fx-background-color: transparent;");
+            btn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: bold;"); // CORREÇÃO: cor consistente
             btn.setPrefWidth(280);
             btn.setPrefHeight(42);
 
             btn.setOnMouseEntered(e -> {
-                btn.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18));");
-                indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64);");
+                btn.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18)); -fx-text-fill: white; -fx-font-weight: bold;");
+                indicatorContainer.setStyle("-fx-background-color: #FFCC00;"); // CORREÇÃO: barra amarela igual
             });
             btn.setOnMouseExited(e -> {
-                btn.setStyle("-fx-background-color: transparent;");
+                btn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: bold;");
                 indicatorContainer.setStyle("-fx-background-color: transparent;");
             });
 
             return btn;
         } catch (Exception e) {
-            return new Button(texto);
+            Button btn = new Button(texto);
+            btn.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
+            return btn;
         }
     }
-
     private List<Venda> carregarVendas() {
         List<Venda> vendas = new ArrayList<>();
         String query = "SELECT v.ID_Vendas, p.Forma_Pagamento, v.Subtotal, v.Total, " +
@@ -273,8 +275,58 @@ public class Caixa {
                 clienteGroup.selectToggle(null);
                 documentoField.clear();
             }
-        });
+        }); // FECHAMENTO CORRETO DO LISTENER - REMOVI O CÓDIGO QUE ESTAVA DENTRO
+
+        // CORREÇÃO: Listener do Enter para código de barras deve estar fora do listener anterior
+        // Campo para adicionar produto
+        HBox adicionarProdutoBox = new HBox(10);
+        adicionarProdutoBox.setAlignment(Pos.CENTER_LEFT);
         
+        codigoProdutoField = new TextField();
+        codigoProdutoField.setPromptText("Código de barras do produto");
+        HBox.setHgrow(codigoProdutoField, Priority.ALWAYS);
+        
+        Spinner<Integer> quantidadeSpinner = new Spinner<>(1, 100, 1);
+        quantidadeSpinner.setPrefWidth(80);
+        quantidadeSpinner.setEditable(true);
+        
+        // CORREÇÃO: Listener do Enter no campo de código de barras
+        codigoProdutoField.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER) {
+                String codigo = codigoProdutoField.getText().trim();
+                if (!codigo.isEmpty()) {
+                    try {
+                        String produto = buscarProdutoPorCodigo(codigo);
+                        if (produto != null) {
+                            double preco = buscarPrecoProduto(codigo);
+                            int quantidade = quantidadeSpinner.getValue();
+                            
+                            Optional<ItemVenda> existente = listaProdutos.getItems().stream()
+                                .filter(item -> item.codigoBarras.equals(codigo))
+                                .findFirst();
+                            
+                            if (existente.isPresent()) {
+                                ItemVenda item = existente.get();
+                                item.quantidade += quantidade;
+                                listaProdutos.refresh();
+                            } else {
+                                listaProdutos.getItems().add(new ItemVenda(produto, codigo, quantidade, preco));
+                            }
+                            
+                            codigoProdutoField.clear();
+                            codigoProdutoField.requestFocus();
+                        } else {
+                            mostrarAlerta("Produto não encontrado", "Nenhum produto encontrado com o código: " + codigo, AlertType.ERROR);
+                        }
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                        mostrarAlerta("Erro ao buscar produto", "Detalhes: " + ex.getMessage(), AlertType.ERROR);
+                    }
+                }
+            }
+        });
+
+
         rbCPF.selectedProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal) {
                 documentoField.setPromptText("Digite o CPF (somente números)");
