@@ -64,11 +64,12 @@ public class Produtos {
     private static class CustomConfirmationAlert extends Alert {
     public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
         super(AlertType.CONFIRMATION);
-        this.initOwner(owner);
-        this.initModality(Modality.NONE); // Não bloqueia a janela pai
+        this.initOwner(owner); // IMPORTANTE: deve ser o Stage correto
+        this.initModality(Modality.WINDOW_MODAL); // ou APPLICATION_MODAL
         this.setTitle(title);
         this.setHeaderText(header);
         this.setContentText(content);
+        
         Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
         stage.getScene().getStylesheets().add(
             getClass().getResource("/css/style.css").toExternalForm()
