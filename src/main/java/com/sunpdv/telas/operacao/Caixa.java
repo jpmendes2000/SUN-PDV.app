@@ -13,7 +13,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.control.Alert.AlertType;
@@ -44,10 +43,12 @@ public class Caixa {
     private VBox historicoContainer;
     private CheckBox clienteNaoIdentificadoCheck;
     private TextField codigoProdutoField;
-    private Label totalLabel; // Movido para o topo
-    private Button toggleButton; // Botão único para alternar entre telas
-    private boolean isHistoricoAtivo = true; // Histórico como padrão
-    private ListView<ItemVenda> listaProdutos; // Para acesso global
+    private Label totalLabel;
+    private Button toggleButton;
+    private boolean isHistoricoAtivo = true;
+    private ListView<ItemVenda> listaProdutos;
+    private TextField documentoField;
+    private ToggleGroup clienteGroup;
 
     private static class CustomConfirmationAlert extends Alert {
         public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
@@ -57,9 +58,13 @@ public class Caixa {
             this.setHeaderText(header);
             this.setContentText(content);
             Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
-            stage.getScene().getStylesheets().add(
-                getClass().getResource("/css/style.css").toExternalForm()
-            );
+            try {
+                stage.getScene().getStylesheets().add(
+                    getClass().getResource("/css/style.css").toExternalForm()
+                );
+            } catch (Exception e) {
+                System.err.println("Erro ao carregar CSS: " + e.getMessage());
+            }
         }
     }
 
@@ -81,7 +86,7 @@ public class Caixa {
         }
     }
 
-    private static class ItemVenda {
+    public static class ItemVenda {
         String produto;
         String codigoBarras;
         int quantidade;
@@ -93,10 +98,13 @@ public class Caixa {
             this.quantidade = quantidade;
             this.preco = preco;
         }
+        
+        public double getTotal() {
+            return quantidade * preco;
+        }
     }
 
     public Caixa() {
-        // Inicializa os containers principais
         novaVendaContainer = new VBox(10);
         historicoContainer = new VBox(10);
         listaVendas = new VBox(10);
@@ -123,39 +131,42 @@ public class Caixa {
             HBox leftContent = new HBox(10, icon, textLabel);
             leftContent.setAlignment(Pos.CENTER_LEFT);
 
-            HBox content = new HBox(leftContent, new Region(), indicatorContainer);
+            HBox content = new HBox(leftContent, indicatorContainer);
             content.setAlignment(Pos.CENTER_LEFT);
-            HBox.setHgrow(content.getChildren().get(1), Priority.ALWAYS);
+            content.setSpacing(10);
 
             Button btn = new Button();
             btn.setGraphic(content);
             btn.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-            btn.setStyle("-fx-background-color: transparent;");
+            btn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: bold;");
             btn.setPrefWidth(280);
             btn.setPrefHeight(42);
 
             btn.setOnMouseEntered(e -> {
-                btn.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18));");
-                indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64);");
+                btn.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18)); -fx-text-fill: white; -fx-font-weight: bold;");
+                indicatorContainer.setStyle("-fx-background-color: #FFCC00;");
             });
             btn.setOnMouseExited(e -> {
-                btn.setStyle("-fx-background-color: transparent;");
+                btn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: bold;");
                 indicatorContainer.setStyle("-fx-background-color: transparent;");
             });
 
             return btn;
         } catch (Exception e) {
-            return new Button(texto);
+            Button btn = new Button(texto);
+            btn.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
+            return btn;
         }
     }
 
-    private List<Venda> carregarVendas() {
-        List<Venda> vendas = new ArrayList<>();
-        String query = "SELECT v.ID_Vendas, p.Forma_Pagamento, v.Subtotal, v.Total, " +
-                      "CONVERT(VARCHAR, v.DataHora_Venda, 103) AS Data " +
-                      "FROM vendas v " +
-                      "JOIN pagamento p ON v.ID_Pagamento = p.ID_Pagamento " +
-                      "ORDER BY v.DataHora_Venda DESC";
+private List<Venda> carregarVendas() {
+    List<Venda> vendas = new ArrayList<>();
+    String query = "SELECT v.ID_Vendas, fp.Forma_Pagamento, v.Subtotal, v.Total, " +
+                   "CONVERT(VARCHAR, v.Data_Venda, 103) AS Data " +
+                   "FROM vendas v " +
+                   "JOIN pagamentos p ON v.ID_Pagamentos = p.ID_Pagamentos " +
+                   "JOIN forma_pagamento fp ON p.ID_Forma_Pagamento = fp.ID_Forma_Pagamento " +
+                   "ORDER BY v.Data_Venda DESC";
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement stmt = conn.prepareStatement(query);
@@ -229,25 +240,21 @@ public class Caixa {
     }
 
     private void setupNovaVendaUI() {
-        // Inicializa todos os componentes primeiro
         clienteNaoIdentificadoCheck = new CheckBox("Cliente não identificado");
         clienteNaoIdentificadoCheck.setSelected(true);
         clienteNaoIdentificadoCheck.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
 
-        // Total da venda - agora no topo
         totalLabel = new Label("SUBTOTAL: R$ 0,00");
         totalLabel.setStyle("-fx-text-fill: #c7eefaff; -fx-font-weight: bold; -fx-font-size: 30px;");
 
-        // Seção de identificação do cliente + Total
         VBox clienteBox = new VBox(15);
         clienteBox.setStyle("-fx-background-color: #00536d; -fx-padding: 20; -fx-background-radius: 5;");
         
-        // Container para o subtotal
         HBox subtotalContainer = new HBox();
         subtotalContainer.setAlignment(Pos.CENTER);
         subtotalContainer.getChildren().add(totalLabel);
         
-        ToggleGroup clienteGroup = new ToggleGroup();
+        clienteGroup = new ToggleGroup();
         RadioButton rbCPF = new RadioButton("CPF");
         rbCPF.setToggleGroup(clienteGroup);
         rbCPF.setStyle("-fx-text-fill: white;");
@@ -258,7 +265,7 @@ public class Caixa {
         rbRG.setToggleGroup(clienteGroup);
         rbRG.setStyle("-fx-text-fill: white;");
         
-        TextField documentoField = new TextField();
+        documentoField = new TextField();
         documentoField.setPromptText("Número do documento");
         documentoField.setMaxWidth(300);
         documentoField.setDisable(true);
@@ -274,7 +281,7 @@ public class Caixa {
                 documentoField.clear();
             }
         });
-        
+
         rbCPF.selectedProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal) {
                 documentoField.setPromptText("Digite o CPF (somente números)");
@@ -293,12 +300,10 @@ public class Caixa {
             }
         });
 
-        // Lista de produtos - agora como variável de instância
         listaProdutos = new ListView<>();
-        listaProdutos.setPrefHeight(450); // Aumentada a altura
+        listaProdutos.setPrefHeight(450);
         listaProdutos.setCellFactory(lv -> new ItemVendaCell());
         
-        // Menu de contexto para itens
         ContextMenu contextMenu = new ContextMenu();
         MenuItem alterarQuantidadeItem = new MenuItem("Alterar Quantidade");
         MenuItem removerItem = new MenuItem("Remover");
@@ -346,7 +351,6 @@ public class Caixa {
             }
         });
 
-        // Campo para adicionar produto
         HBox adicionarProdutoBox = new HBox(10);
         adicionarProdutoBox.setAlignment(Pos.CENTER_LEFT);
         
@@ -393,52 +397,50 @@ public class Caixa {
             }
         });
 
+        codigoProdutoField.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER) {
+                String codigo = codigoProdutoField.getText().trim();
+                if (!codigo.isEmpty()) {
+                    try {
+                        String produto = buscarProdutoPorCodigo(codigo);
+                        if (produto != null) {
+                            double preco = buscarPrecoProduto(codigo);
+                            int quantidade = quantidadeSpinner.getValue();
+                            
+                            Optional<ItemVenda> existente = listaProdutos.getItems().stream()
+                                .filter(item -> item.codigoBarras.equals(codigo))
+                                .findFirst();
+                            
+                            if (existente.isPresent()) {
+                                ItemVenda item = existente.get();
+                                item.quantidade += quantidade;
+                                listaProdutos.refresh();
+                            } else {
+                                listaProdutos.getItems().add(new ItemVenda(produto, codigo, quantidade, preco));
+                            }
+                            
+                            codigoProdutoField.clear();
+                            codigoProdutoField.requestFocus();
+                        } else {
+                            mostrarAlerta("Produto não encontrado", "Nenhum produto encontrado com o código: " + codigo, AlertType.ERROR);
+                        }
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                        mostrarAlerta("Erro ao buscar produto", "Detalhes: " + ex.getMessage(), AlertType.ERROR);
+                    }
+                }
+            }
+        });
+
         adicionarProdutoBox.getChildren().addAll(
             new Label("Código:"), codigoProdutoField,
             new Label("Qtd:"), quantidadeSpinner, btnAdicionar
         );
 
-        // Botões (apenas Finalizar e Cancelar)
         Button btnFinalizar = new Button("Finalizar Venda");
         btnFinalizar.setStyle("-fx-background-color: #28a745; -fx-text-fill: white;");
         btnFinalizar.setPadding(new Insets(10, 60, 10, 60));
-        btnFinalizar.setOnAction(e -> {
-            try {
-                if (listaProdutos.getItems().isEmpty()) {
-                    mostrarAlerta("Venda vazia", "Adicione pelo menos um produto para finalizar a venda.", AlertType.ERROR);
-                    return;
-                }
-
-                double totalVenda = calcularTotal(listaProdutos);
-
-                if (rbCPF.isSelected() && !documentoField.getText().isEmpty() && !validarCPF(documentoField.getText())) {
-                    mostrarAlerta("CPF inválido", "O CPF digitado não é válido.", AlertType.ERROR);
-                    return;
-                }
-
-                String documento = clienteNaoIdentificadoCheck.isSelected() ? "" : documentoField.getText();
-                String tipoDocumento = clienteNaoIdentificadoCheck.isSelected() ? "" : 
-                                     (rbCPF.isSelected() ? "CPF" : (rbCNPJ.isSelected() ? "CNPJ" : "RG"));
-
-                // Por enquanto, salvamos sem forma de pagamento (será implementado em outra tela)
-                // salvarVendaNoBanco(documento, tipoDocumento, listaProdutos, null, 0, null, 0, totalVenda);
-                
-                // Limpar campos após venda
-                listaProdutos.getItems().clear();
-                totalLabel.setText("SUBTOTAL: R$ 0,00");
-                documentoField.clear();
-                clienteNaoIdentificadoCheck.setSelected(true);
-                
-                // Recarregar histórico
-                vendas = carregarVendas();
-                aplicarFiltros();
-                
-                mostrarAlerta("Venda registrada", "Produtos adicionados ao carrinho! Finalize o pagamento na próxima tela.", AlertType.INFORMATION);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                mostrarAlerta("Erro ao registrar venda", "Detalhes: " + ex.getMessage(), AlertType.ERROR);
-            }
-        });
+        btnFinalizar.setOnAction(e -> finalizarVenda());
 
         Button btnCancelar = new Button("Cancelar Venda");
         btnCancelar.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white;");
@@ -452,16 +454,14 @@ public class Caixa {
         HBox botoes = new HBox(10, btnFinalizar, btnCancelar);
         botoes.setAlignment(Pos.CENTER);
 
-        // Adicionar componentes ao clienteBox
         clienteBox.getChildren().addAll(
-            subtotalContainer, // Subtotal no topo
+            subtotalContainer,
             clienteNaoIdentificadoCheck,
             new Label("Identificação do Cliente:"),
             tipoDocumentoBox,
             documentoField
         );
 
-        // Container de produtos
         VBox produtosBox = new VBox(10);
         produtosBox.setStyle("-fx-background-color: #00536d; -fx-padding: 15; -fx-background-radius: 5;");
         produtosBox.getChildren().addAll(
@@ -470,7 +470,6 @@ public class Caixa {
             listaProdutos
         );
 
-        // Atualizar total quando itens mudarem
         listaProdutos.getItems().addListener((javafx.collections.ListChangeListener.Change<? extends ItemVenda> c) -> {
             double total = calcularTotal(listaProdutos);
             totalLabel.setText("SUBTOTAL: R$ " + String.format("%.2f", total));
@@ -481,6 +480,51 @@ public class Caixa {
             produtosBox,
             botoes
         );
+    }
+
+    private void finalizarVenda() {
+        try {
+            if (listaProdutos.getItems().isEmpty()) {
+                mostrarAlerta("Venda vazia", "Adicione pelo menos um produto para finalizar a venda.", AlertType.ERROR);
+                return;
+            }
+
+            double totalVenda = calcularTotal(listaProdutos);
+
+            if (rbCPF.isSelected() && !documentoField.getText().isEmpty() && !validarCPF(documentoField.getText())) {
+                mostrarAlerta("CPF inválido", "O CPF digitado não é válido.", AlertType.ERROR);
+                return;
+            }
+
+            String documento = clienteNaoIdentificadoCheck.isSelected() ? "" : documentoField.getText();
+            String tipoDocumento = clienteNaoIdentificadoCheck.isSelected() ? "" : 
+                                 (rbCPF.isSelected() ? "CPF" : (rbCNPJ.isSelected() ? "CNPJ" : "RG"));
+
+            // Abrir tela de finalização de vendas
+            FinalizarVenda finalizarVenda = new FinalizarVenda(
+                documento, 
+                tipoDocumento, 
+                new ArrayList<>(listaProdutos.getItems()), 
+                totalVenda
+            );
+            
+            finalizarVenda.mostrar(stage, this);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            mostrarAlerta("Erro ao finalizar venda", "Detalhes: " + ex.getMessage(), AlertType.ERROR);
+        }
+    }
+
+    public void limparVendaAtual() {
+        listaProdutos.getItems().clear();
+        totalLabel.setText("SUBTOTAL: R$ 0,00");
+        documentoField.clear();
+        clienteNaoIdentificadoCheck.setSelected(true);
+        
+        // Recarregar histórico
+        vendas = carregarVendas();
+        aplicarFiltros();
     }
 
     private class ItemVendaCell extends ListCell<ItemVenda> {
@@ -621,7 +665,6 @@ public class Caixa {
         Label totalLabel = new Label("Total: R$ " + String.format("%.2f", venda.total));
         totalLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;");
 
-        // Tabela de itens
         TableView<ItemVenda> tabelaItens = new TableView<>();
         
         TableColumn<ItemVenda, String> colProduto = new TableColumn<>("Produto");
@@ -637,7 +680,7 @@ public class Caixa {
         colPreco.setCellValueFactory(cellData -> new javafx.beans.property.SimpleDoubleProperty(cellData.getValue().preco).asObject());
         
         TableColumn<ItemVenda, Double> colTotal = new TableColumn<>("Total");
-        colTotal.setCellValueFactory(cellData -> new javafx.beans.property.SimpleDoubleProperty(cellData.getValue().quantidade * cellData.getValue().preco).asObject());
+        colTotal.setCellValueFactory(cellData -> new javafx.beans.property.SimpleDoubleProperty(cellData.getValue().getTotal()).asObject());
         
         tabelaItens.getColumns().addAll(colProduto, colCodigo, colQuantidade, colPreco, colTotal);
         tabelaItens.getItems().addAll(venda.itens);
@@ -692,7 +735,7 @@ public class Caixa {
     }
 
     private void carregarFormasPagamento(ComboBox<String> combo) {
-        String query = "SELECT Forma_Pagamento FROM pagamento";
+        String query = "SELECT Forma_Pagamento FROM forma_pagamento";
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement stmt = conn.prepareStatement(query);
              ResultSet rs = stmt.executeQuery()) {
@@ -715,12 +758,10 @@ public class Caixa {
 
     private void alternarTela() {
         if (isHistoricoAtivo) {
-            // Mudando para Nova Venda
             mostrarNovaVenda();
             toggleButton.setText("Histórico");
             isHistoricoAtivo = false;
         } else {
-            // Mudando para Histórico
             mostrarHistorico();
             toggleButton.setText("Nova Venda");
             isHistoricoAtivo = true;
@@ -730,7 +771,6 @@ public class Caixa {
     private void mostrarNovaVenda() {
         novaVendaContainer.setVisible(true);
         historicoContainer.setVisible(false);
-        // Focar no campo de código quando abrir nova venda
         if (codigoProdutoField != null) {
             codigoProdutoField.requestFocus();
         }
@@ -739,7 +779,6 @@ public class Caixa {
     private void mostrarHistorico() {
         novaVendaContainer.setVisible(false);
         historicoContainer.setVisible(true);
-        // Recarregar dados quando mostrar histórico
         vendas = carregarVendas();
         aplicarFiltros();
     }
@@ -747,10 +786,8 @@ public class Caixa {
     public void show(Stage stage) {
         this.stage = stage;
         
-        // Inicializa os dados
         vendas = carregarVendas();
         
-        // Configura a UI
         setupNovaVendaUI();
         setupHistoricoUI();
 
@@ -760,20 +797,17 @@ public class Caixa {
         stage.setWidth(screenBounds.getWidth());
         stage.setHeight(screenBounds.getHeight());
 
-        // Menu lateral
         VBox leftMenu = new VBox();
         leftMenu.setPrefWidth(280);
         leftMenu.setStyle("-fx-background-color: #00536d;");
 
         try {
-            // Logo SUN PDV
             Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
             ImageView logoView = new ImageView(logo);
             logoView.setFitWidth(120);
             logoView.setPreserveRatio(true);
             logoView.setStyle("-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 0);");
 
-            // Título da tela
             Label titulonaABA = new Label("Caixa");
             titulonaABA.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 18px; -fx-font-weight: bold;");
 
@@ -781,7 +815,6 @@ public class Caixa {
             logoBox.setAlignment(Pos.CENTER);
             logoBox.setPadding(new Insets(20, 0, 5, 0));
 
-            // Labels para hora e data
             Label horaLabel = new Label();
             horaLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 16px; -fx-font-weight: bold;");
             horaLabel.setAlignment(Pos.CENTER);
