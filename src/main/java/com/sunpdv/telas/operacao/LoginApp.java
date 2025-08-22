@@ -1,25 +1,14 @@
 package com.sunpdv.telas.operacao;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.Base64;
-
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
-
 import com.sunpdv.model.AutenticarUser;
 import com.sunpdv.telas.home.TelaHomeADM;
 import com.sunpdv.telas.home.TelaHomeFUN;
 import com.sunpdv.telas.home.TelaHomeMOD;
-
 import javafx.animation.KeyFrame;
 import javafx.animation.ScaleTransition;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -38,7 +27,6 @@ import javafx.util.Duration;
 
 public class LoginApp extends Application {
 
-    private static final String AES_KEY = "MinhaChaveSuperSegura1234567890!";
     private int tentativas = 0;
     private long tempoBloqueio = 0;
     private static final int MAX_TENTATIVAS = 6;
@@ -52,11 +40,9 @@ public class LoginApp extends Application {
     public static void main(String[] args) {
         try {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            try (Connection conn = DriverManager.getConnection(url, USER, PASSWORD)) {
-                System.out.println("Conexão com banco local OK!");
-            }
-        } catch (Exception e) {
-            System.err.println("Erro ao conectar no banco:");
+            System.out.println("Driver JDBC carregado com sucesso!");
+        } catch (ClassNotFoundException e) {
+            System.err.println("Erro ao carregar driver JDBC: " + e.getMessage());
             e.printStackTrace();
         }
         launch(args);
@@ -67,27 +53,29 @@ public class LoginApp extends Application {
         try {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
         } catch (ClassNotFoundException e) {
+            System.err.println("Erro ao carregar driver JDBC: " + e.getMessage());
             e.printStackTrace();
             System.exit(1);
         }
 
+        // Componentes da interface
         TextField emailField = new TextField();
         emailField.setPromptText("E-mail");
 
         PasswordField senhaField = new PasswordField();
-        senhaField.setPromptText("Senha");
+        senhaField.setPromptText("Senha         min: 8 dígitos");
 
         TextField senhaVisivelField = new TextField();
-        senhaVisivelField.setPromptText("Senha");
+        senhaVisivelField.setPromptText("Senha         min: 8 dígitos");
         senhaVisivelField.setManaged(false);
         senhaVisivelField.setVisible(false);
-
         senhaVisivelField.textProperty().bindBidirectional(senhaField.textProperty());
 
         ToggleButton olhoBtn = new ToggleButton();
         olhoBtn.getStyleClass().add("olho-btn");
         olhoBtn.setStyle("-fx-background-color: transparent; -fx-padding: 5 5 5 5;");
 
+        // Ícones
         String caminhoVisivel = getClass().getResource("/img/icon/visibilidade.png").toExternalForm();
         String caminhoNaoVisivel = getClass().getResource("/img/icon/not-visibilidade.png").toExternalForm();
         String entrarIcon = getClass().getResource("/img/icon/entrar.png").toExternalForm();
@@ -101,6 +89,7 @@ public class LoginApp extends Application {
         entrarIconView.setFitHeight(24);
         entrarIconView.setFitWidth(24);
 
+        // Ação do botão de visibilidade da senha
         olhoBtn.setOnAction(e -> {
             boolean mostrar = olhoBtn.isSelected();
             senhaField.setVisible(!mostrar);
@@ -125,8 +114,13 @@ public class LoginApp extends Application {
         Button loginBtn = new Button("Entrar", entrarIconView);
         loginBtn.setDisable(true);
 
+        // Botão Criar Usuário
+        Button criarUsuarioBtn = new Button("Criar Usuário");
+        criarUsuarioBtn.getStyleClass().add("criar-usuario-btn");
+
         Label statusLabel = new Label();
 
+        // Verificação de campos preenchidos
         Runnable verificarCampos = () -> {
             boolean preenchido = !emailField.getText().trim().isEmpty() &&
                     !(senhaField.isVisible() ? senhaField.getText() : senhaVisivelField.getText()).trim().isEmpty();
@@ -137,34 +131,32 @@ public class LoginApp extends Application {
         senhaField.textProperty().addListener((obs, o, n) -> verificarCampos.run());
         senhaVisivelField.textProperty().addListener((obs, o, n) -> verificarCampos.run());
 
+        // Logo
         Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(100);
         logoView.setPreserveRatio(true);
 
         Image logomini = new Image(getClass().getResourceAsStream("/img/logo/logominuscula.png"));
-        ImageView logoView3 = new ImageView(logomini);
-        logoView3.setFitWidth(100);
-        logoView3.setPreserveRatio(true);
-
         stage.getIcons().add(logomini);
 
-        VBox root = new VBox(15, logoView, emailLinha, senhaLinha, loginBtn, statusLabel);
+        // Layout
+        VBox root = new VBox(8, logoView, emailLinha, senhaLinha, loginBtn, criarUsuarioBtn, statusLabel);
         root.setAlignment(Pos.CENTER);
         root.setPadding(new Insets(20));
 
         Scene scene = new Scene(root, 680, 380);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
+        // Ação de tecla Enter
         scene.setOnKeyPressed(event -> {
-            if (event.getCode() == javafx.scene.input.KeyCode.ENTER) {
-                if (!loginBtn.isDisabled()) {
-                    loginBtn.fire();
-                }
+            if (event.getCode() == javafx.scene.input.KeyCode.ENTER && !loginBtn.isDisabled()) {
+                loginBtn.fire();
                 event.consume();
             }
         });
 
+        // Animação do botão de login
         loginBtn.setOnMouseEntered(e -> {
             ScaleTransition st = new ScaleTransition(Duration.millis(150), loginBtn);
             st.setToX(1.05);
@@ -178,6 +170,17 @@ public class LoginApp extends Application {
             st.play();
         });
 
+        // No método start da classe LoginApp, na ação do botão Criar Usuário
+        criarUsuarioBtn.setOnAction(e -> {
+            try {
+                new Cadastro().mostrar(stage); // Corrigido de Cadastro para TelaCadastro
+            } catch (Exception ex) {
+                statusLabel.setText("Erro ao abrir tela de cadastro: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        });
+
+        // Ação do botão de login
         loginBtn.setOnAction(e -> {
             String email = emailField.getText().trim();
             String senha = senhaField.isVisible() ? senhaField.getText() : senhaVisivelField.getText();
@@ -194,9 +197,9 @@ public class LoginApp extends Application {
                 @Override
                 protected String call() {
                     try {
-                        return autenticarUsuario(email, senha);
+                        boolean autenticado = AutenticarUser.autenticar(email, senha);
+                        return autenticado ? "sucesso" : "E-mail ou senha inválidos.";
                     } catch (Exception ex) {
-                        ex.printStackTrace();
                         return "Erro: " + ex.getMessage();
                     }
                 }
@@ -204,29 +207,36 @@ public class LoginApp extends Application {
 
             loginTask.setOnSucceeded(event -> {
                 String resultado = loginTask.getValue();
+                System.out.println("Resultado da autenticação: " + resultado);
                 if ("sucesso".equalsIgnoreCase(resultado)) {
                     tentativas = 0;
                     try {
-                        switch (AutenticarUser.getCargo()) {
+                        String cargo = AutenticarUser.getCargo();
+                        System.out.println("Cargo do usuário: " + cargo);
+                        switch (cargo != null ? cargo : "") {
                             case "Administrador":
+                                System.out.println("Abrindo TelaHomeADM para: " + AutenticarUser.getNome());
                                 new TelaHomeADM(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar(stage);
                                 break;
                             case "Moderador":
+                                System.out.println("Abrindo TelaHomeMOD para: " + AutenticarUser.getNome());
                                 new TelaHomeMOD(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar(stage);
                                 break;
                             case "Funcionario":
+                                System.out.println("Abrindo TelaHomeFUN para: " + AutenticarUser.getNome());
                                 new TelaHomeFUN(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar(stage);
                                 break;
                             default:
-                                statusLabel.setText("Cargo não reconhecido: " + AutenticarUser.getCargo());
+                                statusLabel.setText("Cargo não reconhecido: " + cargo);
+                                System.err.println("Cargo inválido: " + cargo);
                                 loginBtn.setDisable(false);
                                 return;
                         }
-                        ((Stage) loginBtn.getScene().getWindow()).close();
                     } catch (Exception ex) {
-                        statusLabel.setText("Erro ao abrir a tela principal");
-                        loginBtn.setDisable(false);
+                        statusLabel.setText("Erro ao abrir a tela principal: " + ex.getMessage());
+                        System.err.println("Erro ao abrir tela principal: " + ex.getMessage());
                         ex.printStackTrace();
+                        loginBtn.setDisable(false);
                     }
                 } else {
                     tentativas++;
@@ -241,7 +251,9 @@ public class LoginApp extends Application {
             });
 
             loginTask.setOnFailed(event -> {
-                statusLabel.setText("Erro de login.");
+                String erro = loginTask.getException() != null ? loginTask.getException().getMessage() : "Erro desconhecido";
+                statusLabel.setText("Erro de login: " + erro);
+                System.err.println("Erro no loginTask: " + erro);
                 loginBtn.setDisable(false);
             });
 
@@ -251,6 +263,7 @@ public class LoginApp extends Application {
         stage.setScene(scene);
         stage.setTitle("Login - SUN PDV");
         stage.setResizable(true);
+        Platform.runLater(() -> root.requestFocus());
         stage.show();
     }
 
@@ -268,62 +281,5 @@ public class LoginApp extends Application {
         }));
         contagemRegressiva.setCycleCount(Timeline.INDEFINITE);
         contagemRegressiva.play();
-    }
-
-    private String autenticarUsuario(String email, String senha) throws Exception {
-        String emailCriptografado = criptografarAES(email);
-        String senhaHash = hashSHA256(senha);
-
-        try (Connection conn = DriverManager.getConnection(url, USER, PASSWORD)) {
-            String sql = "SELECT l.Nome, c.Cargo, p.permissao " +
-                         "FROM login_sistema l " +
-                         "INNER JOIN Cargo c ON l.ID_Cargo = c.ID_Cargo " +
-                         "INNER JOIN Permissao p ON l.ID_Permissao = p.ID_Permissao " +
-                         "WHERE l.Email = ? AND l.Senha = ?";
-
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, emailCriptografado);
-                stmt.setString(2, senhaHash);
-
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        String nome = rs.getString("Nome");
-                        String cargo = rs.getString("Cargo");
-                        String permissao = rs.getString("permissao");
-
-                        if (!"Aceito".equalsIgnoreCase(permissao)) {
-                            return "Acesso negado";
-                        }
-
-                        AutenticarUser.setNome(nome);
-                        AutenticarUser.setCargo(cargo);
-                        return "sucesso";
-                    } else {
-                        return "E-mail ou senha inválidos.";
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Erro ao autenticar: " + e.getMessage();
-        }
-    }
-
-    private String criptografarAES(String texto) throws Exception {
-        SecretKeySpec chave = new SecretKeySpec(AES_KEY.getBytes(), "AES");
-        Cipher cipher = Cipher.getInstance("AES");
-        cipher.init(Cipher.ENCRYPT_MODE, chave);
-        byte[] textoCriptografado = cipher.doFinal(texto.getBytes("UTF-8"));
-        return Base64.getEncoder().encodeToString(textoCriptografado);
-    }
-
-    private String hashSHA256(String texto) throws NoSuchAlgorithmException {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] hashBytes = digest.digest(texto.getBytes());
-        StringBuilder sb = new StringBuilder();
-        for (byte b : hashBytes) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
     }
 }
