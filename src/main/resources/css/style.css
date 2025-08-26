@@ -287,3 +287,39 @@
     -fx-border-color: #a9cce3;
     -fx-effect: none;
 }
+
+.criar-usuario-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #c8c966;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+    -fx-underline: false;
+    -fx-padding: 0;
+    -fx-alignment: center;
+    -fx-transition: all 0.3s ease;
+}
+
+.criar-usuario-btn:hover {
+    -fx-background-color: transparent;
+    -fx-text-fill: #a9cce3;
+    -fx-underline: false;
+}
+
+
+.voltar-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #c8c966;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+    -fx-underline: false;
+    -fx-padding: 0;
+    -fx-alignment: center;
+    -fx-transition: all 0.3s ease;
+}
+
+
+.voltar-btn:hover {
+    -fx-background-color: transparent;
+    -fx-text-fill: #a9cce3;
+    -fx-underline: false;
+}
