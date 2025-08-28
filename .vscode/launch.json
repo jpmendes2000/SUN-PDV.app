@@ -1,8 +1,13 @@
 {
     "version": "0.2.0",
     "configurations": [
-        
-
+        {
+            "type": "java",
+            "name": "TesteFinalizarVenda",
+            "request": "launch",
+            "mainClass": "com.sunpdv/com.sunpdv.telas.operacao.TesteFinalizarVenda",
+            "projectName": "pdv"
+        },
         {
             "version": "0.2.0",
             "configurations": [

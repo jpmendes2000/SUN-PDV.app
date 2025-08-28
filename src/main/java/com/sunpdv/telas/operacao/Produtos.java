@@ -511,7 +511,7 @@ public class Produtos {
         dialog.setTitle(produto == null ? "Adicionar Produto" : "Editar Produto");
 
         TextField txtNome = new TextField();
-        txtNome.setPromptText("Nome do Produto");
+        txtNome.setPromptText("Nome: max 30 caracteres");
         txtNome.setPrefWidth(250);
 
         TextField txtPreco = new TextField();
@@ -691,7 +691,7 @@ public class Produtos {
                 mostrarAlertaErro("Erro ao adicionar", "Erro ao adicionar produto.");
             }
         } catch (SQLException e) {
-            mostrarAlertaErro("Erro no banco de dados", "Erro ao adicionar produto: " + e.getMessage());
+            mostrarAlertaErro("Erro ao adicionar produto", "Produto não cadastrado" + e.getMessage());
         }
     }
 
@@ -720,7 +720,7 @@ public class Produtos {
                 mostrarAlertaErro("Erro ao atualizar", "Erro ao atualizar produto.");
             }
         } catch (SQLException e) {
-            mostrarAlertaErro("Erro no banco de dados", "Erro ao atualizar produto: " + e.getMessage());
+            mostrarAlertaErro("Erro ao atualizar produto", "Produto não atualizado" + e.getMessage());
         }
     }
 

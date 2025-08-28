@@ -5,6 +5,7 @@ package com.sunpdv.telas.home;
 import com.sunpdv.model.AutenticarUser;
 import com.sunpdv.telas.operacao.Caixa;
 import com.sunpdv.telas.operacao.Configurar;
+import com.sunpdv.telas.operacao.FinalizarVenda;
 import com.sunpdv.telas.operacao.Produtos;
 import com.sunpdv.telas.operacao.Usuarios;
 
