@@ -401,13 +401,13 @@ public class Caixa {
             new Label("Qtd:"), quantidadeSpinner, btnAdicionar
         );
 
-        btnFinalizar = new Button("Finalizar Venda");
+        btnFinalizar = new Button("  Finalizar");
         btnFinalizar.setStyle("-fx-background-color: #28a745; -fx-text-fill: white;");
         btnFinalizar.setPadding(new Insets(10, 60, 10, 60));
         btnFinalizar.setDisable(true);
         btnFinalizar.setOnAction(e -> finalizarVenda());
 
-        btnCancelar = new Button("Cancelar Venda");
+        btnCancelar = new Button(" Cancelar");
         btnCancelar.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white;");
         btnCancelar.setDisable(true);
         btnCancelar.setOnAction(e -> cancelarVenda());
@@ -778,11 +778,11 @@ public class Caixa {
         filtroBox.setAlignment(Pos.CENTER_LEFT);
 
         listaVendas.setPadding(new Insets(10));
-        listaVendas.setStyle("-fx-background-color: #f5f5f5;");
+        listaVendas.setStyle("-fx-background-color: #003648;");
 
         ScrollPane scrollPane = new ScrollPane(listaVendas);
         scrollPane.setFitToWidth(true);
-        scrollPane.setStyle("-fx-background-color: #f5f5f5;");
+        scrollPane.setStyle("-fx-background-color: #003648;");
 
         historicoContainer.getChildren().addAll(filtroBox, scrollPane);
 
@@ -805,9 +805,73 @@ public class Caixa {
         BorderPane root = new BorderPane();
         root.setStyle("-fx-background-color: #00435a;");
 
-        VBox menuLateral = new VBox(10);
-        menuLateral.setStyle("-fx-background-color: #003648; -fx-padding: 20;");
-        menuLateral.setPrefWidth(300);
+        // ===== MENU LATERAL ESTILIZADO =====
+        VBox menuLateral = new VBox();
+        menuLateral.setPrefWidth(280);
+        menuLateral.setStyle("-fx-background-color: #00536d;");
+
+        // Logo SUN PDV
+        try {
+            Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
+            ImageView logoView = new ImageView(logo);
+            logoView.setFitWidth(120);
+            logoView.setPreserveRatio(true);
+
+            VBox logoBox = new VBox(logoView);
+            logoBox.setAlignment(Pos.CENTER);
+            logoBox.setPadding(new Insets(20, 0, 20, 0));
+            menuLateral.getChildren().add(logoBox);
+        } catch (Exception e) {
+            Label logoText = new Label("SUN PDV");
+            logoText.setStyle("-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;");
+            VBox logoBox = new VBox(logoText);
+            logoBox.setAlignment(Pos.CENTER);
+            logoBox.setPadding(new Insets(20, 0, 20, 0));
+            menuLateral.getChildren().add(logoBox);
+        }
+        
+            // Labels para hora e data
+        Label horaLabel = new Label();
+        horaLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 16px; -fx-font-weight: bold;");
+        horaLabel.setAlignment(Pos.CENTER);
+        horaLabel.setMaxWidth(Double.MAX_VALUE);
+
+        Label dataLabel = new Label();
+        dataLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 14px; -fx-font-weight: bold;");
+        dataLabel.setAlignment(Pos.CENTER);
+        dataLabel.setMaxWidth(Double.MAX_VALUE);
+
+            // VBox para organizar hora acima da data
+        VBox dataHoraBox = new VBox(5, horaLabel, dataLabel);
+        dataHoraBox.setAlignment(Pos.CENTER);
+
+        // Formatadores para hora e data
+        DateTimeFormatter horaFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+        DateTimeFormatter dataFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        // Definir texto inicial
+        LocalDateTime now = LocalDateTime.now();
+        horaLabel.setText(now.format(horaFormatter));
+        dataLabel.setText(now.format(dataFormatter));
+
+        // Atualizar hora e data
+        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+            LocalDateTime currentTime = LocalDateTime.now();
+            horaLabel.setText(currentTime.format(horaFormatter));
+            dataLabel.setText(currentTime.format(dataFormatter));
+        }));
+        timeline.setCycleCount(Timeline.INDEFINITE);
+        timeline.play();
+
+        menuLateral.getChildren().add(dataHoraBox);
+
+            // Espaço para centralizar verticalmente
+        Region espaco = new Region();
+        VBox.setVgrow(espaco, Priority.ALWAYS);
+        menuLateral.getChildren().add(espaco);
+
+
+
 
         Button btnNovaVenda = criarBotaoLateral("Nova Venda", "/icons/nova-venda.png");
         btnNovaVenda.setOnAction(e -> {
@@ -836,33 +900,10 @@ public class Caixa {
 
         menuLateral.getChildren().addAll(btnNovaVenda, btnHistorico, btnSair);
 
-        toggleButton = new Button("Histórico");
-        toggleButton.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-weight: bold;");
-        toggleButton.setPadding(new Insets(10, 20, 10, 20));
-        toggleButton.setOnAction(e -> {
-            if (isHistoricoAtivo) {
-                toggleButton.setText("Histórico");
-                isHistoricoAtivo = false;
-                root.setCenter(novaVendaContainer);
-            } else {
-                toggleButton.setText("Nova Venda");
-                isHistoricoAtivo = true;
-                root.setCenter(historicoContainer);
-                vendas = carregarVendas();
-                aplicarFiltros();
-            }
-        });
-
-        HBox topBar = new HBox(10, toggleButton);
-        topBar.setPadding(new Insets(10));
-        topBar.setAlignment(Pos.CENTER_LEFT);
-        topBar.setStyle("-fx-background-color: #00435a;");
-
         setupNovaVendaUI();
         setupHistoricoUI();
 
         root.setLeft(menuLateral);
-        root.setTop(topBar);
         root.setCenter(isHistoricoAtivo ? historicoContainer : novaVendaContainer);
 
         Scene scene = new Scene(root, 1280, 720);
@@ -877,6 +918,8 @@ public class Caixa {
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
         stage.setX((screenBounds.getWidth() - 1280) / 2);
         stage.setY((screenBounds.getHeight() - 720) / 2);
+
+        stage.setFullScreen(true);
 
         stage.show();
     }
