@@ -673,7 +673,7 @@ public class Caixa {
     private VBox criarPainelVenda(Venda venda) {
         VBox painel = new VBox(5);
         painel.setPadding(new Insets(10));
-        painel.setStyle("-fx-background-color: #ffffff; -fx-border-color: #d3d3d3; -fx-border-radius: 5; -fx-background-radius: 5;");
+        painel.setStyle("-fx-background-color: #00536d; -fx-border-color: #00536d; -fx-border-radius: 5; -fx-background-radius: 5;");
 
         Label idLabel = new Label("Venda #" + venda.id);
         idLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #00536d;");
@@ -718,7 +718,7 @@ public class Caixa {
 
         VBox detalhesBox = new VBox(10);
         detalhesBox.setPadding(new Insets(20));
-        detalhesBox.setStyle("-fx-background-color: #f5f5f5;");
+        detalhesBox.setStyle("-fx-background-color: #00536d;");
 
         Label idLabel = new Label("Venda #" + venda.id);
         idLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #00536d;");
