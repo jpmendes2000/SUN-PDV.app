@@ -22,6 +22,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -36,7 +37,8 @@ public class Configurar {
     private static class CustomConfirmationAlert extends Alert {
         public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
             super(AlertType.CONFIRMATION);
-            this.initOwner(owner);
+            this.initOwner(owner); // IMPORTANTE: deve ser o Stage correto
+            this.initModality(Modality.WINDOW_MODAL); // ou APPLICATION_MODAL
             this.setTitle(title);
             this.setHeaderText(header);
             this.setContentText(content);
@@ -208,52 +210,9 @@ public class Configurar {
         HBox botoesLogo = new HBox(10, botoesStack, imageContainer);
         botoesLogo.setAlignment(Pos.CENTER_LEFT);
 
-        // Configuração de Taxas de Pagamento
-        Label tituloTaxas = new Label("Configuração de Taxas de Pagamento");
-        tituloTaxas.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 18px; -fx-font-weight: bold;");
-
-        // Taxa para Cartão de Crédito
-        Label lblCredito = new Label("Taxa Crédito");
-        lblCredito.setStyle("-fx-text-fill: #a9cce3;");
-        TextField txtCredito = new TextField();
-        txtCredito.setPrefWidth(50);
-        txtCredito.setPromptText("0.0");
-        
-        // Taxa para Cartão de Débito
-        Label lblDebito = new Label("Taxa Débito ");
-        lblDebito.setStyle("-fx-text-fill: #a9cce3;");
-        TextField txtDebito = new TextField();
-        txtDebito.setPrefWidth(50);
-        txtDebito.setPromptText("0.0");
-        
-        Button btnSalvarTaxas = new Button("Salvar Taxas");
-        btnSalvarTaxas.getStyleClass().add("BotaoConfig");
-
-        HBox creditoBox = new HBox(10, lblCredito, txtCredito);
-        creditoBox.setAlignment(Pos.CENTER_LEFT);
-        HBox debitoBox = new HBox(10, lblDebito, txtDebito);
-        debitoBox.setAlignment(Pos.CENTER_LEFT);
-        
-        VBox taxasBox = new VBox(10, creditoBox, debitoBox, btnSalvarTaxas);
-        taxasBox.setAlignment(Pos.CENTER_LEFT);
-        taxasBox.setPadding(new Insets(10, 0, 0, 0));
-
-        // Carrega as taxas atuais do banco de dados
-        try {
-            TaxaPagamentoService taxaService = new TaxaPagamentoService();
-            double taxaCredito = taxaService.obterTaxa("Crédito");
-            double taxaDebito = taxaService.obterTaxa("Débito");
-            
-            txtCredito.setText(String.valueOf(taxaCredito));
-            txtDebito.setText(String.valueOf(taxaDebito));
-        } catch (SQLException e) {
-            mostrarAlerta("Erro", "Não foi possível carregar as taxas atuais.", AlertType.ERROR);
-        }
-
         // Layout principal das configurações
         VBox configLayout = new VBox(20, 
-            new VBox(10, titulo, botoesLogo),
-            new VBox(10, tituloTaxas, taxasBox)
+            new VBox(10, titulo, botoesLogo)
         );
         configLayout.setAlignment(Pos.TOP_LEFT);
         configLayout.setPadding(new Insets(20, 0, 0, 30));
@@ -299,10 +258,8 @@ public class Configurar {
                     }
                     imageLogo.setImage(new Image(selectedFile.toURI().toString()));
                     semLogoLabel.setVisible(false);
-                    mostrarAlerta("Logo atualizada", "Logo da empresa atualizada com sucesso!", AlertType.INFORMATION);
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                    mostrarAlerta("Erro", "Erro ao salvar imagem.", AlertType.ERROR);
                 }
             }
         });
@@ -312,32 +269,12 @@ public class Configurar {
             if (logoFile.exists() && logoFile.delete()) {
                 imageLogo.setImage(null);
                 semLogoLabel.setVisible(true);
-                mostrarAlerta("Logo removida", "Logo da empresa foi removida com sucesso!", AlertType.INFORMATION);
             } else {
                 imageLogo.setImage(null);
                 semLogoLabel.setVisible(true);
-                mostrarAlerta("Erro", "Erro ao remover logo ou logo não encontrada.", AlertType.ERROR);
             }
         });
 
-        // Ação para salvar as taxas
-        btnSalvarTaxas.setOnAction(e -> {
-            try {
-                double credito = Double.parseDouble(txtCredito.getText());
-                double debito = Double.parseDouble(txtDebito.getText());
-                
-                TaxaPagamentoService service = new TaxaPagamentoService();
-                service.salvarTaxa("Crédito", credito);
-                service.salvarTaxa("Débito", debito);
-                
-                mostrarAlerta("Sucesso", "Taxas atualizadas com sucesso!", AlertType.INFORMATION);
-            } catch (NumberFormatException ex) {
-                mostrarAlerta("Erro", "Por favor, insira valores numéricos válidos.", AlertType.ERROR);
-            } catch (Exception ex) {
-                mostrarAlerta("Erro", "Não foi possível salvar as taxas.", AlertType.ERROR);
-                ex.printStackTrace();
-            }
-        });
 
         btnVoltarHome.setOnAction(e -> {
             try {
