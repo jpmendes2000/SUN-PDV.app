@@ -323,3 +323,34 @@
     -fx-text-fill: #a9cce3;
     -fx-underline: false;
 }
+
+
+/* ===== BOTÃO TOGGLE (mesmo estilo da barra lateral) ===== */
+.botao-lateral {
+    -fx-background-color: transparent;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.botao-lateral:hover {
+    -fx-background-color: linear-gradient(to left,
+        rgba(192, 151, 39, 0.39),
+        rgba(232, 186, 35, 0.18));
+}
+
+/* Texto interno */
+.botao-lateral .label {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+/* Barra indicadora lateral */
+.indicador-lateral {
+    -fx-background-color: transparent;
+}
+
+.botao-lateral:hover .indicador-lateral {
+    -fx-background-color: rgba(255, 204, 0, 0.64);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);
+}
