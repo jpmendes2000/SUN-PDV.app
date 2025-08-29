@@ -512,15 +512,15 @@ public class Produtos {
 
         TextField txtNome = new TextField();
         txtNome.setPromptText("Nome do Produto");
-        txtNome.setPrefWidth(250);
+        txtNome.setPrefWidth(350);
 
         TextField txtPreco = new TextField();
         txtPreco.setPromptText("Preço (R$)");
-        txtPreco.setPrefWidth(250);
+        txtPreco.setPrefWidth(350);
 
         TextField txtCodBarras = new TextField();
         txtCodBarras.setPromptText("Código de Barras");
-        txtCodBarras.setPrefWidth(250);
+        txtCodBarras.setPrefWidth(350);
 
         if (produto != null) {
             txtNome.setText(produto.getNome());

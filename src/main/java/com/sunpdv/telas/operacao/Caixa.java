@@ -673,7 +673,7 @@ public class Caixa {
     private VBox criarPainelVenda(Venda venda) {
         VBox painel = new VBox(5);
         painel.setPadding(new Insets(10));
-        painel.setStyle("-fx-background-color: #00536d; -fx-border-color: #00536d; -fx-border-radius: 5; -fx-background-radius: 5;");
+        painel.setStyle("-fx-background-color: #ffffff; -fx-border-color: #00536d; -fx-border-radius: 5; -fx-background-radius: 5;");
 
         Label idLabel = new Label("Venda #" + venda.id);
         idLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #00536d;");
@@ -718,7 +718,7 @@ public class Caixa {
 
         VBox detalhesBox = new VBox(10);
         detalhesBox.setPadding(new Insets(20));
-        detalhesBox.setStyle("-fx-background-color: #00536d;");
+        detalhesBox.setStyle("-fx-background-color: trasparent;");
 
         Label idLabel = new Label("Venda #" + venda.id);
         idLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #00536d;");
@@ -778,11 +778,11 @@ public class Caixa {
         filtroBox.setAlignment(Pos.CENTER_LEFT);
 
         listaVendas.setPadding(new Insets(10));
-        listaVendas.setStyle("-fx-background-color: #003648;");
+        listaVendas.setStyle("-fx-background-color: transparent;");
 
         ScrollPane scrollPane = new ScrollPane(listaVendas);
         scrollPane.setFitToWidth(true);
-        scrollPane.setStyle("-fx-background-color: #003648;");
+        scrollPane.setStyle("-fx-background-color: transparent;");
 
         historicoContainer.getChildren().addAll(filtroBox, scrollPane);
 
@@ -875,19 +875,25 @@ public class Caixa {
 
         Button btnNovaVenda = criarBotaoLateral("Nova Venda", "/icons/nova-venda.png");
         btnNovaVenda.setOnAction(e -> {
-            toggleButton.setText("Histórico");
+            // toggleButton.setText("Histórico"); // Remover esta linha problemática
             isHistoricoAtivo = false;
             root.setCenter(novaVendaContainer);
+            
+            // Focar no campo de código de produto quando entrar na nova venda
+            if (codigoProdutoField != null) {
+                codigoProdutoField.requestFocus();
+            }
         });
 
         Button btnHistorico = criarBotaoLateral("Histórico", "/icons/historico.png");
         btnHistorico.setOnAction(e -> {
-            toggleButton.setText("Nova Venda");
+            // toggleButton.setText("Nova Venda"); // Remover esta linha problemática
             isHistoricoAtivo = true;
             root.setCenter(historicoContainer);
             vendas = carregarVendas();
             aplicarFiltros();
         });
+        
 
         btnSair.setOnAction(e -> {
             CustomConfirmationAlert alert = new CustomConfirmationAlert(stage, "Confirmação", "Deseja sair?", "Isso fechará o sistema.");
