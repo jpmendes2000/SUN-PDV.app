@@ -392,6 +392,27 @@ public class FinalizarVenda {
                 "-fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 6; -fx-padding: 10; -fx-font-size: 14px;"
         );
 
+        pagamentoGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
+        if (newToggle != null) {
+            RadioButton selected = (RadioButton) newToggle;
+            String forma = selected.getText();
+            
+            // Calcule o restante (similar ao atualizarTotalRestante())
+            double totalPago = pagamentos.stream().mapToDouble(p -> p.valor).sum();
+            double restante = Math.max(totalVenda - totalPago, 0);
+            
+            if (forma.equals("Cartão de Débito") || forma.equals("Cartão de Crédito")) {
+                valorField.setText(String.format("%.2f", restante).replace(".", ","));  // Formato com vírgula para Brasil
+                valorField.setEditable(false);  // Não editável
+            } else {
+                valorField.setEditable(true);  // Editável para Dinheiro
+                valorField.clear();  // Opcional: limpa o campo para forçar entrada manual
+            }
+        } else {
+            valorField.setEditable(true);  // Se nada selecionado, volta ao normal
+        }
+    });
+
         Button btnAdicionar = new Button("Adicionar");
         btnAdicionar.setStyle(
                 "-fx-background-color: linear-gradient(to bottom, " + COR_AMARELO + ", #e67e22); " +
@@ -460,7 +481,8 @@ public class FinalizarVenda {
 
     private VBox criarPainelDireito() {
         VBox painel = new VBox(20);
-        painel.setPrefWidth(350);  // Ajustado: aumentado de 250 para 350 para dar mais espaço ao label e evitar truncamento
+        painel.setPrefWidth(420);  // Ajustado
+        painel.setPrefHeight(1100);
         painel.setPadding(new Insets(20, 15, 20, 15));
 
         Background painelBg = new Background(new BackgroundFill(
@@ -515,6 +537,8 @@ public class FinalizarVenda {
         btnFinalizar.setOnAction(e -> finalizarVenda());
 
         painel.getChildren().addAll(titulo, containerLista, totalRestanteLabel, btnFinalizar);
+
+        VBox.setVgrow(containerLista, Priority.ALWAYS);
         return painel;
     }
 
@@ -550,16 +574,19 @@ public class FinalizarVenda {
 
             Button btnRemover = new Button("×");
             btnRemover.setStyle(
-                    "-fx-background-color: " + COR_VERMELHO + "; -fx-text-fill: white; " +
+                    "-fx-background-color: " + 
+                    COR_VERMELHO + 
+                    "; -fx-text-fill: white; " +
                     "-fx-font-weight: bold; " +
-                    "-fx-background-radius: 100%; " +  // Novo: radius 50% para tornar redondo como círculo
-                    "-fx-padding: 0 0 0 0; " +        // Ajustado: padding ainda menor
-                    "-fx-font-size: 10px;"            // Ajustado: fonte menor para caber no círculo
+                    "-fx-background-radius: 7%; " +  // Novo: radius 50% para tornar redondo como círculo
+                    "-fx-padding: 0 4 0 4; " +        // Ajustado: padding ainda menor
+                    "-fx-font-size: 18px;" +           // Ajustado: fonte menor para caber no círculo
+                    "-fx-alignment: center;"
             );
             // Fixos para tamanho pequeno e redondo
-            btnRemover.setPrefSize(5, 20);
-            btnRemover.setMinSize(5, 20);
-            btnRemover.setMaxSize(5, 20);
+            btnRemover.setPrefSize(20, 20);
+            btnRemover.setMinSize(20, 20);
+            btnRemover.setMaxSize(20, 20);
             // Garante que o botão NÃO cresça
             HBox.setHgrow(btnRemover, Priority.NEVER);
 
