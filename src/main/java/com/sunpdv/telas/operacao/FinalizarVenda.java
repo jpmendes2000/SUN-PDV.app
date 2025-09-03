@@ -743,8 +743,8 @@ public class FinalizarVenda {
     }
 
     private int inserirPagamento(Connection conn, String formaPagamento, double valor, double troco) throws SQLException {
-        String sql = "INSERT INTO pagamentos (Qtd_Pagamentos, ID_Forma_Pagamento, Troco, Valor_Recebido) " +
-                "VALUES (1, (SELECT ID_Forma_Pagamento FROM forma_pagamento WHERE Forma_Pagamento = ?), ?, ?)";
+                String sql = "INSERT INTO pagamentos (ID_Forma_Pagamento, Troco, Valor_Recebido) " +
+                "VALUES ((SELECT ID_Forma_Pagamento FROM forma_pagamento WHERE Forma_Pagamento = ?), ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, formaPagamento);
             stmt.setDouble(2, troco);
