@@ -42,7 +42,7 @@ public class FinalizarVenda {
     private static final String DB_PASSWORD = "Senha@12345!";
 
     // Constantes de cores inspiradas no segundo design
-    private static final String COR_FUNDO_PRINCIPAL = "#4834d4";
+    private static final String COR_FUNDO_PRINCIPAL = "#00435a";
     private static final String COR_FUNDO_SECUNDARIO = "#686de0";
     private static final String COR_AZUL_CLARO = "#00a8cc";
     private static final String COR_AZUL_ESCURO = "#00536d";
@@ -85,7 +85,7 @@ public class FinalizarVenda {
         layout.setCenter(areaCentral);
         layout.setRight(painelDireito);
 
-        Scene scene = new Scene(layout, 1000, 700);
+        Scene scene = new Scene(layout, 1720, 780);
         aplicarAnimacaoEntrada(layout);
 
         try {
@@ -95,6 +95,8 @@ public class FinalizarVenda {
         }
 
         stage.setScene(scene);
+
+        stage.setFullScreen(true);
         stage.showAndWait();
     }
 
@@ -197,9 +199,9 @@ public class FinalizarVenda {
             LocalDateTime currentTime = LocalDateTime.now();
             horaLabel.setText(currentTime.format(horaFormatter));
             dataLabel.setText(currentTime.format(dataFormatter));
-        });
+        }));
         timeline.setCycleCount(Timeline.INDEFINITE);
-        timeline.play();
+        timeline.play();        
 
         menuLateral.getChildren().add(dataHoraBox);
 
@@ -458,7 +460,7 @@ public class FinalizarVenda {
 
     private VBox criarPainelDireito() {
         VBox painel = new VBox(20);
-        painel.setPrefWidth(250);
+        painel.setPrefWidth(350);  // Ajustado: aumentado de 250 para 350 para dar mais espaço ao label e evitar truncamento
         painel.setPadding(new Insets(20, 15, 20, 15));
 
         Background painelBg = new Background(new BackgroundFill(
@@ -543,12 +545,24 @@ public class FinalizarVenda {
 
             Label lblPagamento = new Label(p.forma + ": R$ " + String.format("%.2f", p.valor));
             lblPagamento.setStyle("-fx-text-fill: white; -fx-font-size: 13px;");
+            // Novo: faz o label crescer para ocupar espaço e evitar truncamento sem quebrar linhas
+            HBox.setHgrow(lblPagamento, Priority.ALWAYS);
 
             Button btnRemover = new Button("×");
             btnRemover.setStyle(
                     "-fx-background-color: " + COR_VERMELHO + "; -fx-text-fill: white; " +
-                            "-fx-font-weight: bold; -fx-background-radius: 3; -fx-padding: 2 6 2 6;"
+                    "-fx-font-weight: bold; " +
+                    "-fx-background-radius: 100%; " +  // Novo: radius 50% para tornar redondo como círculo
+                    "-fx-padding: 0 0 0 0; " +        // Ajustado: padding ainda menor
+                    "-fx-font-size: 10px;"            // Ajustado: fonte menor para caber no círculo
             );
+            // Fixos para tamanho pequeno e redondo
+            btnRemover.setPrefSize(5, 20);
+            btnRemover.setMinSize(5, 20);
+            btnRemover.setMaxSize(5, 20);
+            // Garante que o botão NÃO cresça
+            HBox.setHgrow(btnRemover, Priority.NEVER);
+
             btnRemover.setOnAction(e -> {
                 pagamentos.remove(index);
                 atualizarListaPagamentos();
