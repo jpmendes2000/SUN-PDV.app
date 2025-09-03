@@ -303,7 +303,7 @@ public class FinalizarVenda {
 
         VBox containerItens = new VBox(5);
         containerItens.setPadding(new Insets(15));
-        containerItens.setPrefHeight(150);
+        containerItens.setPrefHeight(600);
 
         Background itemsBg = new Background(new BackgroundFill(
                 Color.web(COR_AZUL_CLARO, 0.8),
@@ -347,6 +347,8 @@ public class FinalizarVenda {
         scrollItens.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
         containerItens.getChildren().add(scrollItens);
 
+        VBox.setVgrow(containerItens, Priority.ALWAYS);
+
         secao.getChildren().addAll(titulo, containerItens);
         return secao;
     }
@@ -379,15 +381,17 @@ public class FinalizarVenda {
         RadioButton rdbDinheiro = criarRadioButton("Dinheiro", pagamentoGroup);
         RadioButton rdbDebito = criarRadioButton("Cartão de Débito", pagamentoGroup);
         RadioButton rdbCredito = criarRadioButton("Cartão de Crédito", pagamentoGroup);
+        RadioButton rdbPix = criarRadioButton("Pix", pagamentoGroup);  // Novo: Pix
+        RadioButton rdbVoucher = criarRadioButton("Voucher", pagamentoGroup);  // Novo: Voucher
 
-        opcoesPagamento.getChildren().addAll(rdbDinheiro, rdbDebito, rdbCredito);
+        opcoesPagamento.getChildren().addAll(rdbDinheiro, rdbDebito, rdbCredito, rdbPix, rdbVoucher);
 
         HBox inputGroup = new HBox(8);
         inputGroup.setAlignment(Pos.CENTER_LEFT);
 
         TextField valorField = new TextField();
         valorField.setPromptText("Valor");
-        valorField.setPrefWidth(120);
+        valorField.setPrefWidth(400);
         valorField.setStyle(
                 "-fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 6; -fx-padding: 10; -fx-font-size: 14px;"
         );
@@ -397,33 +401,33 @@ public class FinalizarVenda {
             RadioButton selected = (RadioButton) newToggle;
             String forma = selected.getText();
             
-            // Calcule o restante (similar ao atualizarTotalRestante())
+            // Calcule o restante
             double totalPago = pagamentos.stream().mapToDouble(p -> p.valor).sum();
             double restante = Math.max(totalVenda - totalPago, 0);
             
-            if (forma.equals("Cartão de Débito") || forma.equals("Cartão de Crédito")) {
-                valorField.setText(String.format("%.2f", restante).replace(".", ","));  // Formato com vírgula para Brasil
-                valorField.setEditable(false);  // Não editável
+            if (forma.equals("Cartão de Débito") || forma.equals("Cartão de Crédito") || forma.equals("Pix") || forma.equals("Voucher"))  {
+                valorField.setText(String.format("%.2f", restante).replace(".", ","));  // Preenche com restante
+                valorField.setEditable(false);  // Não editável para pagamentos exatos
             } else {
                 valorField.setEditable(true);  // Editável para Dinheiro
-                valorField.clear();  // Opcional: limpa o campo para forçar entrada manual
+                valorField.clear();  // Opcional: limpa para entrada manual
             }
         } else {
-            valorField.setEditable(true);  // Se nada selecionado, volta ao normal
+            valorField.setEditable(true);  // Volta ao normal se nada selecionado
         }
     });
 
         Button btnAdicionar = new Button("Adicionar");
         btnAdicionar.setStyle(
-                "-fx-background-color: linear-gradient(to bottom, " + COR_AMARELO + ", #e67e22); " +
+                "-fx-background-color: linear-gradient(to bottom,  + #c09727 + , #e8b923); " +
                         "-fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 10 15 10 15;"
         );
         btnAdicionar.setOnMouseEntered(e -> btnAdicionar.setStyle(
-                "-fx-background-color: linear-gradient(to bottom, #e67e22, #d35400); " +
+                "-fx-background-color: linear-gradient(to bottom, #ae8922ff + , #e2b72aff); " +
                         "-fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 10 15 10 15;"
         ));
         btnAdicionar.setOnMouseExited(e -> btnAdicionar.setStyle(
-                "-fx-background-color: linear-gradient(to bottom, " + COR_AMARELO + ", #e67e22); " +
+                "-fx-background-color: linear-gradient(to bottom,  + #c09727 + , #e8b923); " +
                         "-fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 10 15 10 15;"
         ));
 
@@ -458,6 +462,7 @@ public class FinalizarVenda {
         RadioButton rb = new RadioButton(texto);
         rb.setToggleGroup(group);
         rb.setStyle("-fx-text-fill: white; -fx-font-size: 13px;");
+        rb.setPadding(new Insets(6, 10, 6, 10));
 
         rb.setOnMouseEntered(e -> {
             if (!rb.isSelected()) {
@@ -472,7 +477,6 @@ public class FinalizarVenda {
         rb.setOnMouseExited(e -> {
             if (!rb.isSelected()) {
                 rb.setBackground(Background.EMPTY);
-                rb.setPadding(new Insets(6, 10, 6, 10));
             }
         });
 
@@ -482,7 +486,7 @@ public class FinalizarVenda {
     private VBox criarPainelDireito() {
         VBox painel = new VBox(20);
         painel.setPrefWidth(420);  // Ajustado
-        painel.setPrefHeight(1100);
+        painel.setPrefHeight(900);
         painel.setPadding(new Insets(20, 15, 20, 15));
 
         Background painelBg = new Background(new BackgroundFill(
@@ -739,8 +743,8 @@ public class FinalizarVenda {
     }
 
     private int inserirPagamento(Connection conn, String formaPagamento, double valor, double troco) throws SQLException {
-        String sql = "INSERT INTO pagamentos (Qtd_Pagamentos, ID_Forma_Pagamento, Troco, Valor_Recebido) " +
-                "VALUES (1, (SELECT ID_Forma_Pagamento FROM forma_pagamento WHERE Forma_Pagamento = ?), ?, ?)";
+                String sql = "INSERT INTO pagamentos (ID_Forma_Pagamento, Troco, Valor_Recebido) " +
+                "VALUES ((SELECT ID_Forma_Pagamento FROM forma_pagamento WHERE Forma_Pagamento = ?), ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, formaPagamento);
             stmt.setDouble(2, troco);
