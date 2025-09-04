@@ -4,6 +4,7 @@ module com.sunpdv {
     requires javafx.fxml;
     requires javafx.graphics;
     requires java.sql;
+    requires java.desktop;
     
     // Abre pacotes necessários para o JavaFX
     opens com.sunpdv to javafx.fxml;
