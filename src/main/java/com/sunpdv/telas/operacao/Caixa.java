@@ -4,6 +4,10 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.awt.Desktop;
+import java.io.File;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.geometry.Insets;
@@ -70,21 +74,40 @@ public class Caixa {
         }
     }
 
+    // Classe para armazenar informações de pagamento
+    private static class PagamentoInfo {
+        String formaPagamento;
+        double valor;
+        
+        public PagamentoInfo(String formaPagamento, double valor) {
+            this.formaPagamento = formaPagamento;
+            this.valor = valor;
+        }
+    }
+
     private static class Venda {
         int id;
         String formaPagamento;
         double subtotal;
         double total;
+        double troco;
         String data;
+        String documento;
+        String tipoDocumento;
         List<ItemVenda> itens;
+        List<PagamentoInfo> pagamentos;
 
-        public Venda(int id, String formaPagamento, double subtotal, double total, String data) {
+        public Venda(int id, String formaPagamento, double subtotal, double total, double troco, String data, String documento, String tipoDocumento) {
             this.id = id;
             this.formaPagamento = formaPagamento;
             this.subtotal = subtotal;
             this.total = total;
+            this.troco = troco;
             this.data = data;
+            this.documento = documento;
+            this.tipoDocumento = tipoDocumento;
             this.itens = new ArrayList<>();
+            this.pagamentos = new ArrayList<>();
         }
     }
 
@@ -147,7 +170,7 @@ public class Caixa {
             Label textLabel = new Label(texto);
             textLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
 
-            StackPane indicatorContainer = new StackPane(); // barra amarela lateral
+            StackPane indicatorContainer = new StackPane();
             indicatorContainer.setMinWidth(3);
             indicatorContainer.setMaxWidth(3);
             indicatorContainer.setMinHeight(30);
@@ -189,132 +212,160 @@ public class Caixa {
         }
     }
 
-            private void atualizarBotao(Button botao, String texto, String caminhoIcone) {
-            try {
-                Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
-                if (img.isError()) {
-                    throw new Exception("Erro ao carregar imagem: " + caminhoIcone);
-                }
-
-                // Ícone
-                ImageView icon = new ImageView(img);
-                icon.setFitWidth(20);
-                icon.setFitHeight(20);
-
-                // Texto
-                Label textLabel = new Label(texto);
-                textLabel.getStyleClass().add("botao-toggle-text");
-
-                // Indicador lateral
-                StackPane indicatorContainer = new StackPane();
-                indicatorContainer.setMinWidth(3);
-                indicatorContainer.setMaxWidth(3);
-                indicatorContainer.setPrefHeight(40);
-                indicatorContainer.getStyleClass().add("indicador-lateral");
-
-                // Conteúdo alinhado
-                HBox leftContent = new HBox(20, icon, textLabel);
-                leftContent.setAlignment(Pos.CENTER_LEFT);
-
-                HBox content = new HBox(leftContent, new Region(), indicatorContainer);
-                content.setAlignment(Pos.CENTER_LEFT);
-                HBox.setHgrow(content.getChildren().get(1), Priority.ALWAYS);
-
-                // Aplicar no botão
-                botao.setGraphic(content);
-                botao.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-                botao.getStyleClass().add("botao-toggle");
-                botao.setPrefWidth(280);
-                botao.setPrefHeight(54);
-
-            } catch (Exception e) {
-                System.err.println("Erro ao carregar ícone: " + caminhoIcone);
-                botao.setText(texto);
-                botao.getStyleClass().add("botao-toggle");
+    private void atualizarBotao(Button botao, String texto, String caminhoIcone) {
+        try {
+            Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
+            if (img.isError()) {
+                throw new Exception("Erro ao carregar imagem: " + caminhoIcone);
             }
+
+            ImageView icon = new ImageView(img);
+            icon.setFitWidth(20);
+            icon.setFitHeight(20);
+
+            Label textLabel = new Label(texto);
+            textLabel.getStyleClass().add("botao-toggle-text");
+
+            StackPane indicatorContainer = new StackPane();
+            indicatorContainer.setMinWidth(3);
+            indicatorContainer.setMaxWidth(3);
+            indicatorContainer.setPrefHeight(40);
+            indicatorContainer.getStyleClass().add("indicador-lateral");
+
+            HBox leftContent = new HBox(20, icon, textLabel);
+            leftContent.setAlignment(Pos.CENTER_LEFT);
+
+            HBox content = new HBox(leftContent, new Region(), indicatorContainer);
+            content.setAlignment(Pos.CENTER_LEFT);
+            HBox.setHgrow(content.getChildren().get(1), Priority.ALWAYS);
+
+            botao.setGraphic(content);
+            botao.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+            botao.getStyleClass().add("botao-toggle");
+            botao.setPrefWidth(280);
+            botao.setPrefHeight(54);
+
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar ícone: " + caminhoIcone);
+            botao.setText(texto);
+            botao.getStyleClass().add("botao-toggle");
         }
+    }
 
-        private List<Venda> carregarVendas() {
-            List<Venda> vendas = new ArrayList<>();
-            String query = "SELECT v.ID_Vendas, fp.Forma_Pagamento, v.Subtotal, v.Total, " +
-                        "CONVERT(VARCHAR, v.Data_Venda, 103) AS Data " +
-                        "FROM vendas v " +
-                        "JOIN pagamentos p ON v.ID_Pagamentos = p.ID_Pagamentos " +
-                        "JOIN forma_pagamento fp ON p.ID_Forma_Pagamento = fp.ID_Forma_Pagamento " +
-                        "ORDER BY v.Data_Venda DESC";
+    private List<Venda> carregarVendas() {
+        List<Venda> vendas = new ArrayList<>();
+        String query = "SELECT v.ID_Vendas, fp.Forma_Pagamento, v.Subtotal, v.Total, " +
+                      "ISNULL(p.Troco, 0) AS Troco, " +
+                      "CONVERT(VARCHAR, v.Data_Venda, 103) AS Data, " +
+                      "ISNULL(c.cpf, ISNULL(c.cnpj, ISNULL(c.rg, ''))) AS documento, " +
+                      "CASE WHEN c.cpf IS NOT NULL THEN 'CPF' " +
+                      "     WHEN c.cnpj IS NOT NULL THEN 'CNPJ' " +
+                      "     WHEN c.rg IS NOT NULL THEN 'RG' " +
+                      "     ELSE '' END AS tipoDocumento " +
+                      "FROM vendas v " +
+                      "JOIN pagamentos p ON v.ID_Pagamentos = p.ID_Pagamentos " +
+                      "JOIN forma_pagamento fp ON p.ID_Forma_Pagamento = fp.ID_Forma_Pagamento " +
+                      "LEFT JOIN clientes c ON v.ID_Clientes = c.ID_Clientes " +
+                      "ORDER BY v.Data_Venda DESC";
 
-            try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-                PreparedStatement stmt = conn.prepareStatement(query);
-                ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
 
-                while (rs.next()) {
-                    Venda venda = new Venda(
-                        rs.getInt("ID_Vendas"),
-                        rs.getString("Forma_Pagamento"),
-                        rs.getDouble("Subtotal"),
-                        rs.getDouble("Total"),
-                        rs.getString("Data")
-                    );
-                    
-                    carregarItensVenda(venda);
-                    vendas.add(venda);
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-                mostrarAlerta("Erro ao carregar vendas", "Detalhes: " + e.getMessage(), AlertType.ERROR);
-            }
-            return vendas;
-        }
-
-        private void carregarItensVenda(Venda venda) throws SQLException {
-            String query = "SELECT p.Nome, p.Cod_Barras, ci.Quantidade, ci.PrecoUnitario " +
-                        "FROM carrinho_itens ci " +
-                        "JOIN produtos p ON ci.ID_Produto = p.ID_Produto " +
-                        "WHERE ci.ID_Carrinho = (SELECT ID_Carrinho FROM vendas WHERE ID_Vendas = ?)";
-            
-            try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-                PreparedStatement stmt = conn.prepareStatement(query)) {
+            while (rs.next()) {
+                Venda venda = new Venda(
+                    rs.getInt("ID_Vendas"),
+                    rs.getString("Forma_Pagamento"),
+                    rs.getDouble("Subtotal"),
+                    rs.getDouble("Total"),
+                    rs.getDouble("Troco"),
+                    rs.getString("Data"),
+                    rs.getString("documento"),
+                    rs.getString("tipoDocumento")
+                );
                 
-                stmt.setInt(1, venda.id);
-                ResultSet rs = stmt.executeQuery();
-                
-                while (rs.next()) {
-                    venda.itens.add(new ItemVenda(
-                        rs.getString("Nome"),
-                        rs.getString("Cod_Barras"),
-                        rs.getInt("Quantidade"),
-                        rs.getDouble("PrecoUnitario")
-                    ));
-                }
+                carregarItensVenda(venda);
+                carregarPagamentosVenda(venda);
+                vendas.add(venda);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            mostrarAlerta("Erro ao carregar vendas", "Detalhes: " + e.getMessage(), AlertType.ERROR);
+        }
+        return vendas;
+    }
+
+    private void carregarItensVenda(Venda venda) throws SQLException {
+        String query = "SELECT p.Nome, p.Cod_Barras, ci.Quantidade, ci.PrecoUnitario " +
+                      "FROM carrinho_itens ci " +
+                      "JOIN produtos p ON ci.ID_Produto = p.ID_Produto " +
+                      "WHERE ci.ID_Carrinho = (SELECT ID_Carrinho FROM vendas WHERE ID_Vendas = ?)";
+        
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            
+            stmt.setInt(1, venda.id);
+            ResultSet rs = stmt.executeQuery();
+            
+            while (rs.next()) {
+                venda.itens.add(new ItemVenda(
+                    rs.getString("Nome"),
+                    rs.getString("Cod_Barras"),
+                    rs.getInt("Quantidade"),
+                    rs.getDouble("PrecoUnitario")
+                ));
             }
         }
+    }
 
-        private void aplicarFiltros() {
-            String textoBusca = pesquisaField.getText().toLowerCase().trim();
-            String pagamentoSelecionado = filtroPagamento.getValue();
-
-            listaVendas.getChildren().clear();
-            boolean achou = false;
+    // Novo método para carregar múltiplas formas de pagamento
+    private void carregarPagamentosVenda(Venda venda) throws SQLException {
+        String query = "SELECT fp.Forma_Pagamento, p.Valor_Recebido " +
+                      "FROM pagamentos p " +
+                      "JOIN forma_pagamento fp ON p.ID_Forma_Pagamento = fp.ID_Forma_Pagamento " +
+                      "WHERE p.ID_Pagamentos IN (SELECT ID_Pagamentos FROM vendas WHERE ID_Vendas = ?)";
+        
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
             
-            for (Venda venda : vendas) {
-                boolean idMatch = String.valueOf(venda.id).contains(textoBusca);
-                boolean pagamentoMatch = pagamentoSelecionado == null || pagamentoSelecionado.equals("Todos") || 
-                                    venda.formaPagamento.equalsIgnoreCase(pagamentoSelecionado);
-
-                if (idMatch && pagamentoMatch) {
-                    listaVendas.getChildren().add(criarPainelVenda(venda));
-                    achou = true;
-                }
-            }
+            stmt.setInt(1, venda.id);
+            ResultSet rs = stmt.executeQuery();
             
-            if (!achou) {
-                Label lblNenhumaVenda = new Label("Nenhuma venda corresponde à pesquisa.");
-                lblNenhumaVenda.setStyle("-fx-text-fill: #00536d; -fx-font-size: 14px;");
-                listaVendas.getChildren().add(lblNenhumaVenda);
+            while (rs.next()) {
+                venda.pagamentos.add(new PagamentoInfo(
+                    rs.getString("Forma_Pagamento"),
+                    rs.getDouble("Valor_Recebido")
+                ));
             }
         }
+    }
 
-        private void setupNovaVendaUI() {
+    private void aplicarFiltros() {
+        String textoBusca = pesquisaField.getText().toLowerCase().trim();
+        String pagamentoSelecionado = filtroPagamento.getValue();
+
+        listaVendas.getChildren().clear();
+        boolean achou = false;
+        
+        for (Venda venda : vendas) {
+            boolean idMatch = String.valueOf(venda.id).contains(textoBusca);
+            boolean pagamentoMatch = pagamentoSelecionado == null || pagamentoSelecionado.equals("Todos") || 
+                                venda.formaPagamento.equalsIgnoreCase(pagamentoSelecionado);
+
+            if (idMatch && pagamentoMatch) {
+                listaVendas.getChildren().add(criarPainelVenda(venda));
+                achou = true;
+            }
+        }
+        
+        if (!achou) {
+            Label lblNenhumaVenda = new Label("Nenhuma venda corresponde à pesquisa.");
+            lblNenhumaVenda.setStyle("-fx-text-fill: #00536d; -fx-font-size: 14px;");
+            listaVendas.getChildren().add(lblNenhumaVenda);
+        }
+    }
+
+    private void setupNovaVendaUI() {
         clienteNaoIdentificadoCheck = new CheckBox("Cliente não identificado");
         clienteNaoIdentificadoCheck.setSelected(true);
         clienteNaoIdentificadoCheck.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
@@ -325,13 +376,11 @@ public class Caixa {
         VBox clienteBox = new VBox(15);
         clienteBox.setStyle("-fx-background-color: transparent; -fx-padding: 20; -fx-background-radius: 5;");
 
-        // Campo de documento
         documentoField = new TextField();
         documentoField.setPromptText("Número do documento");
         documentoField.setMaxWidth(300);
         documentoField.setDisable(true);
 
-        // RadioButtons
         clienteGroup = new ToggleGroup();
         RadioButton rbCPF = new RadioButton("CPF");
         rbCPF.setToggleGroup(clienteGroup);
@@ -346,7 +395,6 @@ public class Caixa {
         HBox tipoDocumentoBox = new HBox(10, rbCPF, rbCNPJ, rbRG);
         tipoDocumentoBox.setDisable(true);
 
-        // HBox que contém RadioButtons e campo de documento
         HBox documentoBox = new HBox(10, tipoDocumentoBox, documentoField);
         documentoBox.setAlignment(Pos.CENTER_LEFT);
 
@@ -377,12 +425,10 @@ public class Caixa {
             }
         });
 
-        // Lista de produtos
         listaProdutos = new ListView<>();
         listaProdutos.setPrefHeight(450);
         listaProdutos.setCellFactory(lv -> new ItemVendaCell());
 
-        // Adicionar produtos
         HBox adicionarProdutoBox = new HBox(10);
         adicionarProdutoBox.setAlignment(Pos.CENTER_LEFT);
 
@@ -409,7 +455,6 @@ public class Caixa {
             new Label("Qtd:"), quantidadeSpinner, btnAdicionar
         );
 
-        // Botões finalizar e cancelar
         btnFinalizar = new Button("  Finalizar");
         btnFinalizar.setStyle("-fx-background-color: #28a745; -fx-text-fill: white;");
         btnFinalizar.setPadding(new Insets(10, 60, 10, 60));
@@ -424,7 +469,6 @@ public class Caixa {
         HBox botoes = new HBox(10, btnFinalizar, btnCancelar);
         botoes.setAlignment(Pos.CENTER);
 
-        // Adiciona tudo ao VBox clienteBox
         clienteBox.getChildren().addAll(
             clienteNaoIdentificadoCheck,
             new Label("Identificação do Cliente:"),
@@ -440,7 +484,6 @@ public class Caixa {
             totalLabel
         );
 
-        // Atualizar total quando a lista muda
         listaProdutos.getItems().addListener((javafx.collections.ListChangeListener.Change<? extends ItemVenda> c) -> {
             atualizarTotal();
         });
@@ -451,7 +494,6 @@ public class Caixa {
             botoes
         );
     }
-
 
     private void adicionarProduto(Spinner<Integer> quantidadeSpinner) {
         String codigo = codigoProdutoField.getText().trim();
@@ -562,7 +604,8 @@ public class Caixa {
                 documento, 
                 tipoDocumento, 
                 new ArrayList<>(listaProdutos.getItems()), 
-                totalVenda
+                totalVenda,
+                this
             );
             
             finalizarVenda.mostrar(stage, this);
@@ -689,14 +732,36 @@ public class Caixa {
         Label idLabel = new Label("Venda #" + venda.id);
         idLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #00536d;");
 
-        Label pagamentoLabel = new Label("Pagamento: " + venda.formaPagamento);
-        pagamentoLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #00536d;");
+        // Exibir documento se existir
+        if (!venda.documento.isEmpty()) {
+            Label documentoLabel = new Label("Cliente: " + venda.tipoDocumento + " " + venda.documento);
+            documentoLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #00536d;");
+            painel.getChildren().add(documentoLabel);
+        } else {
+            Label documentoLabel = new Label("Cliente: Não identificado");
+            documentoLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #00536d;");
+            painel.getChildren().add(documentoLabel);
+        }
 
-        Label subtotalLabel = new Label("Subtotal: R$ " + String.format("%.2f", venda.subtotal));
-        subtotalLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #00536d;");
+        // Exibir múltiplas formas de pagamento
+        Label pagamentoTituloLabel = new Label("Formas de Pagamento:");
+        pagamentoTituloLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #00536d;");
+        painel.getChildren().add(pagamentoTituloLabel);
+
+        VBox pagamentosBox = new VBox(2);
+        for (PagamentoInfo pag : venda.pagamentos) {
+            Label pagLabel = new Label("• " + pag.formaPagamento + ": R$ " + String.format("%.2f", pag.valor));
+            pagLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #666; -fx-padding: 0 0 0 10;");
+            pagamentosBox.getChildren().add(pagLabel);
+        }
+        painel.getChildren().add(pagamentosBox);
 
         Label totalLabel = new Label("Total: R$ " + String.format("%.2f", venda.total));
         totalLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #00536d;");
+
+        // Substituir subtotal por troco
+        Label trocoLabel = new Label("Troco: R$ " + String.format("%.2f", venda.troco));
+        trocoLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #00536d;");
 
         Label dataLabel = new Label("Data: " + venda.data);
         dataLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #00536d;");
@@ -711,7 +776,7 @@ public class Caixa {
             itensBox.getChildren().add(itemLabel);
         }
 
-        painel.getChildren().addAll(idLabel, pagamentoLabel, subtotalLabel, totalLabel, dataLabel, itensBox);
+        painel.getChildren().addAll(totalLabel, trocoLabel, dataLabel, itensBox);
 
         painel.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
@@ -729,19 +794,36 @@ public class Caixa {
 
         VBox detalhesBox = new VBox(10);
         detalhesBox.setPadding(new Insets(20));
-        detalhesBox.setStyle("-fx-background-color: trasparent;");
+        detalhesBox.setStyle("-fx-background-color: transparent;");
 
         Label idLabel = new Label("Venda #" + venda.id);
         idLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #00536d;");
 
-        Label pagamentoLabel = new Label("Forma de Pagamento: " + venda.formaPagamento);
-        pagamentoLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #00536d;");
+        // Cliente
+        Label clienteLabel;
+        if (!venda.documento.isEmpty()) {
+            clienteLabel = new Label("Cliente: " + venda.tipoDocumento + " " + venda.documento);
+        } else {
+            clienteLabel = new Label("Cliente: Não identificado");
+        }
+        clienteLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #00536d;");
 
-        Label subtotalLabel = new Label("Subtotal: R$ " + String.format("%.2f", venda.subtotal));
-        subtotalLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #00536d;");
+        // Formas de pagamento detalhadas
+        Label pagamentoTituloLabel = new Label("Formas de Pagamento:");
+        pagamentoTituloLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #00536d;");
+
+        VBox pagamentosDetalhesBox = new VBox(5);
+        for (PagamentoInfo pag : venda.pagamentos) {
+            Label pagLabel = new Label("• " + pag.formaPagamento + ": R$ " + String.format("%.2f", pag.valor));
+            pagLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #00536d;");
+            pagamentosDetalhesBox.getChildren().add(pagLabel);
+        }
 
         Label totalLabel = new Label("Total: R$ " + String.format("%.2f", venda.total));
         totalLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #00536d;");
+
+        Label trocoLabel = new Label("Troco: R$ " + String.format("%.2f", venda.troco));
+        trocoLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #00536d;");
 
         Label dataLabel = new Label("Data: " + venda.data);
         dataLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #00536d;");
@@ -756,13 +838,14 @@ public class Caixa {
         fecharButton.setOnAction(e -> detalhesStage.close());
 
         detalhesBox.getChildren().addAll(
-            idLabel, pagamentoLabel, subtotalLabel, totalLabel, dataLabel,
+            idLabel, clienteLabel, pagamentoTituloLabel, pagamentosDetalhesBox, 
+            totalLabel, trocoLabel, dataLabel,
             new Label("Itens:"),
             itensListView,
             fecharButton
         );
 
-        Scene scene = new Scene(detalhesBox, 400, 400);
+        Scene scene = new Scene(detalhesBox, 500, 500);
         try {
             scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
         } catch (Exception e) {
@@ -780,7 +863,7 @@ public class Caixa {
         pesquisaField.textProperty().addListener((obs, oldValue, newValue) -> aplicarFiltros());
 
         filtroPagamento = new ComboBox<>();
-        filtroPagamento.getItems().addAll("Todos", "Dinheiro", "Cartão de Crédito", "Cartão de Débito", "Pix", "Voucher");
+        filtroPagamento.getItems().addAll("Todos", "Dinheiro", "Débito", "Crédito", "Pix", "Voucher");
         filtroPagamento.setValue("Todos");
         filtroPagamento.setMaxWidth(200);
         filtroPagamento.setOnAction(e -> aplicarFiltros());

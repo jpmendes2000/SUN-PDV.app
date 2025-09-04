@@ -13,8 +13,6 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.LinearGradient;
 import javafx.scene.paint.Stop;
-import javafx.scene.shape.Circle;
-import javafx.scene.shape.Rectangle;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -24,6 +22,11 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+
+import javafx.scene.control.Alert.AlertType;
+
+// Importar a nova classe CupomFiscal
+import com.sunpdv.model.CupomFiscal;
 
 public class FinalizarVenda {
 
@@ -37,6 +40,11 @@ public class FinalizarVenda {
     private Label totalRestanteLabel;
     private VBox pagamentosListaBox;
     private Button btnFinalizar;
+    private CheckBox imprimirCupomCheck;
+    
+    // Instância da classe CupomFiscal
+    private CupomFiscal cupomFiscal;
+    
     private static final String DB_URL = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;trustServerCertificate=true";
     private static final String DB_USER = "sa";
     private static final String DB_PASSWORD = "Senha@12345!";
@@ -50,11 +58,13 @@ public class FinalizarVenda {
     private static final String COR_VERDE = "#27ae60";
     private static final String COR_VERMELHO = "#e74c3c";
 
-    public FinalizarVenda(String documento, String tipoDocumento, List<Caixa.ItemVenda> itens, double totalVenda) {
+    public FinalizarVenda(String documento, String tipoDocumento, List<Caixa.ItemVenda> itens, double totalVenda, Caixa caixa) {
         this.documento = documento;
         this.tipoDocumento = tipoDocumento;
         this.itens = new ArrayList<>(itens);
         this.totalVenda = totalVenda;
+        this.caixa = caixa;
+        this.cupomFiscal = new CupomFiscal(); // Inicializar a instância
     }
 
     public void mostrar(Stage owner, Caixa caixa) {
@@ -95,7 +105,6 @@ public class FinalizarVenda {
         }
 
         stage.setScene(scene);
-
         stage.setFullScreen(true);
         stage.showAndWait();
     }
@@ -275,8 +284,6 @@ public class FinalizarVenda {
         }
     }
 
-    // ... (os demais métodos permanecem inalterados)
-
     private VBox criarAreaCentral() {
         VBox areaCentral = new VBox(20);
         areaCentral.setPadding(new Insets(20));
@@ -381,8 +388,8 @@ public class FinalizarVenda {
         RadioButton rdbDinheiro = criarRadioButton("Dinheiro", pagamentoGroup);
         RadioButton rdbDebito = criarRadioButton("Cartão de Débito", pagamentoGroup);
         RadioButton rdbCredito = criarRadioButton("Cartão de Crédito", pagamentoGroup);
-        RadioButton rdbPix = criarRadioButton("Pix", pagamentoGroup);  // Novo: Pix
-        RadioButton rdbVoucher = criarRadioButton("Voucher", pagamentoGroup);  // Novo: Voucher
+        RadioButton rdbPix = criarRadioButton("Pix", pagamentoGroup);
+        RadioButton rdbVoucher = criarRadioButton("Voucher", pagamentoGroup);
 
         opcoesPagamento.getChildren().addAll(rdbDinheiro, rdbDebito, rdbCredito, rdbPix, rdbVoucher);
 
@@ -397,37 +404,36 @@ public class FinalizarVenda {
         );
 
         pagamentoGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
-        if (newToggle != null) {
-            RadioButton selected = (RadioButton) newToggle;
-            String forma = selected.getText();
-            
-            // Calcule o restante
-            double totalPago = pagamentos.stream().mapToDouble(p -> p.valor).sum();
-            double restante = Math.max(totalVenda - totalPago, 0);
-            
-            if (forma.equals("Cartão de Débito") || forma.equals("Cartão de Crédito") || forma.equals("Pix") || forma.equals("Voucher"))  {
-                valorField.setText(String.format("%.2f", restante).replace(".", ","));  // Preenche com restante
-                valorField.setEditable(false);  // Não editável para pagamentos exatos
+            if (newToggle != null) {
+                RadioButton selected = (RadioButton) newToggle;
+                String forma = selected.getText();
+                
+                double totalPago = pagamentos.stream().mapToDouble(p -> p.valor).sum();
+                double restante = Math.max(totalVenda - totalPago, 0);
+                
+                if (forma.equals("Cartão de Débito") || forma.equals("Cartão de Crédito") || forma.equals("Pix") || forma.equals("Voucher")) {
+                    valorField.setText(String.format("%.2f", restante).replace(".", ","));
+                    valorField.setEditable(false);
+                } else {
+                    valorField.setEditable(true);
+                    valorField.clear();
+                }
             } else {
-                valorField.setEditable(true);  // Editável para Dinheiro
-                valorField.clear();  // Opcional: limpa para entrada manual
+                valorField.setEditable(true);
             }
-        } else {
-            valorField.setEditable(true);  // Volta ao normal se nada selecionado
-        }
-    });
+        });
 
         Button btnAdicionar = new Button("Adicionar");
         btnAdicionar.setStyle(
-                "-fx-background-color: linear-gradient(to bottom,  + #c09727 + , #e8b923); " +
+                "-fx-background-color: linear-gradient(to bottom, #c09727, #e8b923); " +
                         "-fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 10 15 10 15;"
         );
         btnAdicionar.setOnMouseEntered(e -> btnAdicionar.setStyle(
-                "-fx-background-color: linear-gradient(to bottom, #ae8922ff + , #e2b72aff); " +
+                "-fx-background-color: linear-gradient(to bottom, #ae8922, #e2b72a); " +
                         "-fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 10 15 10 15;"
         ));
         btnAdicionar.setOnMouseExited(e -> btnAdicionar.setStyle(
-                "-fx-background-color: linear-gradient(to bottom,  + #c09727 + , #e8b923); " +
+                "-fx-background-color: linear-gradient(to bottom, #c09727, #e8b923); " +
                         "-fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 10 15 10 15;"
         ));
 
@@ -485,7 +491,7 @@ public class FinalizarVenda {
 
     private VBox criarPainelDireito() {
         VBox painel = new VBox(20);
-        painel.setPrefWidth(420);  // Ajustado
+        painel.setPrefWidth(420);
         painel.setPrefHeight(900);
         painel.setPadding(new Insets(20, 15, 20, 15));
 
@@ -531,6 +537,11 @@ public class FinalizarVenda {
         totalRestanteLabel.setAlignment(Pos.CENTER);
         totalRestanteLabel.setMaxWidth(Double.MAX_VALUE);
 
+        // Checkbox para impressão do cupom
+        imprimirCupomCheck = new CheckBox("Imprimir cupom fiscal");
+        imprimirCupomCheck.setSelected(true); // Por padrão, marcado para imprimir
+        imprimirCupomCheck.setStyle("-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;");
+
         btnFinalizar = new Button("Faltam R$ " + String.format("%.2f", totalVenda));
         btnFinalizar.setPrefWidth(230);
         btnFinalizar.setDisable(true);
@@ -540,7 +551,7 @@ public class FinalizarVenda {
         );
         btnFinalizar.setOnAction(e -> finalizarVenda());
 
-        painel.getChildren().addAll(titulo, containerLista, totalRestanteLabel, btnFinalizar);
+        painel.getChildren().addAll(titulo, containerLista, totalRestanteLabel, imprimirCupomCheck, btnFinalizar);
 
         VBox.setVgrow(containerLista, Priority.ALWAYS);
         return painel;
@@ -573,7 +584,6 @@ public class FinalizarVenda {
 
             Label lblPagamento = new Label(p.forma + ": R$ " + String.format("%.2f", p.valor));
             lblPagamento.setStyle("-fx-text-fill: white; -fx-font-size: 13px;");
-            // Novo: faz o label crescer para ocupar espaço e evitar truncamento sem quebrar linhas
             HBox.setHgrow(lblPagamento, Priority.ALWAYS);
 
             Button btnRemover = new Button("×");
@@ -582,16 +592,14 @@ public class FinalizarVenda {
                     COR_VERMELHO + 
                     "; -fx-text-fill: white; " +
                     "-fx-font-weight: bold; " +
-                    "-fx-background-radius: 7%; " +  // Novo: radius 50% para tornar redondo como círculo
-                    "-fx-padding: 0 4 0 4; " +        // Ajustado: padding ainda menor
-                    "-fx-font-size: 18px;" +           // Ajustado: fonte menor para caber no círculo
+                    "-fx-background-radius: 50%; " +
+                    "-fx-padding: 0 4 0 4; " +
+                    "-fx-font-size: 14px;" +
                     "-fx-alignment: center;"
             );
-            // Fixos para tamanho pequeno e redondo
             btnRemover.setPrefSize(20, 20);
             btnRemover.setMinSize(20, 20);
             btnRemover.setMaxSize(20, 20);
-            // Garante que o botão NÃO cresça
             HBox.setHgrow(btnRemover, Priority.NEVER);
 
             btnRemover.setOnAction(e -> {
@@ -676,9 +684,16 @@ public class FinalizarVenda {
             }
 
             conn.commit();
+            
+            // Gerar cupom fiscal se a opção estiver marcada
+            if (imprimirCupomCheck.isSelected()) {
+                gerarCupomFiscal(troco);
+            }
+            
             caixa.limparVendaAtual();
             mostrarAlerta("Sucesso", "Venda finalizada com sucesso! Troco: R$ " + String.format("%.2f", troco), Alert.AlertType.INFORMATION);
             stage.close();
+            
         } catch (SQLException e) {
             if (conn != null) {
                 try {
@@ -697,6 +712,46 @@ public class FinalizarVenda {
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+    /**
+     * Método para gerar cupom fiscal usando a classe CupomFiscal
+     */
+    private void gerarCupomFiscal(double troco) {
+        try {
+            // Converter ItemVenda para o formato esperado pela classe CupomFiscal
+            List<CupomFiscal.ItemVenda> itensConvertidos = new ArrayList<>();
+            for (Caixa.ItemVenda item : itens) {
+                CupomFiscal.ItemVenda itemConvertido = new CupomFiscal.ItemVenda(
+                    item.produto,
+                    item.codigoBarras,
+                    item.quantidade,
+                    item.preco
+                );
+                itensConvertidos.add(itemConvertido);
+            }
+            
+            // Converter pagamentos para o formato esperado pela classe CupomFiscal
+            List<CupomFiscal.PagamentoInfo> pagamentosConvertidos = new ArrayList<>();
+            for (Pagamento p : pagamentos) {
+                CupomFiscal.PagamentoInfo pagamentoConvertido = new CupomFiscal.PagamentoInfo(p.forma, p.valor);
+                pagamentosConvertidos.add(pagamentoConvertido);
+            }
+            
+            // Gerar e imprimir cupom usando a classe CupomFiscal
+            cupomFiscal.gerarEImprimirCupom(
+                itensConvertidos, 
+                totalVenda, 
+                troco, 
+                documento != null ? documento : "", 
+                tipoDocumento != null ? tipoDocumento : "", 
+                pagamentosConvertidos
+            );
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            mostrarAlerta("Erro", "Erro ao gerar cupom fiscal: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
@@ -743,7 +798,7 @@ public class FinalizarVenda {
     }
 
     private int inserirPagamento(Connection conn, String formaPagamento, double valor, double troco) throws SQLException {
-                String sql = "INSERT INTO pagamentos (ID_Forma_Pagamento, Troco, Valor_Recebido) " +
+        String sql = "INSERT INTO pagamentos (ID_Forma_Pagamento, Troco, Valor_Recebido) " +
                 "VALUES ((SELECT ID_Forma_Pagamento FROM forma_pagamento WHERE Forma_Pagamento = ?), ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, formaPagamento);
@@ -794,19 +849,6 @@ public class FinalizarVenda {
                 stmt.setNull(5, Types.INTEGER);
             }
             stmt.executeUpdate();
-        }
-    }
-
-    private void carregarFormasPagamento(ComboBox<String> combo) {
-        String query = "SELECT Forma_Pagamento FROM forma_pagamento";
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-             PreparedStatement stmt = conn.prepareStatement(query);
-             ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                combo.getItems().add(rs.getString("Forma_Pagamento"));
-            }
-        } catch (SQLException e) {
-            mostrarAlerta("Erro", "Erro ao carregar formas de pagamento: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
