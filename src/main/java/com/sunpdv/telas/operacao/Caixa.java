@@ -29,6 +29,8 @@ import com.sunpdv.model.AutenticarUser;
 import com.sunpdv.telas.home.TelaHomeADM;
 import com.sunpdv.telas.home.TelaHomeFUN;
 import com.sunpdv.telas.home.TelaHomeMOD;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import javafx.collections.ListChangeListener;
@@ -95,6 +97,7 @@ public class Caixa {
         String data;
         String documento;
         String tipoDocumento;
+        String funcionario;
         List<ItemVenda> itens;
         List<PagamentoInfo> pagamentos;
 
@@ -107,6 +110,7 @@ public class Caixa {
             this.data = data;
             this.documento = documento;
             this.tipoDocumento = tipoDocumento;
+            this.funcionario = funcionario;
             this.itens = new ArrayList<>();
             this.pagamentos = new ArrayList<>();
         }
@@ -263,6 +267,7 @@ public class Caixa {
                       "     WHEN c.cnpj IS NOT NULL THEN 'CNPJ' " +
                       "     WHEN c.rg IS NOT NULL THEN 'RG' " +
                       "     ELSE '' END AS tipoDocumento " +
+                      "u.Nome AS funcionario " +
                       "FROM vendas v " +
                       "JOIN pagamentos p ON v.ID_Pagamentos = p.ID_Pagamentos " +
                       "JOIN forma_pagamento fp ON p.ID_Forma_Pagamento = fp.ID_Forma_Pagamento " +
@@ -282,7 +287,8 @@ public class Caixa {
                     rs.getDouble("Troco"),
                     rs.getString("Data"),
                     rs.getString("documento"),
-                    rs.getString("tipoDocumento")
+                    rs.getString("tipoDocumento"),
+                    rs.getString("funcionario") // Passar funcionário
                 );
                 
                 carregarItensVenda(venda);
@@ -344,6 +350,8 @@ public class Caixa {
     private void aplicarFiltros() {
         String textoBusca = pesquisaField.getText().toLowerCase().trim();
         String pagamentoSelecionado = filtroPagamento.getValue();
+        LocalDate dataInicio = dataInicioPicker.getValue();
+        LocalDate dataFim = dataFimPicker.getValue();
 
         listaVendas.getChildren().clear();
         boolean achou = false;
@@ -352,8 +360,27 @@ public class Caixa {
             boolean idMatch = String.valueOf(venda.id).contains(textoBusca);
             boolean pagamentoMatch = pagamentoSelecionado == null || pagamentoSelecionado.equals("Todos") || 
                                 venda.formaPagamento.equalsIgnoreCase(pagamentoSelecionado);
+            
+            // Verificar filtro de data
+            boolean dataMatch = true;
+            if (dataInicio != null || dataFim != null) {
+                try {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                    LocalDate dataVenda = LocalDate.parse(venda.data, formatter);
+                    
+                    if (dataInicio != null && dataVenda.isBefore(dataInicio)) {
+                        dataMatch = false;
+                    }
+                    if (dataFim != null && dataVenda.isAfter(dataFim)) {
+                        dataMatch = false;
+                    }
+                } catch (Exception e) {
+                    // Se houver erro no parsing, ignora o filtro de data para esta venda
+                    dataMatch = true;
+                }
+            }
 
-            if (idMatch && pagamentoMatch) {
+            if (idMatch && pagamentoMatch && dataMatch) {
                 listaVendas.getChildren().add(criarPainelVenda(venda));
                 achou = true;
             }
@@ -912,14 +939,38 @@ public class Caixa {
         pesquisaField.setMaxWidth(300);
         pesquisaField.textProperty().addListener((obs, oldValue, newValue) -> aplicarFiltros());
 
+        // Incluir cartões no filtro
         filtroPagamento = new ComboBox<>();
         filtroPagamento.getItems().addAll("Todos", "Dinheiro", "Débito", "Crédito", "Pix", "Voucher");
         filtroPagamento.setValue("Todos");
         filtroPagamento.setMaxWidth(200);
         filtroPagamento.setOnAction(e -> aplicarFiltros());
         
+        // Adicionar filtro de data
+        DatePicker dataInicioPicker = new DatePicker();
+        dataInicioPicker.setPromptText("Data início");
+        dataInicioPicker.setMaxWidth(150);
+        
+        DatePicker dataFimPicker = new DatePicker();
+        dataFimPicker.setPromptText("Data fim");
+        dataFimPicker.setMaxWidth(150);
+        
+        Button btnFiltrarData = new Button("Filtrar");
+        btnFiltrarData.setOnAction(e -> aplicarFiltros());
+        
+        Button btnLimparFiltroData = new Button("Limpar");
+        btnLimparFiltroData.setOnAction(e -> {
+            dataInicioPicker.setValue(null);
+            dataFimPicker.setValue(null);
+            aplicarFiltros();
+        });
 
-        HBox filtroBox = new HBox(10, new Label("Filtro:"), pesquisaField, new Label("Pagamento:"), filtroPagamento);
+        HBox filtroDataBox = new HBox(5, new Label("Período:"), dataInicioPicker, 
+                                    new Label("até"), dataFimPicker, btnFiltrarData, btnLimparFiltroData);
+        filtroDataBox.setAlignment(Pos.CENTER_LEFT);
+
+        HBox filtroBox = new HBox(10, new Label("Filtro:"), pesquisaField, 
+                                new Label("Pagamento:"), filtroPagamento, filtroDataBox);
         filtroBox.setAlignment(Pos.CENTER_LEFT);
         filtroBox.setPadding(new Insets(5, 0, 15, 10));
 

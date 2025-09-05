@@ -846,8 +846,8 @@ public class FinalizarVenda {
             throw new SQLException("Usuário não autenticado. ID do login não encontrado.");
         }
         
-        String sql = "INSERT INTO vendas (ID_Carrinho, ID_Login, ID_Pagamentos, Subtotal, Total, Data_Venda, ID_Clientes) " +
-                "VALUES (?, ?, ?, ?, ?, GETDATE(), ?)";
+        String insertVenda = "INSERT INTO vendas (Data_Venda, Subtotal, Total, ID_Clientes, ID_Usuario, ID_Carrinho, ID_Pagamentos) " +
+                            "VALUES (GETDATE(), ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, idCarrinho);
             stmt.setInt(2, idLogin);  // ID do funcionário que está realizando a venda
