@@ -33,8 +33,12 @@ import javafx.scene.input.MouseEvent;
 
 import java.sql.*;
 import java.text.DecimalFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.format.TextStyle;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -55,6 +59,9 @@ public class Produtos {
     private ScrollPane scrollTable;                // ScrollPane da tabela para alternar com dashboard
     private VBox dashboardContainer;               // Container do dashboard administrativo
     private Button btnAdmin;                       // Botão de administração
+    private Button btnAdd;
+    private Button btnEdit;
+    private Button btnDelete;
 
     // Constantes para conexão com o banco de dados
     private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=false;trustServerCertificate=true;";
@@ -79,10 +86,13 @@ public class Produtos {
             this.setHeaderText(header);
             this.setContentText(content);
             
-            Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
-            stage.getScene().getStylesheets().add(
-                getClass().getResource("/css/style.css").toExternalForm()
-            );
+            try {
+                this.getDialogPane().getStylesheets().add(
+                    getClass().getResource("/css/style.css").toExternalForm()
+                );
+            } catch (Exception e) {
+                System.err.println("Erro ao carregar CSS: " + e.getMessage());
+            }
         }
     }
 
@@ -103,7 +113,13 @@ public class Produtos {
         leftMenu.setStyle("-fx-background-color: #00536d;");
 
         // Logo SUN PDV
-        Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
+        Image logo = null;
+        try {
+            logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar logo: " + e.getMessage());
+        }
+        
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(120);
         logoView.setPreserveRatio(true);
@@ -130,7 +146,7 @@ public class Produtos {
         // VBox para organizar hora acima da data
         VBox dataHoraBox = new VBox(5, horaLabel, dataLabel);
         dataHoraBox.setAlignment(Pos.CENTER);
-        dataHoraBox.setPadding(new Insets(0, 0, 5, 0)); // Espaço mínimo abaixo do dataHoraBox
+        dataHoraBox.setPadding(new Insets(0, 0, 15, 0)); // Aumentado o espaço inferior
 
         // Formatadores para hora e data
         DateTimeFormatter horaFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
@@ -150,9 +166,11 @@ public class Produtos {
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.play();
 
-        // Espaço para empurrar os botões para baixo
-        Region espaco = new Region();
-        VBox.setVgrow(espaco, Priority.ALWAYS);
+        // Container para o conteúdo scrollável do menu
+        VBox menuContent = new VBox();
+        menuContent.setAlignment(Pos.TOP_CENTER);
+        menuContent.setSpacing(10);
+        menuContent.setPadding(new Insets(10, 0, 20, 0));
 
         // Botões do menu
         Button btnVoltar = criarBotaoLateral("Home", "/img/icon/casa.png");
@@ -160,7 +178,6 @@ public class Produtos {
 
         // Ações dos botões
         btnVoltar.setOnAction(e -> voltarParaHome(stage));
-
         btnSair.setOnAction(e -> {
             CustomConfirmationAlert alert = new CustomConfirmationAlert(stage, "Confirmação", "Deseja sair?", "Isso fechará o sistema.");
             alert.showAndWait().ifPresent(response -> {
@@ -170,12 +187,23 @@ public class Produtos {
             });
         });
 
-        VBox buttonBox = new VBox(10, btnVoltar, btnSair);
-        buttonBox.setAlignment(Pos.BOTTOM_LEFT);
-        buttonBox.setPadding(new Insets(0, 0, 20, 0));
+        // Adiciona botões ao container scrollável
+        menuContent.getChildren().addAll(btnVoltar, btnSair);
 
-        // Adicionar elementos ao menu lateral, com dataHoraBox abaixo do logo
-        leftMenu.getChildren().addAll(logoBox, dataHoraBox, espaco, buttonBox);
+        // Cria ScrollPane para o menu
+        ScrollPane menuScroll = new ScrollPane(menuContent);
+        menuScroll.setFitToWidth(true);
+        menuScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        menuScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        menuScroll.setStyle("-fx-background: #00536d; -fx-background-color: #00536d;");
+        menuScroll.setPrefViewportHeight(200); // Altura mínima visível
+
+        // Espaço flexível para empurrar o menu para baixo
+        Region espacoFlexivel = new Region();
+        VBox.setVgrow(espacoFlexivel, Priority.ALWAYS);
+
+        // Monta o menu lateral final
+        leftMenu.getChildren().addAll(logoBox, dataHoraBox, espacoFlexivel, menuScroll);
 
         // Configuração da área central (conteúdo principal)
         // GridPane organiza os elementos em uma grade
@@ -198,10 +226,10 @@ public class Produtos {
         campoPesquisa.textProperty().addListener((obs, oldVal, newVal) -> filtrarProdutos(newVal));
 
         // Configuração dos botões de ação
-        Button btnAdd = criarBotaoAcao("/img/icon/lista.png", "Adicionar Produto");
-        Button btnEdit = criarBotaoAcao("/img/icon/lapis.png", "Editar Produto");
-        Button btnDelete = criarBotaoAcao("/img/icon/lixeira.png", "Apagar Produto");
-        btnAdmin = criarBotaoAcao("/img/icon/lista.png", "Dashboard Administrativo");
+        btnAdd = criarBotaoAcao("/img/icon/lista.png", "Adicionar Produto");
+        btnEdit = criarBotaoAcao("/img/icon/lapis.png", "Editar Produto");
+        btnDelete = criarBotaoAcao("/img/icon/lixeira.png", "Apagar Produto");
+        btnAdmin = criarBotaoAcao("/img/icon/pasta.png", "Dashboard Administrativo");
 
         btnEdit.setDisable(true); // Desabilita até que um produto seja selecionado
         btnDelete.setDisable(true); // Desabilita até que um produto seja selecionado
@@ -287,6 +315,7 @@ public class Produtos {
         
         // Adiciona ambos ao GridPane
         contentGrid.add(scrollTable, 0, 1, 2, 1); // Adiciona ao GridPane na linha 1, colunas 0-1
+        contentGrid.add(dashboardContainer, 0, 1, 2, 1); // Sobreposto, mas visibility controla
 
         // Configuração do layout principal
         layout.setLeft(leftMenu); // Define o menu lateral à esquerda
@@ -294,7 +323,11 @@ public class Produtos {
 
         // Associa ações aos botões
         btnAdd.setOnAction(e -> abrirFormularioProduto(null)); // Abre formulário para adicionar
-        btnEdit.setOnAction(e -> abrirFormularioProduto(produtoSelecionado)); // Abre formulário para editar
+        btnEdit.setOnAction(e -> {
+            if (produtoSelecionado != null) {
+                abrirFormularioProduto(produtoSelecionado); // Abre formulário para editar
+            }
+        });
         btnDelete.setOnAction(e -> {
             if (produtoSelecionado != null) {
                 apagarProduto(produtoSelecionado); // Apaga o produto selecionado
@@ -319,8 +352,8 @@ public class Produtos {
         // Listener para seleção na tabela
         table.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             produtoSelecionado = newVal; // Atualiza o produto selecionado
-            btnEdit.setDisable(newVal == null); // Habilita/desabilita botão Editar
-            btnDelete.setDisable(newVal == null); // Habilita/desabilita botão Apagar
+            btnEdit.setDisable(newVal == null || modoAdminAtivo); // Habilita/desabilita botão Editar
+            btnDelete.setDisable(newVal == null || modoAdminAtivo); // Habilita/desabilita botão Apagar
         });
 
         // Carrega os produtos do banco de dados
@@ -328,7 +361,11 @@ public class Produtos {
 
         // Configuração da cena e exibição do palco
         Scene scene = new Scene(layout, 1200, 800);
-        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        try {
+            scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar CSS: " + e.getMessage());
+        }
 
         scene.setOnKeyPressed(event -> {
             if (event.getCode() == javafx.scene.input.KeyCode.ESCAPE) {
@@ -363,6 +400,12 @@ public class Produtos {
             scrollTable.setVisible(false);
             criarDashboard();
             dashboardContainer.setVisible(true);
+            
+            // Desabilitar botões de interação com produtos
+            btnAdd.setDisable(true);
+            btnEdit.setDisable(true);
+            btnDelete.setDisable(true);
+            campoPesquisa.setDisable(true);
         } else {
             // Sair do modo admin - mostrar produtos
             btnAdmin.setText("Dashboard Administrativo");
@@ -371,126 +414,274 @@ public class Produtos {
             // Esconder dashboard e mostrar tabela
             dashboardContainer.setVisible(false);
             scrollTable.setVisible(true);
+            
+            // Habilitar botões de interação com produtos
+            btnAdd.setDisable(false);
+            btnEdit.setDisable(produtoSelecionado == null);
+            btnDelete.setDisable(produtoSelecionado == null);
+            campoPesquisa.setDisable(false);
         }
-        
-        // Desabilitar outros botões no modo admin
-        campoPesquisa.setDisable(modoAdminAtivo);
     }
 
     /**
-     * Cria o dashboard administrativo com gráficos
+     * Cria o dashboard administrativo com gráficos e scroll
      */
     private void criarDashboard() {
         dashboardContainer.getChildren().clear();
         dashboardContainer.setSpacing(20);
         dashboardContainer.setPadding(new Insets(20));
-        dashboardContainer.setStyle("-fx-background-color: #f0f0f0;");
+        dashboardContainer.setStyle("-fx-background-color: #00536d;");
+        
+        // Container principal com scroll
+        VBox dashboardContent = new VBox();
+        dashboardContent.setSpacing(20);
+        dashboardContent.setPadding(new Insets(10));
         
         // Título do dashboard
         Label tituloDashboard = new Label("Dashboard Administrativo");
         tituloDashboard.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #00536d;");
-        dashboardContainer.getChildren().add(tituloDashboard);
+        dashboardContent.getChildren().add(tituloDashboard);
         
         try {
-            // Gráfico 1: Produtos mais vendidos (verde)
-            BarChart<String, Number> chartMaisVendidos = criarGraficoBarra(
-                "Produtos Mais Vendidos", 
-                "green"
+            // Gráfico 1: Produtos mais vendidos (azul) - overall, top 10
+            BarChart<String, Number> chartMaisVendidos = criarGraficoColuna(
+                "Produtos Mais Vendidos (Geral)", 
+                "#3498db"
             );
-            carregarDadosProdutosMaisVendidos(chartMaisVendidos);
-            dashboardContainer.getChildren().add(chartMaisVendidos);
+            carregarDadosProdutosMaisVendidos(chartMaisVendidos, 10);
+            dashboardContent.getChildren().add(chartMaisVendidos);
             
             // Gráfico 2: Produtos menos vendidos (vermelho)
-            BarChart<String, Number> chartMenosVendidos = criarGraficoBarra(
+            BarChart<String, Number> chartMenosVendidos = criarGraficoColuna(
                 "Produtos Menos Vendidos", 
-                "red"
+                "#e74c3c"
             );
             carregarDadosProdutosMenosVendidos(chartMenosVendidos);
-            dashboardContainer.getChildren().add(chartMenosVendidos);
+            dashboardContent.getChildren().add(chartMenosVendidos);
             
-            // Gráfico 3: Funcionário que mais realizou vendas
-            BarChart<String, Number> chartTopFuncionario = criarGraficoBarra(
-                "Funcionário com Mais Vendas", 
-                "blue"
+            // Gráfico 3: Funcionário que mais realizou vendas (overall)
+            BarChart<String, Number> chartTopFuncionario = criarGraficoColuna(
+                "Funcionário com Mais Vendas (Geral)", 
+                "#2ecc71"
             );
             carregarDadosTopFuncionario(chartTopFuncionario);
-            dashboardContainer.getChildren().add(chartTopFuncionario);
+            dashboardContent.getChildren().add(chartTopFuncionario);
+            
+            // Gráficos mensais dos últimos 12 meses
+            LocalDate currentDate = LocalDate.now();
+            
+            for (int i = 11; i >= 0; i--) {
+                LocalDate monthDate = currentDate.minusMonths(i);
+                int year = monthDate.getYear();
+                int month = monthDate.getMonthValue();
+                String monthName = monthDate.getMonth().getDisplayName(TextStyle.FULL, new Locale("pt", "BR")) + " " + year;
+                
+                // Verifica se há dados para o mês
+                boolean hasData = hasDataForMonth(year, month);
+                
+                if (hasData) {
+                    // Get top employee for this month
+                    String employeeInfo = getTopEmployee(year, month);
+                    
+                    // Create chart
+                    BarChart<String, Number> monthlyChart = criarGraficoColuna(
+                        "Top 10 Produtos - " + monthName, 
+                        "#3498db"
+                    );
+                    
+                    // Load data
+                    carregarTopProdutosMonthly(monthlyChart, year, month, 10);
+                    
+                    // If has employee data, add label
+                    if (employeeInfo != null) {
+                        Label employeeLabel = new Label(employeeInfo);
+                        employeeLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #00536d; -fx-padding: 10 0 5 0;");
+                        dashboardContent.getChildren().add(employeeLabel);
+                    }
+                    
+                    dashboardContent.getChildren().add(monthlyChart);
+                } else {
+                    // Adiciona apenas um label indicando que não há dados para o mês
+                    Label noDataLabel = new Label("Sem dados para " + monthName);
+                    noDataLabel.setStyle("-fx-text-fill: gray; -fx-font-size: 14px; -fx-padding: 10 0 5 0;");
+                    dashboardContent.getChildren().add(noDataLabel);
+                }
+            }
             
         } catch (SQLException e) {
             Label erroLabel = new Label("Erro ao carregar dados do dashboard: " + e.getMessage());
             erroLabel.setStyle("-fx-text-fill: red;");
-            dashboardContainer.getChildren().add(erroLabel);
+            dashboardContent.getChildren().add(erroLabel);
         }
+        
+        // Cria ScrollPane para o dashboard
+        ScrollPane dashboardScroll = new ScrollPane(dashboardContent);
+        dashboardScroll.setFitToWidth(true);
+        dashboardScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        dashboardScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        dashboardScroll.setStyle("-fx-background: #00536d; -fx-background-color: #00536d;");
+        
+        // Limpa e adiciona o scroll ao container
+        dashboardContainer.getChildren().clear();
+        dashboardContainer.getChildren().add(dashboardScroll);
     }
 
     /**
-     * Cria um gráfico de barras com título e cor específica
+     * Cria um gráfico de coluna (barras verticais) com estilo similar à imagem
      */
-    private BarChart<String, Number> criarGraficoBarra(String titulo, String cor) {
+    private BarChart<String, Number> criarGraficoColuna(String titulo, String cor) {
         CategoryAxis xAxis = new CategoryAxis();
         NumberAxis yAxis = new NumberAxis();
         BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
         
+        // Configurações de estilo para corresponder à imagem
         barChart.setTitle(titulo);
         barChart.setLegendVisible(false);
         barChart.setPrefHeight(400);
-        barChart.setStyle("-fx-background-color: white; -fx-padding: 15;");
+        barChart.setMinHeight(400);
+        barChart.setStyle("-fx-background-color: white; -fx-padding: 15; -fx-border-color: #ff00b7ff; -fx-border-width: 1;");
+        
+        // Estilo do título
+        barChart.setTitle(titulo);
+        barChart.lookup(".chart-title").setStyle("-fx-text-fill: #2c3e50; -fx-font-size: 16px; -fx-font-weight: bold;");
+        
+        // Configurações dos eixos
+        xAxis.setTickLabelRotation(0);
+        xAxis.setTickLabelFont(javafx.scene.text.Font.font(12));
+        xAxis.setTickLabelFill(javafx.scene.paint.Color.BLACK);
+        xAxis.setStyle("-fx-tick-label-fill: black;");
+        
+        yAxis.setTickLabelFont(javafx.scene.text.Font.font(12));
+        yAxis.setTickLabelFill(javafx.scene.paint.Color.BLACK);
+        yAxis.setForceZeroInRange(true);
+        
+        // Aplica a cor às barras
+        barChart.getData().addListener((javafx.collections.ListChangeListener.Change<? extends XYChart.Series> change) -> {
+            while (change.next()) {
+                if (change.wasAdded()) {
+                    for (XYChart.Series<String, Number> series : barChart.getData()) {
+                        for (XYChart.Data<String, Number> data : series.getData()) {
+                            data.nodeProperty().addListener((obs, oldNode, newNode) -> {
+                                if (newNode != null) {
+                                    newNode.setStyle("-fx-bar-fill: " + cor + ";");
+                                    
+                                    // Adiciona efeito de hover
+                                    newNode.setOnMouseEntered(e -> {
+                                        newNode.setStyle("-fx-bar-fill: derive(" + cor + ", -20%); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 5, 0, 0, 1);");
+                                    });
+                                    newNode.setOnMouseExited(e -> {
+                                        newNode.setStyle("-fx-bar-fill: " + cor + ";");
+                                    });
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+        });
         
         return barChart;
     }
 
     /**
-     * Carrega dados dos produtos mais vendidos
+     * Verifica se há dados de vendas para um mês específico
+     * @param year Ano
+     * @param month Mês
+     * @return true se houver dados, false caso contrário
      */
-    private void carregarDadosProdutosMaisVendidos(BarChart<String, Number> chart) throws SQLException {
-        String sql = "SELECT TOP 5 p.Nome, SUM(iv.Quantidade) as TotalVendas " +
-                     "FROM ItensVenda iv " +
-                     "JOIN Produtos p ON iv.ID_Produto = p.ID_Produto " +
-                     "GROUP BY p.Nome " +
-                     "ORDER BY TotalVendas DESC";
+    private boolean hasDataForMonth(int year, int month) throws SQLException {
+        String sql = "SELECT COUNT(*) as total FROM vendas v " +
+                     "WHERE YEAR(v.Data_Venda) = ? AND MONTH(v.Data_Venda) = ?";
         
         try (Connection con = getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            
-            XYChart.Series<String, Number> series = new XYChart.Series<>();
-            while (rs.next()) {
-                String nomeProduto = rs.getString("Nome");
-                Number totalVendas = rs.getInt("TotalVendas");
-                XYChart.Data<String, Number> data = new XYChart.Data<>(nomeProduto, totalVendas);
-                data.nodeProperty().addListener((obs, oldNode, newNode) -> {
-                    if (newNode != null) {
-                        newNode.setStyle("-fx-bar-fill: green;");
-                    }
-                });
-                series.getData().add(data);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, year);
+            ps.setInt(2, month);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total") > 0;
+                }
             }
-            chart.getData().add(series);
         }
+        return false;
+    }
+
+    /**
+     * Carrega dados dos produtos mais vendidos (overall)
+        */
+        private void carregarDadosProdutosMaisVendidos(BarChart<String, Number> chart, int topN) throws SQLException {
+        String sql = "SELECT TOP " + topN + " p.Nome, SUM(ci.Quantidade) as TotalVendas " +
+                    "FROM carrinho_itens ci " +
+                    "JOIN produtos p ON ci.ID_Produto = p.ID_Produto " +
+                    "JOIN vendas v ON ci.ID_Carrinho = v.ID_Carrinho " +
+                    "GROUP BY p.Nome " +
+                    "ORDER BY TotalVendas DESC";
+        
+        carregarBarChartData(chart, sql, "#3498db");
     }
 
     /**
      * Carrega dados dos produtos menos vendidos
      */
     private void carregarDadosProdutosMenosVendidos(BarChart<String, Number> chart) throws SQLException {
-        String sql = "SELECT TOP 5 p.Nome, SUM(iv.Quantidade) as TotalVendas " +
-                     "FROM ItensVenda iv " +
-                     "JOIN Produtos p ON iv.ID_Produto = p.ID_Produto " +
-                     "GROUP BY p.Nome " +
-                     "ORDER BY TotalVendas ASC";
+        String sql = "SELECT TOP 5 p.Nome, SUM(ci.Quantidade) as TotalVendas " +
+                    "FROM carrinho_itens ci " +
+                    "JOIN produtos p ON ci.ID_Produto = p.ID_Produto " +
+                    "JOIN vendas v ON ci.ID_Carrinho = v.ID_Carrinho " +
+                    "GROUP BY p.Nome " +
+                    "ORDER BY TotalVendas ASC";
         
+        carregarBarChartData(chart, sql, "#e74c3c");
+    }
+
+    /**
+     * Carrega dados do funcionário com mais vendas (overall)
+     */
+    private void carregarDadosTopFuncionario(BarChart<String, Number> chart) throws SQLException {
+        String sql = "SELECT TOP 5 ls.Nome, COUNT(v.ID_Vendas) as TotalVendas " +
+                    "FROM vendas v " +
+                    "JOIN login_sistema ls ON v.ID_Login = ls.ID_Login " +
+                    "GROUP BY ls.Nome " +
+                    "ORDER BY TotalVendas DESC";
+        
+        carregarBarChartData(chart, sql, "#2ecc71");
+    }
+
+    /**
+     * Carrega dados para um BarChart genérico
+     */
+    private void carregarBarChartData(BarChart<String, Number> chart, String sql, String color) throws SQLException {
         try (Connection con = getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+            PreparedStatement ps = con.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()) {
             
             XYChart.Series<String, Number> series = new XYChart.Series<>();
             while (rs.next()) {
-                String nomeProduto = rs.getString("Nome");
-                Number totalVendas = rs.getInt("TotalVendas");
-                XYChart.Data<String, Number> data = new XYChart.Data<>(nomeProduto, totalVendas);
+                String name = rs.getString("Nome");
+                Number total = rs.getInt("TotalVendas");
+                
+                // Limita o nome muito longo para melhor visualização
+                String displayName = name.length() > 20 ? name.substring(0, 17) + "..." : name;
+                
+                XYChart.Data<String, Number> data = new XYChart.Data<>(displayName, total);
+                
+                // Adiciona tooltip para mostrar informações detalhadas
                 data.nodeProperty().addListener((obs, oldNode, newNode) -> {
                     if (newNode != null) {
-                        newNode.setStyle("-fx-bar-fill: red;");
+                        newNode.setStyle("-fx-bar-fill: " + color + ";");
+                        
+                        // Tooltip com informações completas
+                        Tooltip tooltip = new Tooltip(name + ": " + total + " vendas");
+                        tooltip.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
+                        Tooltip.install(newNode, tooltip);
+                        
+                        // Efeito de hover
+                        newNode.setOnMouseEntered(e -> {
+                            newNode.setStyle("-fx-bar-fill: derive(" + color + ", -20%); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 5, 0, 0, 1);");
+                        });
+                        newNode.setOnMouseExited(e -> {
+                            newNode.setStyle("-fx-bar-fill: " + color + ";");
+                        });
                     }
                 });
                 series.getData().add(data);
@@ -500,33 +691,92 @@ public class Produtos {
     }
 
     /**
-     * Carrega dados do funcionário com mais vendas
+     * Carrega top produtos para um mês específico
      */
-    private void carregarDadosTopFuncionario(BarChart<String, Number> chart) throws SQLException {
-        String sql = "SELECT TOP 1 u.Nome, COUNT(v.ID_Venda) as TotalVendas " +
-                     "FROM Vendas v " +
-                     "JOIN Usuarios u ON v.ID_Usuario = u.ID_Usuario " +
-                     "GROUP BY u.Nome " +
-                     "ORDER BY TotalVendas DESC";
+    private void carregarTopProdutosMonthly(BarChart<String, Number> chart, int year, int month, int topN) throws SQLException {
+        String sql = "SELECT TOP " + topN + " p.Nome, SUM(ci.Quantidade) as TotalVendas " +
+                    "FROM carrinho_itens ci " +
+                    "JOIN produtos p ON ci.ID_Produto = p.ID_Produto " +
+                    "JOIN vendas v ON ci.ID_Carrinho = v.ID_Carrinho " +
+                    "WHERE YEAR(v.Data_Venda) = ? AND MONTH(v.Data_Venda) = ? " +
+                    "GROUP BY p.Nome " +
+                    "ORDER BY TotalVendas DESC";
         
         try (Connection con = getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            
-            XYChart.Series<String, Number> series = new XYChart.Series<>();
-            while (rs.next()) {
-                String nomeFuncionario = rs.getString("Nome");
-                Number totalVendas = rs.getInt("TotalVendas");
-                XYChart.Data<String, Number> data = new XYChart.Data<>(nomeFuncionario, totalVendas);
-                data.nodeProperty().addListener((obs, oldNode, newNode) -> {
-                    if (newNode != null) {
-                        newNode.setStyle("-fx-bar-fill: blue;");
-                    }
-                });
-                series.getData().add(data);
+            PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, year);
+            ps.setInt(2, month);
+            try (ResultSet rs = ps.executeQuery()) {
+                XYChart.Series<String, Number> series = new XYChart.Series<>();
+                boolean hasData = false;
+                
+                while (rs.next()) {
+                    hasData = true;
+                    String name = rs.getString("Nome");
+                    Number total = rs.getInt("TotalVendas");
+                    
+                    // Limita o nome muito longo para melhor visualização
+                    String displayName = name.length() > 20 ? name.substring(0, 17) + "..." : name;
+                    
+                    XYChart.Data<String, Number> data = new XYChart.Data<>(displayName, total);
+                    
+                    // Adiciona tooltip para mostrar informações detalhadas
+                    data.nodeProperty().addListener((obs, oldNode, newNode) -> {
+                        if (newNode != null) {
+                            newNode.setStyle("-fx-bar-fill: #3498db;");
+                            
+                            // Tooltip com informações detalhadas
+                            String monthName = Month.of(month).getDisplayName(TextStyle.FULL, new Locale("pt", "BR"));
+                            Tooltip tooltip = new Tooltip(name + ": " + total + " vendas em " + monthName + "/" + year);
+                            tooltip.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
+                            Tooltip.install(newNode, tooltip);
+                            
+                            // Efeito de hover
+                            newNode.setOnMouseEntered(e -> {
+                                newNode.setStyle("-fx-bar-fill: #2980b9; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 5, 0, 0, 1);");
+                            });
+                            newNode.setOnMouseExited(e -> {
+                                newNode.setStyle("-fx-bar-fill: #3498db;");
+                            });
+                        }
+                    });
+                    series.getData().add(data);
+                }
+                
+                // Só adiciona a série se houver dados
+                if (hasData) {
+                    chart.getData().add(series);
+                }
             }
-            chart.getData().add(series);
         }
+    }
+
+    /**
+     * Obtém o top funcionário para um mês específico
+     * @return String com info ou null se sem dados
+     */
+    private String getTopEmployee(int year, int month) throws SQLException {
+        String sql = "SELECT TOP 1 ls.Nome, COUNT(v.ID_Vendas) as TotalVendas " +
+                    "FROM vendas v " +
+                    "JOIN login_sistema ls ON v.ID_Login = ls.ID_Login " +
+                    "WHERE YEAR(v.Data_Venda) = ? AND MONTH(v.Data_Venda) = ? " +
+                    "GROUP BY ls.Nome " +
+                    "ORDER BY TotalVendas DESC";
+        
+        try (Connection con = getConnection();
+            PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, year);
+            ps.setInt(2, month);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String nome = rs.getString("Nome");
+                    int total = rs.getInt("TotalVendas");
+                    String monthName = Month.of(month).getDisplayName(TextStyle.FULL, new Locale("pt", "BR"));
+                    return "Funcionário do mês (" + monthName + "/" + year + "): " + nome + " - " + total + " vendas";
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -746,7 +996,11 @@ public class Produtos {
         formGrid.add(btnSalvar, 1, 3);
 
         Scene scene = new Scene(formGrid);
-        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        try {
+            scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar CSS: " + e.getMessage());
+        }
         dialog.setScene(scene);
         dialog.showAndWait();
     }
@@ -833,7 +1087,11 @@ public class Produtos {
                     alert.setTitle("Produto Existente");
                     alert.setHeaderText("Conflito ao salvar produto");
                     alert.setContentText(mensagem);
-                    alert.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+                    try {
+                        alert.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+                    } catch (Exception e) {
+                        System.err.println("Erro ao carregar CSS: " + e.getMessage());
+                    }
 
                     ButtonType btnFechar = new ButtonType("Fechar", ButtonBar.ButtonData.CANCEL_CLOSE);
                     alert.getButtonTypes().setAll(btnFechar);
@@ -933,7 +1191,11 @@ public class Produtos {
         confirm.setTitle("Confirmação");
         confirm.setHeaderText("Deseja apagar o produto: " + produto.getNome() + "?");
         confirm.setContentText("Esta ação não pode ser desfeita.");
-        confirm.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        try {
+            confirm.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar CSS: " + e.getMessage());
+        }
         confirm.initModality(Modality.NONE); // Não bloqueia a janela pai
         confirm.initOwner(stage);
 
@@ -1019,7 +1281,11 @@ public class Produtos {
         alert.initModality(Modality.NONE); // Adicionar esta linha
         alert.initOwner(stage);
         alert.setContentText(mensagem);
-        alert.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        try {
+            alert.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar CSS: " + e.getMessage());
+        }
         alert.showAndWait();
     }
-}
+}   
