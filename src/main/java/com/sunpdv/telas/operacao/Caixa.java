@@ -31,6 +31,7 @@ import com.sunpdv.telas.home.TelaHomeFUN;
 import com.sunpdv.telas.home.TelaHomeMOD;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import javafx.collections.ListChangeListener;
 
 public class Caixa {
 
@@ -155,7 +156,6 @@ public class Caixa {
         }
         atualizarEstadoBotoes();
     }
-
 
     private Button criarBotaoLateral(String texto, String caminhoIcone) {
         try {
@@ -297,7 +297,7 @@ public class Caixa {
     }
 
     private void carregarItensVenda(Venda venda) throws SQLException {
-        String query = "SELECT p.Nome, p.Cod_Barras, ci.Quantidade, ci.PrecoUnitario " +
+        String query = "SELECT p.Nome, p.Cod_Barras, ci.Quantidade, ci.Preco_Unitario " +
                       "FROM carrinho_itens ci " +
                       "JOIN produtos p ON ci.ID_Produto = p.ID_Produto " +
                       "WHERE ci.ID_Carrinho = (SELECT ID_Carrinho FROM vendas WHERE ID_Vendas = ?)";
@@ -313,7 +313,7 @@ public class Caixa {
                     rs.getString("Nome"),
                     rs.getString("Cod_Barras"),
                     rs.getInt("Quantidade"),
-                    rs.getDouble("PrecoUnitario")
+                    rs.getDouble("Preco_Unitario")
                 ));
             }
         }
@@ -485,27 +485,21 @@ public class Caixa {
             totalLabel
         );
 
-        listaProdutos.getItems().addListener((javafx.collections.ListChangeListener.Change<? extends ItemVenda> c) -> {
-            atualizarTotal();
+        // Corrigido: Removido o listener problemático e adicionado um correto
+        listaProdutos.getItems().addListener((ListChangeListener<ItemVenda>) c -> {
+            while (c.next()) {
+                if (c.wasAdded() || c.wasRemoved() || c.wasReplaced()) {
+                    atualizarTotal();
+                }
+            }
         });
-
-        listaProdutos.getItems().addListener((javafx.collections.ListChangeListener.Change<? extends ItemVenda> c) -> {
-    while (c.next()) {
-        if (c.wasAdded() || c.wasRemoved() || c.wasReplaced()) {
-            atualizarTotal();
-        }}});
-
-        private void removerItem(ItemVenda item) {
-        listaProdutos.getItems().remove(item);
-        atualizarTotal(); // Chama explicitamente após remover
-    }
 
         novaVendaContainer.getChildren().addAll(
             clienteBox,
             produtosBox,
             botoes
         );
-    }
+    }   
 
     private void adicionarProduto(Spinner<Integer> quantidadeSpinner) {
         String codigo = codigoProdutoField.getText().trim();
@@ -559,6 +553,11 @@ public class Caixa {
             ex.printStackTrace();
             mostrarAlerta("Erro ao buscar produto", "Detalhes: " + ex.getMessage(), AlertType.ERROR);
         }
+    }
+
+    private void removerItem(ItemVenda item) {
+        listaProdutos.getItems().remove(item);
+        atualizarTotal(); // Chama explicitamente após remover
     }
 
     private void cancelarVenda() {
@@ -622,7 +621,6 @@ public class Caixa {
                 totalVenda,
                 this
             );
-            
             finalizarVenda.mostrar(stage, this);
 
         } catch (Exception ex) {
@@ -654,7 +652,7 @@ public class Caixa {
         atualizarEstadoBotoes();
         
         vendas = carregarVendas();
-        aplicarFiltros();
+        aplicarFiltros();   
     }
 
     private class ItemVendaCell extends ListCell<ItemVenda> {
@@ -720,6 +718,7 @@ public class Caixa {
             }
         }
     }
+    
     private boolean validarCPF(String cpf) {
         cpf = cpf.replaceAll("[^0-9]", "");
         
