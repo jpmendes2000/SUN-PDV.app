@@ -25,6 +25,7 @@ import javafx.animation.Timeline;
 
 import javafx.scene.control.Alert.AlertType;
 
+import com.sunpdv.model.AutenticarUser;
 // Importar a nova classe CupomFiscal
 import com.sunpdv.model.CupomFiscal;
 
@@ -679,7 +680,7 @@ public class FinalizarVenda {
             double troco = totalPago - totalVenda;
             for (Pagamento p : pagamentos) {
                 int idPagamento = inserirPagamento(conn, p.forma, p.valor, troco > 0 ? troco : 0);
-                inserirVenda(conn, idCarrinho, idPagamento, idCliente);
+            inserirVenda(conn, idCarrinho, idPagamento, idCliente);
                 break; // Usar apenas o primeiro pagamento para compatibilidade com esquema original
             }
 
@@ -765,11 +766,12 @@ public class FinalizarVenda {
             rs = conn.getMetaData().getTables(null, null, "carrinho_itens", null);
             if (!rs.next()) {
                 stmt.execute("CREATE TABLE carrinho_itens (" +
+                        "ID_Login SMALLINT NOT NULL,"+
                         "ID_Carrinho_itens INT PRIMARY KEY IDENTITY(1,1)," +
                         "ID_Carrinho INT NOT NULL," +
                         "ID_Produto INT NOT NULL," +
                         "Quantidade INT NOT NULL," +
-                        "PrecoUnitario DECIMAL(10,2) NOT NULL," +
+                        "Preco_Unitario DECIMAL(10,2) NOT NULL," +
                         "CONSTRAINT FK_carrinho_itens_carrinho FOREIGN KEY (ID_Carrinho) REFERENCES carrinho(ID_Carrinho)," +
                         "CONSTRAINT FK_carrinho_itens_produtos FOREIGN KEY (ID_Produto) REFERENCES produtos(ID_Produto)" +
                         ")");
@@ -822,7 +824,7 @@ public class FinalizarVenda {
     }
 
     private void inserirItensCarrinho(Connection conn, int idCarrinho) throws SQLException {
-        String sql = "INSERT INTO carrinho_itens (ID_Carrinho, ID_Produto, Quantidade, PrecoUnitario) " +
+        String sql = "INSERT INTO carrinho_itens (ID_Carrinho, ID_Produto, Quantidade, Preco_Unitario) " +
                 "VALUES (?, (SELECT ID_Produto FROM produtos WHERE Cod_Barras = ?), ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             for (Caixa.ItemVenda item : itens) {
@@ -835,20 +837,31 @@ public class FinalizarVenda {
         }
     }
 
+    // 2. Substitua o método inserirVenda existente na classe FinalizarVenda.java por este:
     private void inserirVenda(Connection conn, int idCarrinho, int idPagamento, Integer idCliente) throws SQLException {
-        String sql = "INSERT INTO vendas (ID_Carrinho, ID_Pagamentos, Subtotal, Total, Data_Venda, ID_Clientes) " +
-                "VALUES (?, ?, ?, ?, GETDATE(), ?)";
+        // Obter o ID do funcionário logado através da classe AutenticarUser
+        int idLogin = AutenticarUser.getIdUsuario(); 
+        
+        if (idLogin == 0) {
+            throw new SQLException("Usuário não autenticado. ID do login não encontrado.");
+        }
+        
+        String sql = "INSERT INTO vendas (ID_Carrinho, ID_Login, ID_Pagamentos, Subtotal, Total, Data_Venda, ID_Clientes) " +
+                "VALUES (?, ?, ?, ?, ?, GETDATE(), ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, idCarrinho);
-            stmt.setInt(2, idPagamento);
-            stmt.setDouble(3, totalVenda);
+            stmt.setInt(2, idLogin);  // ID do funcionário que está realizando a venda
+            stmt.setInt(3, idPagamento);
             stmt.setDouble(4, totalVenda);
+            stmt.setDouble(5, totalVenda);
             if (idCliente != null) {
-                stmt.setInt(5, idCliente);
+                stmt.setInt(6, idCliente);
             } else {
-                stmt.setNull(5, Types.INTEGER);
+                stmt.setNull(6, Types.INTEGER);
             }
             stmt.executeUpdate();
+            
+            System.out.println("Venda registrada para o funcionário ID: " + idLogin + " (" + AutenticarUser.getNome() + ")");
         }
     }
 
