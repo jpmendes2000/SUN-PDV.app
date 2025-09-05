@@ -156,6 +156,7 @@ public class Caixa {
         atualizarEstadoBotoes();
     }
 
+
     private Button criarBotaoLateral(String texto, String caminhoIcone) {
         try {
             Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
@@ -488,6 +489,17 @@ public class Caixa {
             atualizarTotal();
         });
 
+        listaProdutos.getItems().addListener((javafx.collections.ListChangeListener.Change<? extends ItemVenda> c) -> {
+    while (c.next()) {
+        if (c.wasAdded() || c.wasRemoved() || c.wasReplaced()) {
+            atualizarTotal();
+        }}});
+
+        private void removerItem(ItemVenda item) {
+        listaProdutos.getItems().remove(item);
+        atualizarTotal(); // Chama explicitamente após remover
+    }
+
         novaVendaContainer.getChildren().addAll(
             clienteBox,
             produtosBox,
@@ -531,10 +543,13 @@ public class Caixa {
             if (existente.isPresent()) {
                 ItemVenda item = existente.get();
                 item.quantidade += quantidade;
-                listaProdutos.refresh();
+                listaProdutos.refresh(); // Força a atualização da ListView
             } else {
                 listaProdutos.getItems().add(new ItemVenda(nomeProduto, codigo, quantidade, preco));
             }
+
+            // Chama explicitamente atualizarTotal() após modificar a lista
+            atualizarTotal();
 
             codigoProdutoField.clear();
             quantidadeSpinner.getValueFactory().setValue(1);
@@ -651,7 +666,10 @@ public class Caixa {
                 setText(null);
                 setGraphic(null);
             } else {
-                VBox vbox = new VBox(2);
+                HBox mainBox = new HBox(10);
+                mainBox.setAlignment(Pos.CENTER_LEFT);
+                
+                VBox infoBox = new VBox(2);
                 
                 Label nomeLabel = new Label(item.produto);
                 nomeLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: white;");
@@ -663,12 +681,45 @@ public class Caixa {
                 );
                 detalhesLabel.setStyle("-fx-text-fill: #c7eefaff; -fx-font-size: 11px;");
                 
-                vbox.getChildren().addAll(nomeLabel, detalhesLabel);
-                setGraphic(vbox);
+                infoBox.getChildren().addAll(nomeLabel, detalhesLabel);
+                
+                // Botões para modificar quantidade
+                Button btnMenos = new Button("-");
+                btnMenos.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white; -fx-font-weight: bold;");
+                btnMenos.setPrefSize(30, 25);
+                btnMenos.setOnAction(e -> {
+                    if (item.quantidade > 1) {
+                        item.quantidade--;
+                        updateItem(item, false); // Re-renderiza a célula
+                        atualizarTotal();
+                    }
+                });
+                
+                Button btnMais = new Button("+");
+                btnMais.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-weight: bold;");
+                btnMais.setPrefSize(30, 25);
+                btnMais.setOnAction(e -> {
+                    item.quantidade++;
+                    updateItem(item, false); // Re-renderiza a célula
+                    atualizarTotal();
+                });
+                
+                Button btnRemover = new Button("×");
+                btnRemover.setStyle("-fx-background-color: #6c757d; -fx-text-fill: white; -fx-font-weight: bold;");
+                btnRemover.setPrefSize(30, 25);
+                btnRemover.setOnAction(e -> removerItem(item));
+                
+                HBox botoesBox = new HBox(5, btnMenos, btnMais, btnRemover);
+                botoesBox.setAlignment(Pos.CENTER);
+                
+                Region spacer = new Region();
+                HBox.setHgrow(spacer, Priority.ALWAYS);
+                
+                mainBox.getChildren().addAll(infoBox, spacer, botoesBox);
+                setGraphic(mainBox);
             }
         }
     }
-
     private boolean validarCPF(String cpf) {
         cpf = cpf.replaceAll("[^0-9]", "");
         

@@ -15,12 +15,14 @@ public class AutenticarUser {
     private static String nome;
     private static String cargo;
     private static int idPermissao;
+    private static int idUsuario; // ADICIONADO: Para armazenar o ID do usuário logado
+    
     private static final String AES_KEY = "MinhaChaveSuperSegura1234567890!";
     private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=true;trustServerCertificate=true;";
     private static final String USER = "sa";
     private static final String PASSWORD = "Senha@12345!";
 
-    // Getters
+    // Getters existentes
     public static String getNome() {
         return nome;
     }
@@ -33,7 +35,12 @@ public class AutenticarUser {
         return idPermissao;
     }
 
-    // Setters
+    // ADICIONADO: Getter para ID do usuário
+    public static int getIdUsuario() {
+        return idUsuario;
+    }
+
+    // Setters existentes
     public static void setNome(String nome) {
         AutenticarUser.nome = nome;
     }
@@ -46,11 +53,17 @@ public class AutenticarUser {
         AutenticarUser.idPermissao = idPermissao;
     }
 
-    // Limpa os dados do usuário (para logout)
+    // ADICIONADO: Setter para ID do usuário
+    public static void setIdUsuario(int idUsuario) {
+        AutenticarUser.idUsuario = idUsuario;
+    }
+
+    // MODIFICADO: Limpa os dados do usuário (para logout)
     public static void limparDados() {
         nome = null;
         cargo = null;
         idPermissao = 0;
+        idUsuario = 0; // ADICIONADO: Limpar também o ID do usuário
     }
 
     // Verifica se há um usuário autenticado
@@ -60,9 +73,8 @@ public class AutenticarUser {
     }
 
     /**
-     * Método para autenticar usuário com e-mail e senha no banco de dados.
-     * Se válido, salva dados estáticos e retorna true.
-     * Se inválido, retorna false.
+     * MODIFICADO: Método para autenticar usuário com e-mail e senha no banco de dados.
+     * Agora também captura o ID_Login do usuário para registrar nas vendas.
      */
     public static boolean autenticar(String email, String senha) {
         if (email == null || senha == null || email.trim().isEmpty() || senha.trim().isEmpty()) {
@@ -75,11 +87,13 @@ public class AutenticarUser {
             String senhaHash = hashSHA256(senha);
 
             try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD)) {
-                String sql = "SELECT l.Nome, c.Cargo, p.ID_Permissao, p.permissao " +
+                // MODIFICADO: Incluir ID_Login na consulta
+                String sql = "SELECT l.ID_Login, l.Nome, c.Cargo, p.ID_Permissao, p.permissao " +
                              "FROM login_sistema l " +
                              "INNER JOIN Cargo c ON l.ID_Cargo = c.ID_Cargo " +
                              "INNER JOIN Permissao p ON l.ID_Permissao = p.ID_Permissao " +
-                             "WHERE l.Email = ? AND l.Senha = ?";
+                             "WHERE l.Email = ? AND l.Senha = ? AND l.Ativo = 1";
+                             
                 try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                     stmt.setString(1, emailCriptografado);
                     stmt.setString(2, senhaHash);
@@ -91,10 +105,18 @@ public class AutenticarUser {
                                 limparDados();
                                 return false;
                             }
+                            
+                            // MODIFICADO: Capturar também o ID_Login
+                            idUsuario = rs.getInt("ID_Login");
                             nome = rs.getString("Nome");
                             cargo = rs.getString("Cargo");
                             idPermissao = rs.getInt("ID_Permissao");
-                            System.out.println("Usuário autenticado: " + nome + ", Cargo: " + cargo + ", ID_Permissao: " + idPermissao);
+                            
+                            // ADICIONADO: Atualizar último login
+                            atualizarUltimoLogin(idUsuario);
+                            
+                            System.out.println("Usuário autenticado: " + nome + ", Cargo: " + cargo + 
+                                             ", ID_Usuario: " + idUsuario + ", ID_Permissao: " + idPermissao);
                             return true;
                         } else {
                             System.err.println("Nenhum usuário encontrado para o e-mail: " + email);
@@ -119,8 +141,28 @@ public class AutenticarUser {
         }
     }
 
+    // ADICIONADO: Método para atualizar último login
+    private static void atualizarUltimoLogin(int idUsuario) {
+        String sql = "UPDATE login_sistema SET Ultimo_Login = GETDATE() WHERE ID_Login = ?";
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idUsuario);
+            stmt.executeUpdate();
+            System.out.println("Último login atualizado para o usuário ID: " + idUsuario);
+        } catch (SQLException e) {
+            System.err.println("Erro ao atualizar último login: " + e.getMessage());
+        }
+    }
+
+    // ADICIONADO: Método para fazer logout completo
+    public static void logout() {
+        System.out.println("Fazendo logout do usuário: " + nome);
+        limparDados();
+    }
+
     /**
      * Método para cadastrar um novo usuário no banco de dados.
+     * (Mantido sem alterações)
      */
     public static boolean cadastrar(String nome, String email, String senha, String cargo) {
         if (nome == null || email == null || senha == null || cargo == null ||
@@ -189,6 +231,7 @@ public class AutenticarUser {
         }
     }
 
+    // Métodos de criptografia existentes (sem alterações)
     private static String criptografarAES(String texto) throws Exception {
         SecretKeySpec chave = new SecretKeySpec(AES_KEY.getBytes(), "AES");
         Cipher cipher = Cipher.getInstance("AES");
