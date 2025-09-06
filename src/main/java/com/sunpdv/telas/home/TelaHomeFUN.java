@@ -181,7 +181,7 @@ public class TelaHomeFUN {
 
         // Botões do menu
         Button btnVendas = criarBotaoLateral("Vendas", "/img/icon/carrinho-de-compras.png");
-        Button btnProdutos = criarBotaoLateral("Gerenciar Produtos", "/img/icon/lista.png");
+        Button btnProdutos = criarBotaoLateral("Gestão", "/img/icon/lista.png");
         Button btnUsuarios = criarBotaoLateral("Gerenciar Usuários", "/img/icon/grupo.png");
         Button btnConfigurar = criarBotaoLateral("Configurações", "/img/icon/definicoes.png");
         Button btnSair = criarBotaoLateral("Sair do Sistema", "/img/icon/fechar.png");
