@@ -678,10 +678,17 @@ public class FinalizarVenda {
             inserirItensCarrinho(conn, idCarrinho);
 
             double troco = totalPago - totalVenda;
+            List<Integer> idsPagamentos = new ArrayList<>();
             for (Pagamento p : pagamentos) {
-                int idPagamento = inserirPagamento(conn, p.forma, p.valor, troco > 0 ? troco : 0);
-            inserirVenda(conn, idCarrinho, idPagamento, idCliente);
-                break; // Usar apenas o primeiro pagamento para compatibilidade com esquema original
+                double trocoPagamento = (p.forma.equals("Dinheiro") && troco > 0) ? troco : 0;
+                int idPagamento = inserirPagamento(conn, p.forma, p.valor, trocoPagamento);
+                idsPagamentos.add(idPagamento);
+            }
+
+            int idVenda = inserirVenda(conn, idCarrinho, idCliente);
+
+            for (int idPagamento : idsPagamentos) {
+                inserirVendaPagamento(conn, idVenda, idPagamento);
             }
 
             conn.commit();
@@ -776,17 +783,35 @@ public class FinalizarVenda {
                         "CONSTRAINT FK_carrinho_itens_produtos FOREIGN KEY (ID_Produto) REFERENCES produtos(ID_Produto)" +
                         ")");
             }
+
+            // Tornar ID_Pagamentos nullable na tabela vendas para suportar múltiplos pagamentos via venda_pagamentos
+            rs = conn.getMetaData().getColumns(null, null, "vendas", "ID_Pagamentos");
+            if (rs.next() && "NO".equals(rs.getString("IS_NULLABLE"))) {
+                stmt.execute("ALTER TABLE vendas ALTER COLUMN ID_Pagamentos INT NULL");
+            }
+
+            // Garantir que a tabela venda_pagamentos existe
+            rs = conn.getMetaData().getTables(null, null, "venda_pagamentos", null);
+            if (!rs.next()) {
+                stmt.execute("CREATE TABLE venda_pagamentos (" +
+                        "ID_Venda_Pagamento INT PRIMARY KEY IDENTITY(1,1)," +
+                        "ID_Venda INT NOT NULL," +
+                        "ID_Pagamento INT NOT NULL," +
+                        "CONSTRAINT FK_venda_pagamentos_venda FOREIGN KEY (ID_Venda) REFERENCES vendas(ID_Vendas)," +
+                        "CONSTRAINT FK_venda_pagamentos_pagamento FOREIGN KEY (ID_Pagamento) REFERENCES pagamentos(ID_Pagamentos)" +
+                        ")");
+            }
         }
     }
 
     private Integer inserirCliente(Connection conn) throws SQLException {
         String column = "";
         if ("CPF".equals(tipoDocumento)) {
-            column = "cpf";
+            column = "CPF";
         } else if ("CNPJ".equals(tipoDocumento)) {
-            column = "cnpj";
+            column = "CNPJ";
         } else if ("RG".equals(tipoDocumento)) {
-            column = "rg";
+            column = "RG";
         }
 
         String sql = "INSERT INTO clientes (" + column + ") VALUES (?)";
@@ -837,8 +862,7 @@ public class FinalizarVenda {
         }
     }
 
-    // 2. Substitua o método inserirVenda existente na classe FinalizarVenda.java por este:
-    private void inserirVenda(Connection conn, int idCarrinho, int idPagamento, Integer idCliente) throws SQLException {
+    private int inserirVenda(Connection conn, int idCarrinho, Integer idCliente) throws SQLException {
         // Obter o ID do funcionário logado através da classe AutenticarUser
         int idLogin = AutenticarUser.getIdUsuario(); 
         
@@ -846,22 +870,32 @@ public class FinalizarVenda {
             throw new SQLException("Usuário não autenticado. ID do login não encontrado.");
         }
         
-        String insertVenda = "INSERT INTO vendas (Data_Venda, Subtotal, Total, ID_Clientes, ID_Usuario, ID_Carrinho, ID_Pagamentos) " +
-                            "VALUES (GETDATE(), ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        String insertVenda = "INSERT INTO vendas (ID_Carrinho, ID_Clientes, Subtotal, Total, Data_Venda, ID_Login, Desconto, Status) " +
+                             "VALUES (?, ?, ?, ?, GETDATE(), ?, 0.00, 'Concluida')";
+        try (PreparedStatement stmt = conn.prepareStatement(insertVenda, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, idCarrinho);
-            stmt.setInt(2, idLogin);  // ID do funcionário que está realizando a venda
-            stmt.setInt(3, idPagamento);
-            stmt.setDouble(4, totalVenda);
-            stmt.setDouble(5, totalVenda);
-            if (idCliente != null) {
-                stmt.setInt(6, idCliente);
-            } else {
-                stmt.setNull(6, Types.INTEGER);
-            }
+            stmt.setObject(2, idCliente, Types.INTEGER); // Aceita null
+            stmt.setDouble(3, totalVenda); // Subtotal (ajuste se houver desconto)
+            stmt.setDouble(4, totalVenda); // Total
+            stmt.setInt(5, idLogin);
             stmt.executeUpdate();
             
-            System.out.println("Venda registrada para o funcionário ID: " + idLogin + " (" + AutenticarUser.getNome() + ")");
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                } else {
+                    throw new SQLException("Falha ao obter ID da venda gerado.");
+                }
+            }
+        }
+    }
+
+    private void inserirVendaPagamento(Connection conn, int idVenda, int idPagamento) throws SQLException {
+        String sql = "INSERT INTO venda_pagamentos (ID_Venda, ID_Pagamento) VALUES (?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idVenda);
+            stmt.setInt(2, idPagamento);
+            stmt.executeUpdate();
         }
     }
 
