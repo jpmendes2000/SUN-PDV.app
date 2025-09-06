@@ -195,7 +195,7 @@ public class Produtos {
         menuScroll.setFitToWidth(true);
         menuScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         menuScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        menuScroll.setStyle("-fx-background: #00536d; -fx-background-color: #00536d;");
+        menuScroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
         menuScroll.setPrefViewportHeight(200); // Altura mínima visível
 
         // Espaço flexível para empurrar o menu para baixo
@@ -346,8 +346,7 @@ public class Produtos {
                     stage.close();
                 }
             });
-        });
-     // Confirma saída do sistema
+        }); // Confirma saída do sistema
 
         // Listener para seleção na tabela
         table.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
@@ -430,7 +429,7 @@ public class Produtos {
         dashboardContainer.getChildren().clear();
         dashboardContainer.setSpacing(20);
         dashboardContainer.setPadding(new Insets(20));
-        dashboardContainer.setStyle("-fx-background-color: #00536d;");
+        dashboardContainer.setStyle("-fx-background-color: transparent;");
         
         // Container principal com scroll
         VBox dashboardContent = new VBox();
@@ -439,49 +438,41 @@ public class Produtos {
         
         // Título do dashboard
         Label tituloDashboard = new Label("Dashboard Administrativo");
-        tituloDashboard.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #00536d;");
+        tituloDashboard.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #a9cce3;");
         dashboardContent.getChildren().add(tituloDashboard);
         
         try {
-            // Gráfico 1: Produtos mais vendidos (azul) - overall, top 10
-            BarChart<String, Number> chartMaisVendidos = criarGraficoColuna(
-                "Produtos Mais Vendidos (Geral)", 
-                "#3498db"
-            );
-            carregarDadosProdutosMaisVendidos(chartMaisVendidos, 10);
-            dashboardContent.getChildren().add(chartMaisVendidos);
-            
-            // Gráfico 2: Produtos menos vendidos (vermelho)
-            BarChart<String, Number> chartMenosVendidos = criarGraficoColuna(
-                "Produtos Menos Vendidos", 
-                "#e74c3c"
-            );
-            carregarDadosProdutosMenosVendidos(chartMenosVendidos);
-            dashboardContent.getChildren().add(chartMenosVendidos);
-            
-            // Gráfico 3: Funcionário que mais realizou vendas (overall)
-            BarChart<String, Number> chartTopFuncionario = criarGraficoColuna(
-                "Funcionário com Mais Vendas (Geral)", 
-                "#2ecc71"
-            );
-            carregarDadosTopFuncionario(chartTopFuncionario);
-            dashboardContent.getChildren().add(chartTopFuncionario);
+            // Gráfico combinado com os 3 dados principais
+            BarChart<String, Number> combinedChart = criarGraficoColuna("Dashboard de Vendas", null);
+            carregarDadosCombinados(combinedChart);
+            dashboardContent.getChildren().add(combinedChart);
+
+            // Adicionar label do funcionário do mês atual
+            LocalDate current = LocalDate.now();
+            int year = current.getYear();
+            int month = current.getMonthValue();
+            String employeeInfo = getTopEmployee(year, month);
+            if (employeeInfo != null) {
+                Label employeeLabel = new Label(employeeInfo);
+                employeeLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #a9cce3; -fx-padding: 10;");
+                dashboardContent.getChildren().add(employeeLabel);
+            }
             
             // Gráficos mensais dos últimos 12 meses
             LocalDate currentDate = LocalDate.now();
             
             for (int i = 11; i >= 0; i--) {
                 LocalDate monthDate = currentDate.minusMonths(i);
-                int year = monthDate.getYear();
-                int month = monthDate.getMonthValue();
-                String monthName = monthDate.getMonth().getDisplayName(TextStyle.FULL, new Locale("pt", "BR")) + " " + year;
+                int yearMonthly = monthDate.getYear();
+                int monthMonthly = monthDate.getMonthValue();
+                String monthName = monthDate.getMonth().getDisplayName(TextStyle.FULL, new Locale("pt", "BR")) + " " + yearMonthly;
                 
                 // Verifica se há dados para o mês
-                boolean hasData = hasDataForMonth(year, month);
+                boolean hasData = hasDataForMonth(yearMonthly, monthMonthly);
                 
                 if (hasData) {
                     // Get top employee for this month
-                    String employeeInfo = getTopEmployee(year, month);
+                    String employeeInfoMonthly = getTopEmployee(yearMonthly, monthMonthly);
                     
                     // Create chart
                     BarChart<String, Number> monthlyChart = criarGraficoColuna(
@@ -490,27 +481,22 @@ public class Produtos {
                     );
                     
                     // Load data
-                    carregarTopProdutosMonthly(monthlyChart, year, month, 10);
+                    carregarTopProdutosMonthly(monthlyChart, yearMonthly, monthMonthly, 10);
                     
                     // If has employee data, add label
-                    if (employeeInfo != null) {
-                        Label employeeLabel = new Label(employeeInfo);
-                        employeeLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #00536d; -fx-padding: 10 0 5 0;");
-                        dashboardContent.getChildren().add(employeeLabel);
+                    if (employeeInfoMonthly != null) {
+                        Label employeeLabelMonthly = new Label(employeeInfoMonthly);
+                        employeeLabelMonthly.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #a9cce3; -fx-padding: 10 0 5 0;");
+                        dashboardContent.getChildren().add(employeeLabelMonthly);
                     }
                     
                     dashboardContent.getChildren().add(monthlyChart);
-                } else {
-                    // Adiciona apenas um label indicando que não há dados para o mês
-                    Label noDataLabel = new Label("Sem dados para " + monthName);
-                    noDataLabel.setStyle("-fx-text-fill: gray; -fx-font-size: 14px; -fx-padding: 10 0 5 0;");
-                    dashboardContent.getChildren().add(noDataLabel);
                 }
             }
             
         } catch (SQLException e) {
             Label erroLabel = new Label("Erro ao carregar dados do dashboard: " + e.getMessage());
-            erroLabel.setStyle("-fx-text-fill: red;");
+            erroLabel.setStyle("-fx-text-fill: #a9cce3;");
             dashboardContent.getChildren().add(erroLabel);
         }
         
@@ -519,7 +505,7 @@ public class Produtos {
         dashboardScroll.setFitToWidth(true);
         dashboardScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         dashboardScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        dashboardScroll.setStyle("-fx-background: #00536d; -fx-background-color: #00536d;");
+        dashboardScroll.setStyle("-fx-background: transparent; -fx-background-color: transparent,;");
         
         // Limpa e adiciona o scroll ao container
         dashboardContainer.getChildren().clear();
@@ -539,11 +525,11 @@ public class Produtos {
         barChart.setLegendVisible(false);
         barChart.setPrefHeight(400);
         barChart.setMinHeight(400);
-        barChart.setStyle("-fx-background-color: white; -fx-padding: 15; -fx-border-color: #ff00b7ff; -fx-border-width: 1;");
+        barChart.setStyle("-fx-background-color:  linear-gradient(to bottom right, #025a74ff, #0b5167ff, #17353fff); -fx-padding: 15; -fx-border-color: linear-gradient(to bottom right, #0280a6ff, #0f7392ff, #255565ff); -fx-border-width: 1;");
         
         // Estilo do título
         barChart.setTitle(titulo);
-        barChart.lookup(".chart-title").setStyle("-fx-text-fill: #2c3e50; -fx-font-size: 16px; -fx-font-weight: bold;");
+        barChart.lookup(".chart-title").setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 16px; -fx-font-weight: bold;");
         
         // Configurações dos eixos
         xAxis.setTickLabelRotation(0);
@@ -554,31 +540,6 @@ public class Produtos {
         yAxis.setTickLabelFont(javafx.scene.text.Font.font(12));
         yAxis.setTickLabelFill(javafx.scene.paint.Color.BLACK);
         yAxis.setForceZeroInRange(true);
-        
-        // Aplica a cor às barras
-        barChart.getData().addListener((javafx.collections.ListChangeListener.Change<? extends XYChart.Series> change) -> {
-            while (change.next()) {
-                if (change.wasAdded()) {
-                    for (XYChart.Series<String, Number> series : barChart.getData()) {
-                        for (XYChart.Data<String, Number> data : series.getData()) {
-                            data.nodeProperty().addListener((obs, oldNode, newNode) -> {
-                                if (newNode != null) {
-                                    newNode.setStyle("-fx-bar-fill: " + cor + ";");
-                                    
-                                    // Adiciona efeito de hover
-                                    newNode.setOnMouseEntered(e -> {
-                                        newNode.setStyle("-fx-bar-fill: derive(" + cor + ", -20%); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 5, 0, 0, 1);");
-                                    });
-                                    newNode.setOnMouseExited(e -> {
-                                        newNode.setStyle("-fx-bar-fill: " + cor + ";");
-                                    });
-                                }
-                            });
-                        }
-                    }
-                }
-            }
-        });
         
         return barChart;
     }
@@ -607,86 +568,126 @@ public class Produtos {
     }
 
     /**
-     * Carrega dados dos produtos mais vendidos (overall)
-        */
-        private void carregarDadosProdutosMaisVendidos(BarChart<String, Number> chart, int topN) throws SQLException {
-        String sql = "SELECT TOP " + topN + " p.Nome, SUM(ci.Quantidade) as TotalVendas " +
-                    "FROM carrinho_itens ci " +
-                    "JOIN produtos p ON ci.ID_Produto = p.ID_Produto " +
-                    "JOIN vendas v ON ci.ID_Carrinho = v.ID_Carrinho " +
-                    "GROUP BY p.Nome " +
-                    "ORDER BY TotalVendas DESC";
+     * Carrega dados combinados para o gráfico principal
+     */
+    private void carregarDadosCombinados(BarChart<String, Number> chart) throws SQLException {
+        // Limpa qualquer dado existente
+        chart.getData().clear();
         
-        carregarBarChartData(chart, sql, "#3498db");
+        XYChart.Series<String, Number> seriesReceita = new XYChart.Series<>();
+        seriesReceita.setName("Receita");
+        String colorReceita = "#FFD700"; // yellow
+        
+        XYChart.Series<String, Number> seriesQuantidade = new XYChart.Series<>();
+        seriesQuantidade.setName("Quantidade Vendida");
+        String colorQuantidade = "#FF0000"; // red
+        
+        XYChart.Series<String, Number> seriesVendas = new XYChart.Series<>();
+        seriesVendas.setName("Número de Vendas");
+        String colorVendas = "#0000FF"; // blue
+        
+        String[] months = {"janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"};
+        int year = LocalDate.now().getYear();
+        
+        for (int m = 1; m <= 12; m++) {
+            String monthName = months[m - 1];
+            
+            // Receita
+            double receita = getMonthlyValue("SUM(v.Subtotal)", year, m);
+            XYChart.Data<String, Number> dataReceita = new XYChart.Data<>(monthName, receita);
+            addHoverAndStyle(dataReceita, colorReceita, "Receita em " + monthName + ": R$ " + String.format("%.2f", receita));
+            seriesReceita.getData().add(dataReceita);
+            
+            // Quantidade vendida
+            double quantidade = getMonthlyValue("SUM(ci.Quantidade)", year, m);
+            XYChart.Data<String, Number> dataQuantidade = new XYChart.Data<>(monthName, quantidade);
+            addHoverAndStyle(dataQuantidade, colorQuantidade, "Quantidade vendida em " + monthName + ": " + (int) quantidade);
+            seriesQuantidade.getData().add(dataQuantidade);
+            
+            // Número de vendas
+            double vendas = getMonthlyValue("COUNT(v.ID_Vendas)", year, m);
+            XYChart.Data<String, Number> dataVendas = new XYChart.Data<>(monthName, vendas);
+            addHoverAndStyle(dataVendas, colorVendas, "Número de vendas em " + monthName + ": " + (int) vendas);
+            seriesVendas.getData().add(dataVendas);
+        }
+        
+        // Adiciona as séries ao gráfico
+        chart.getData().addAll(seriesReceita, seriesQuantidade, seriesVendas);
+        
+        // Adiciona legendas
+        chart.setLegendVisible(true);
+        chart.lookup(".chart-legend").setStyle("-fx-background-color: transparent;");
     }
 
     /**
-     * Carrega dados dos produtos menos vendidos
+     * Obtém o valor agregado para um mês específico
+     * @param aggregate Expressão de agregação (ex: SUM(v.Valor_Total))
+     * @param year Ano
+     * @param month Mês
+     * @return Valor agregado
      */
-    private void carregarDadosProdutosMenosVendidos(BarChart<String, Number> chart) throws SQLException {
-        String sql = "SELECT TOP 5 p.Nome, SUM(ci.Quantidade) as TotalVendas " +
-                    "FROM carrinho_itens ci " +
-                    "JOIN produtos p ON ci.ID_Produto = p.ID_Produto " +
-                    "JOIN vendas v ON ci.ID_Carrinho = v.ID_Carrinho " +
-                    "GROUP BY p.Nome " +
-                    "ORDER BY TotalVendas ASC";
+    private double getMonthlyValue(String aggregate, int year, int month) throws SQLException {
+        String join = aggregate.contains("ci.") ? "JOIN carrinho_itens ci ON v.ID_Carrinho = ci.ID_Carrinho " : "";
+        String sql = "SELECT " + aggregate + " as total FROM vendas v " + join +
+                     "WHERE YEAR(v.Data_Venda) = ? AND MONTH(v.Data_Venda) = ?";
         
-        carregarBarChartData(chart, sql, "#e74c3c");
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, year);
+            ps.setInt(2, month);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble("total");
+                }
+            }
+        }
+        return 0.0;
     }
 
     /**
-     * Carrega dados do funcionário com mais vendas (overall)
+     * Adiciona hover e estilo à barra
      */
-    private void carregarDadosTopFuncionario(BarChart<String, Number> chart) throws SQLException {
-        String sql = "SELECT TOP 5 ls.Nome, COUNT(v.ID_Vendas) as TotalVendas " +
-                    "FROM vendas v " +
-                    "JOIN login_sistema ls ON v.ID_Login = ls.ID_Login " +
-                    "GROUP BY ls.Nome " +
-                    "ORDER BY TotalVendas DESC";
-        
-        carregarBarChartData(chart, sql, "#2ecc71");
+    private void addHoverAndStyle(XYChart.Data<String, Number> data, String color, String tooltipText) {
+        data.nodeProperty().addListener((obs, oldNode, newNode) -> {
+            if (newNode != null) {
+                newNode.setStyle("-fx-bar-fill: " + color + ";");
+                
+                Tooltip tooltip = new Tooltip(tooltipText);
+                tooltip.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
+                Tooltip.install(newNode, tooltip);
+                
+                // Efeito de hover
+                newNode.setOnMouseEntered(e -> {
+                    newNode.setStyle("-fx-bar-fill: derive(" + color + ", -20%); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 5, 0, 0, 1);");
+                });
+                newNode.setOnMouseExited(e -> {
+                    newNode.setStyle("-fx-bar-fill: " + color + ";");
+                });
+            }
+        });
     }
 
     /**
-     * Carrega dados para um BarChart genérico
+     * Carrega dados para uma série específica
      */
-    private void carregarBarChartData(BarChart<String, Number> chart, String sql, String color) throws SQLException {
+    private void carregarDadosSerie(XYChart.Series<String, Number> series, String sql, String color) throws SQLException {
         try (Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ResultSet rs = ps.executeQuery()) {
             
-            XYChart.Series<String, Number> series = new XYChart.Series<>();
             while (rs.next()) {
                 String name = rs.getString("Nome");
                 Number total = rs.getInt("TotalVendas");
                 
                 // Limita o nome muito longo para melhor visualização
-                String displayName = name.length() > 20 ? name.substring(0, 17) + "..." : name;
+                String displayName = name.length() > 15 ? name.substring(0, 12) + "..." : name;
                 
                 XYChart.Data<String, Number> data = new XYChart.Data<>(displayName, total);
                 
                 // Adiciona tooltip para mostrar informações detalhadas
-                data.nodeProperty().addListener((obs, oldNode, newNode) -> {
-                    if (newNode != null) {
-                        newNode.setStyle("-fx-bar-fill: " + color + ";");
-                        
-                        // Tooltip com informações completas
-                        Tooltip tooltip = new Tooltip(name + ": " + total + " vendas");
-                        tooltip.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
-                        Tooltip.install(newNode, tooltip);
-                        
-                        // Efeito de hover
-                        newNode.setOnMouseEntered(e -> {
-                            newNode.setStyle("-fx-bar-fill: derive(" + color + ", -20%); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 5, 0, 0, 1);");
-                        });
-                        newNode.setOnMouseExited(e -> {
-                            newNode.setStyle("-fx-bar-fill: " + color + ";");
-                        });
-                    }
-                });
+                addHoverAndStyle(data, color, name + ": " + total + " vendas");
                 series.getData().add(data);
             }
-            chart.getData().add(series);
         }
     }
 
@@ -720,26 +721,8 @@ public class Produtos {
                     
                     XYChart.Data<String, Number> data = new XYChart.Data<>(displayName, total);
                     
-                    // Adiciona tooltip para mostrar informações detalhadas
-                    data.nodeProperty().addListener((obs, oldNode, newNode) -> {
-                        if (newNode != null) {
-                            newNode.setStyle("-fx-bar-fill: #3498db;");
-                            
-                            // Tooltip com informações detalhadas
-                            String monthName = Month.of(month).getDisplayName(TextStyle.FULL, new Locale("pt", "BR"));
-                            Tooltip tooltip = new Tooltip(name + ": " + total + " vendas em " + monthName + "/" + year);
-                            tooltip.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
-                            Tooltip.install(newNode, tooltip);
-                            
-                            // Efeito de hover
-                            newNode.setOnMouseEntered(e -> {
-                                newNode.setStyle("-fx-bar-fill: #2980b9; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 5, 0, 0, 1);");
-                            });
-                            newNode.setOnMouseExited(e -> {
-                                newNode.setStyle("-fx-bar-fill: #3498db;");
-                            });
-                        }
-                    });
+                    String monthName = Month.of(month).getDisplayName(TextStyle.FULL, new Locale("pt", "BR"));
+                    addHoverAndStyle(data, "#3498db", name + ": " + total + " vendas em " + monthName + "/" + year);
                     series.getData().add(data);
                 }
                 
@@ -797,7 +780,7 @@ public class Produtos {
         apagarItem.setOnAction(e -> {
             if (produtoSelecionado != null) {
                 apagarProduto(produtoSelecionado); // Apaga o produto selecionado
-            }
+                        }
         });
 
         contextMenu.getItems().addAll(editarItem, apagarItem); // Adiciona itens ao menu
@@ -860,7 +843,7 @@ public class Produtos {
             icon.setStyle("-fx-fill: white;");
 
             Label textLabel = new Label(texto);
-            textLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
+            textLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-weight: bold;");
 
             // Container para a barra indicadora amarela (agora à direita)
             StackPane indicatorContainer = new StackPane();
@@ -900,7 +883,7 @@ public class Produtos {
         } catch (Exception e) {
             System.err.println("Erro ao carregar ícone: " + caminhoIcone);
             Button btn = new Button(texto);
-            btn.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-background-color: transparent;");
+            btn.setStyle("-fx-text-fill: #a9cce3; -fx-font-weight: bold; -fx-background-color: transparent;");
             btn.setPrefWidth(280);
             btn.setPrefHeight(40);
             return btn;
@@ -915,8 +898,8 @@ public class Produtos {
         String sql = "SELECT ID_Produto, Nome, Cod_Barras, Preco FROM produtos ORDER BY Nome";
 
         try (Connection con = getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+            PreparedStatement ps = con.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 listaProdutos.add(new Produto(
@@ -950,7 +933,7 @@ public class Produtos {
         table.setItems(filtrados);
     }
 
-     /**
+    /**
      * Abre um formulário para adicionar ou editar um produto.
      * @param produto Produto a ser editado (null para adicionar novo)
      */
@@ -1013,7 +996,7 @@ public class Produtos {
      * @param dialog Janela de diálogo a ser fechada após salvar
      */
     private void salvarProduto(Produto produto, TextField txtNome, TextField txtCodBarras, 
-                             TextField txtPreco, Stage dialog) {
+                            TextField txtPreco, Stage dialog) {
         String nome = txtNome.getText().trim();
         String codBarras = txtCodBarras.getText().trim();
         String precoStr = txtPreco.getText().trim();
@@ -1056,13 +1039,13 @@ public class Produtos {
      * @param nome Nome do produto a ser validado
      * @param codBarras Código de barras a ser validado
      * @param idProduto ID do produto (para ignorar o próprio produto em edição)
-     * @return true se já existe, false caso contrário
+     * @return true if já existe, false caso contrário
      */
     private boolean validarProdutoExistente(String nome, String codBarras, int idProduto) {
         String sql = "SELECT ID_Produto, Nome, Cod_Barras FROM produtos WHERE (Nome = ? OR Cod_Barras = ?) AND ID_Produto != ?";
 
         try (Connection con = getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+            PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, nome);
             ps.setString(2, codBarras);
@@ -1130,7 +1113,7 @@ public class Produtos {
     private void inserirProduto(Produto produto) {
         String sql = "INSERT INTO produtos (Nome, Cod_Barras, Preco) VALUES (?, ?, ?)";
         try (Connection con = getConnection();
-             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setString(1, produto.getNome());
             ps.setDouble(3, produto.getPreco());
@@ -1160,7 +1143,7 @@ public class Produtos {
     private void atualizarProduto(Produto produto) {
         String sql = "UPDATE produtos SET Nome=?, Cod_Barras=?, Preco=? WHERE ID_Produto=?";
         try (Connection con = getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+            PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, produto.getNome());
             ps.setString(2, produto.getCodBarras());
@@ -1203,7 +1186,7 @@ public class Produtos {
         if (result.isPresent() && result.get() == ButtonType.OK) {
             String sql = "DELETE FROM produtos WHERE ID_Produto = ?";
             try (Connection con = getConnection();
-                 PreparedStatement ps = con.prepareStatement(sql)) {
+                PreparedStatement ps = con.prepareStatement(sql)) {
 
                 ps.setInt(1, produto.getId());
                 int rows = ps.executeUpdate();
@@ -1287,5 +1270,4 @@ public class Produtos {
             System.err.println("Erro ao carregar CSS: " + e.getMessage());
         }
         alert.showAndWait();
-    }
-}   
+    }}
