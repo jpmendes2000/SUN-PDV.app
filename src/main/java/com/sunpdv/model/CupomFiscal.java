@@ -89,7 +89,6 @@ public class CupomFiscal {
             job.print(doc, atributos);
             
             System.out.println("Cupom enviado para impressão com sucesso!");
-            mostrarAlerta("Sucesso", "Cupom enviado para impressão!\nCópia salva em: " + arquivoTexto.getAbsolutePath(), AlertType.INFORMATION);
             
         } catch (Exception e) {
             e.printStackTrace();

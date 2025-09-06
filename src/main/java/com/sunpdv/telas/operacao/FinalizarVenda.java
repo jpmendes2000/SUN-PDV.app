@@ -700,6 +700,12 @@ public class FinalizarVenda {
             
             caixa.limparVendaAtual();
             mostrarAlerta("Sucesso", "Venda finalizada com sucesso! Troco: R$ " + String.format("%.2f", troco), Alert.AlertType.INFORMATION);
+            
+            // Forçar a tela de Caixa a voltar em tela cheia antes de fechar o diálogo
+            if (caixa != null && caixa.stage != null) {
+                caixa.stage.setIconified(false); // Garante que a janela não esteja minimizada
+                caixa.stage.setFullScreen(true); // Define tela cheia
+            }
             stage.close();
             
         } catch (SQLException e) {

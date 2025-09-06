@@ -35,7 +35,7 @@ import javafx.collections.ListChangeListener;
 
 public class Caixa {
 
-    private Stage stage;
+    Stage stage;
     private static final String DB_URL = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;trustServerCertificate=true";
     private static final String DB_USER = "sa";
     private static final String DB_PASSWORD = "Senha@12345!";
@@ -255,46 +255,132 @@ public class Caixa {
 
     private List<Venda> carregarVendas() {
         List<Venda> vendas = new ArrayList<>();
-        String query = "SELECT v.ID_Vendas, fp.Forma_Pagamento, v.Subtotal, v.Total, " +
-                      "ISNULL(p.Troco, 0) AS Troco, " +
-                      "CONVERT(VARCHAR, v.Data_Venda, 103) AS Data, " +
-                      "ISNULL(c.cpf, ISNULL(c.cnpj, ISNULL(c.rg, ''))) AS documento, " +
-                      "CASE WHEN c.cpf IS NOT NULL THEN 'CPF' " +
-                      "     WHEN c.cnpj IS NOT NULL THEN 'CNPJ' " +
-                      "     WHEN c.rg IS NOT NULL THEN 'RG' " +
-                      "     ELSE '' END AS tipoDocumento " +
-                      "FROM vendas v " +
-                      "JOIN pagamentos p ON v.ID_Pagamentos = p.ID_Pagamentos " +
-                      "JOIN forma_pagamento fp ON p.ID_Forma_Pagamento = fp.ID_Forma_Pagamento " +
-                      "LEFT JOIN clientes c ON v.ID_Clientes = c.ID_Clientes " +
-                      "ORDER BY v.Data_Venda DESC";
-
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-             PreparedStatement stmt = conn.prepareStatement(query);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                Venda venda = new Venda(
-                    rs.getInt("ID_Vendas"),
-                    rs.getString("Forma_Pagamento"),
-                    rs.getDouble("Subtotal"),
-                    rs.getDouble("Total"),
-                    rs.getDouble("Troco"),
-                    rs.getString("Data"),
-                    rs.getString("documento"),
-                    rs.getString("tipoDocumento")
-                );
+        
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            System.out.println("Conectado ao banco com sucesso");
+            
+            // Query simplificada - uma venda por vez
+            String query = "SELECT v.ID_Vendas, v.Subtotal, v.Total, v.Data_Venda, " +
+                        "       c.CPF, c.CNPJ, c.RG, c.Nome " +
+                        "FROM vendas v " +
+                        "LEFT JOIN clientes c ON v.ID_Clientes = c.ID_Clientes " +
+                        "ORDER BY v.Data_Venda DESC";
+            
+            try (PreparedStatement stmt = conn.prepareStatement(query);
+                ResultSet rs = stmt.executeQuery()) {
                 
-                carregarItensVenda(venda);
-                carregarPagamentosVenda(venda);
-                vendas.add(venda);
+                while (rs.next()) {
+                    int idVenda = rs.getInt("ID_Vendas");
+                    double subtotal = rs.getDouble("Subtotal");
+                    double total = rs.getDouble("Total");
+                    Timestamp dataVenda = rs.getTimestamp("Data_Venda");
+                    String nomeCliente = rs.getString("Nome");
+                    
+                    // Formatar data
+                    String dataFormatada = "";
+                    if (dataVenda != null) {
+                        dataFormatada = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(dataVenda);
+                    }
+                    
+                    // Determinar documento e tipo
+                    String documento = "";
+                    String tipoDocumento = "";
+                    if (rs.getString("CPF") != null && !rs.getString("CPF").trim().isEmpty()) {
+                        documento = rs.getString("CPF");
+                        tipoDocumento = "CPF";
+                    } else if (rs.getString("CNPJ") != null && !rs.getString("CNPJ").trim().isEmpty()) {
+                        documento = rs.getString("CNPJ");
+                        tipoDocumento = "CNPJ";
+                    } else if (rs.getString("RG") != null && !rs.getString("RG").trim().isEmpty()) {
+                        documento = rs.getString("RG");
+                        tipoDocumento = "RG";
+                    }
+                    
+                    // Buscar forma de pagamento (primeira encontrada)
+                    String formaPagamento = buscarFormaPagamentoVenda(conn, idVenda);
+                    
+                    // Buscar troco total
+                    double troco = buscarTrocoVenda(conn, idVenda);
+                    
+                    Venda venda = new Venda(
+                        idVenda,
+                        formaPagamento != null ? formaPagamento : "N/A",
+                        subtotal,
+                        total,
+                        troco,
+                        dataFormatada,
+                        documento,
+                        tipoDocumento
+                    );
+                    
+                    // Carregar itens e pagamentos
+                    carregarItensVenda(venda);
+                    carregarPagamentosVenda(venda);
+                    
+                    vendas.add(venda);
+                    System.out.println("Venda carregada: ID=" + idVenda + ", Total=" + total + ", Cliente=" + nomeCliente);
+                }
             }
+            
         } catch (SQLException e) {
             e.printStackTrace();
+            System.err.println("Erro SQL detalhado: " + e.getMessage());
             mostrarAlerta("Erro ao carregar vendas", "Detalhes: " + e.getMessage(), AlertType.ERROR);
         }
+        
+        System.out.println("Total de vendas carregadas: " + vendas.size());
         return vendas;
     }
+
+    // Método auxiliar para buscar forma de pagamento
+        private String buscarFormaPagamentoVenda(Connection conn, int idVenda) {
+            try {
+                String query = "SELECT fp.Forma_Pagamento " +
+                            "FROM venda_pagamentos vp " +
+                            "JOIN pagamentos p ON vp.ID_Pagamento = p.ID_Pagamentos " +
+                            "JOIN forma_pagamento fp ON p.ID_Forma_Pagamento = fp.ID_Forma_Pagamento " +
+                            "WHERE vp.ID_Venda = ?";
+                
+                try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                    stmt.setInt(1, idVenda);
+                    ResultSet rs = stmt.executeQuery();
+                    
+                    StringBuilder formas = new StringBuilder();
+                    while (rs.next()) {
+                        if (formas.length() > 0) {
+                            formas.append(", ");
+                        }
+                        formas.append(rs.getString("Forma_Pagamento"));
+                    }
+                    return formas.length() > 0 ? formas.toString() : "N/A";
+                }
+            } catch (SQLException e) {
+                System.err.println("Erro ao buscar forma de pagamento para venda " + idVenda + ": " + e.getMessage());
+                return "N/A";
+            }
+        }
+
+        // Método auxiliar para buscar troco
+private double buscarTrocoVenda(Connection conn, int idVenda) {
+    try {
+        String query = "SELECT SUM(p.Troco) as TrocoTotal " +
+                      "FROM venda_pagamentos vp " +
+                      "JOIN pagamentos p ON vp.ID_Pagamento = p.ID_Pagamentos " +
+                      "WHERE vp.ID_Venda = ?";
+        
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, idVenda);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getDouble("TrocoTotal");
+            }
+        }
+    } catch (SQLException e) {
+        System.err.println("Erro ao buscar troco para venda " + idVenda + ": " + e.getMessage());
+    }
+    return 0.0;
+}
 
     private void carregarItensVenda(Venda venda) throws SQLException {
         String query = "SELECT p.Nome, p.Cod_Barras, ci.Quantidade, ci.Preco_Unitario " +
@@ -322,12 +408,13 @@ public class Caixa {
     // Novo método para carregar múltiplas formas de pagamento
     private void carregarPagamentosVenda(Venda venda) throws SQLException {
         String query = "SELECT fp.Forma_Pagamento, p.Valor_Recebido " +
-                      "FROM pagamentos p " +
-                      "JOIN forma_pagamento fp ON p.ID_Forma_Pagamento = fp.ID_Forma_Pagamento " +
-                      "WHERE p.ID_Pagamentos IN (SELECT ID_Pagamentos FROM vendas WHERE ID_Vendas = ?)";
+                    "FROM venda_pagamentos vp " +
+                    "JOIN pagamentos p ON vp.ID_Pagamento = p.ID_Pagamentos " +
+                    "JOIN forma_pagamento fp ON p.ID_Forma_Pagamento = fp.ID_Forma_Pagamento " +
+                    "WHERE vp.ID_Venda = ?";
         
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+            PreparedStatement stmt = conn.prepareStatement(query)) {
             
             stmt.setInt(1, venda.id);
             ResultSet rs = stmt.executeQuery();
@@ -340,6 +427,48 @@ public class Caixa {
             }
         }
     }
+    private void verificarConexaoBanco() {
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            
+            // Verificar se existem vendas
+            String queryVendas = "SELECT COUNT(*) as total FROM vendas";
+            PreparedStatement stmt = conn.prepareStatement(queryVendas);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                System.out.println("Total de vendas na tabela: " + rs.getInt("total"));
+            }
+            
+            // Verificar se existem pagamentos
+            String queryPagamentos = "SELECT COUNT(*) as total FROM pagamentos";
+            stmt = conn.prepareStatement(queryPagamentos);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                System.out.println("Total de pagamentos na tabela: " + rs.getInt("total"));
+            }
+            
+            // Verificar se existem venda_pagamentos
+            String queryVendaPagamentos = "SELECT COUNT(*) as total FROM venda_pagamentos";
+            stmt = conn.prepareStatement(queryVendaPagamentos);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                System.out.println("Total de venda_pagamentos na tabela: " + rs.getInt("total"));
+            }
+            
+            // Verificar se existem carrinhos
+            String queryCarrinhos = "SELECT COUNT(*) as total FROM carrinho";
+            stmt = conn.prepareStatement(queryCarrinhos);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                System.out.println("Total de carrinhos na tabela: " + rs.getInt("total"));
+            }
+            
+            System.out.println("Conexão com banco OK!");
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao conectar com banco: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 
     private void aplicarFiltros() {
         String textoBusca = pesquisaField.getText().toLowerCase().trim();
@@ -348,22 +477,40 @@ public class Caixa {
         listaVendas.getChildren().clear();
         boolean achou = false;
         
+        System.out.println("Aplicando filtros - Total vendas: " + vendas.size());
+        System.out.println("Filtro busca: '" + textoBusca + "'");
+        System.out.println("Filtro pagamento: '" + pagamentoSelecionado + "'");
+        
         for (Venda venda : vendas) {
-            boolean idMatch = String.valueOf(venda.id).contains(textoBusca);
-            boolean pagamentoMatch = pagamentoSelecionado == null || pagamentoSelecionado.equals("Todos") || 
-                                venda.formaPagamento.equalsIgnoreCase(pagamentoSelecionado);
+            boolean idMatch = textoBusca.isEmpty() || String.valueOf(venda.id).contains(textoBusca);
+            boolean pagamentoMatch = pagamentoSelecionado == null || 
+                                pagamentoSelecionado.equals("Todos") || 
+                                (venda.formaPagamento != null && venda.formaPagamento.contains(pagamentoSelecionado));
+
+            System.out.println("Venda ID: " + venda.id + " | Pagamento: " + venda.formaPagamento + 
+                            " | IdMatch: " + idMatch + " | PagMatch: " + pagamentoMatch);
 
             if (idMatch && pagamentoMatch) {
-                listaVendas.getChildren().add(criarPainelVenda(venda));
+                VBox painelVenda = criarPainelVenda(venda);
+                listaVendas.getChildren().add(painelVenda);
                 achou = true;
             }
         }
         
         if (!achou) {
-            Label lblNenhumaVenda = new Label("Nenhuma venda corresponde à pesquisa.");
-            lblNenhumaVenda.setStyle("-fx-text-fill: #00536d; -fx-font-size: 14px;");
+            Label lblNenhumaVenda = new Label("Nenhuma venda encontrada.");
+            lblNenhumaVenda.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-padding: 20;");
             listaVendas.getChildren().add(lblNenhumaVenda);
+            
+            // Se não há vendas, mostrar instruções
+            if (vendas.isEmpty()) {
+                Label lblInstrucao = new Label("Execute o script SQL de dados de teste para criar vendas de exemplo.");
+                lblInstrucao.setStyle("-fx-text-fill: #c7eefaff; -fx-font-size: 12px; -fx-padding: 10;");
+                listaVendas.getChildren().add(lblInstrucao);
+            }
         }
+        
+        System.out.println("Filtros aplicados - Painéis criados: " + (achou ? listaVendas.getChildren().size() : 0));
     }
 
     private void setupNovaVendaUI() {
@@ -913,26 +1060,39 @@ public class Caixa {
         pesquisaField.textProperty().addListener((obs, oldValue, newValue) -> aplicarFiltros());
 
         filtroPagamento = new ComboBox<>();
-        filtroPagamento.getItems().addAll("Todos", "Dinheiro", "Débito", "Crédito", "Pix", "Voucher");
+        // Corrigir os nomes para corresponder aos do banco
+        filtroPagamento.getItems().addAll("Todos", "Dinheiro", "Cartão de Débito", "Cartão de Crédito", "Pix", "Voucher");
         filtroPagamento.setValue("Todos");
         filtroPagamento.setMaxWidth(200);
         filtroPagamento.setOnAction(e -> aplicarFiltros());
-        
 
         HBox filtroBox = new HBox(10, new Label("Filtro:"), pesquisaField, new Label("Pagamento:"), filtroPagamento);
         filtroBox.setAlignment(Pos.CENTER_LEFT);
         filtroBox.setPadding(new Insets(5, 0, 15, 10));
+        
+        // Aplicar estilos aos labels
+        ((Label)filtroBox.getChildren().get(0)).setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
+        ((Label)filtroBox.getChildren().get(2)).setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
 
         listaVendas.setPadding(new Insets(10));
         listaVendas.setStyle("-fx-background-color: transparent;");
 
         ScrollPane scrollPane = new ScrollPane(listaVendas);
         scrollPane.setFitToWidth(true);
-        scrollPane.setStyle("-fx-background-color: transparent;");
+        scrollPane.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+        scrollPane.setPrefHeight(900); // Definir altura preferida
 
+        historicoContainer.getChildren().clear(); // Limpar antes de adicionar
         historicoContainer.getChildren().addAll(filtroBox, scrollPane);
+        historicoContainer.setStyle("-fx-background-color: transparent; -fx-padding: 20;");
 
+        // Adicionar debug
+        System.out.println("setupHistoricoUI() - Iniciando carregamento de vendas...");
+        verificarConexaoBanco(); // Chamar método de debug
+        
         vendas = carregarVendas();
+        System.out.println("setupHistoricoUI() - Vendas carregadas: " + vendas.size());
+        
         aplicarFiltros();
     }
 
@@ -1070,6 +1230,7 @@ public class Caixa {
                 mostrarAlerta("Erro", "Erro ao retornar para a tela principal.", AlertType.ERROR);
             }
         });
+        
 
         menuLateral.getChildren().addAll(toggleButton, btnVoltarHome, btnSair);
         menuLateral.setAlignment(Pos.BOTTOM_LEFT);

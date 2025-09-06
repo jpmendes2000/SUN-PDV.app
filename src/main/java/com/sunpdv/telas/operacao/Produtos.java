@@ -43,22 +43,22 @@ import java.util.Optional;
 
 /**
  * Classe responsável por gerenciar a tela de produtos no sistema SUN PDV.
- * Esta tela permite visualizar, adicionar, editar e apagar produtos, além de oferecer
+ * Esta tela permite visualizar, adicionar, editar e desativar produtos, além de oferecer
  * funcionalidades como pesquisa, navegação e dashboard administrativo.
  */
 public class Produtos {
 
     // Atributos da classe para controle da interface e dados
     private Stage stage;
-    private TableView<Produto> table;              // Tabela que exibe a lista de produtos
-    private ObservableList<Produto> listaProdutos; // Lista observável para armazenar produtos
-    private TextField campoPesquisa;               // Campo para filtrar produtos por nome ou código
-    private Label lblMensagemSucesso;              // Label para exibir mensagens de sucesso temporárias
-    private Produto produtoSelecionado;            // Produto atualmente selecionado na tabela
-    private boolean modoAdminAtivo = false;        // Controla se o dashboard está ativo
-    private ScrollPane scrollTable;                // ScrollPane da tabela para alternar com dashboard
-    private VBox dashboardContainer;               // Container do dashboard administrativo
-    private Button btnAdmin;                       // Botão de administração
+    private TableView<Produto> table;
+    private ObservableList<Produto> listaProdutos;
+    private TextField campoPesquisa;
+    private Label lblMensagemSucesso;
+    private Produto produtoSelecionado;
+    private boolean modoAdminAtivo = false;
+    private ScrollPane scrollTable;
+    private VBox dashboardContainer;
+    private Button btnAdmin;
     private Button btnAdd;
     private Button btnEdit;
     private Button btnDelete;
@@ -80,8 +80,8 @@ public class Produtos {
     private static class CustomConfirmationAlert extends Alert {
         public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
             super(AlertType.CONFIRMATION);
-            this.initOwner(owner); // IMPORTANTE: deve ser o Stage correto
-            this.initModality(Modality.WINDOW_MODAL); // ou APPLICATION_MODAL
+            this.initOwner(owner);
+            this.initModality(Modality.WINDOW_MODAL);
             this.setTitle(title);
             this.setHeaderText(header);
             this.setContentText(content);
@@ -102,9 +102,8 @@ public class Produtos {
      */
     public void show(Stage stage) {
         this.stage = stage;
-        // Criação do layout principal usando BorderPane
-        // BorderPane permite dividir a tela em cinco áreas: topo, inferior, esquerda, direita e centro
         BorderPane layout = new BorderPane();
+        layout.setStyle("-fx-background-color: #00435a;");
 
         // Configuração da área esquerda (menu lateral)
         VBox leftMenu = new VBox();
@@ -125,12 +124,12 @@ public class Produtos {
         logoView.setPreserveRatio(true);
 
         // Cria o título da tela
-        Label titulonaABA = new Label("Gerenciamento de Produtos");
+        Label titulonaABA = new Label("Gerencia");
         titulonaABA.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 18px; -fx-font-weight: bold;");
 
         VBox logoBox = new VBox(10, logoView, titulonaABA);
         logoBox.setAlignment(Pos.CENTER);
-        logoBox.setPadding(new Insets(20, 0, 5, 0)); // Espaço mínimo abaixo do logotipo
+        logoBox.setPadding(new Insets(20, 0, 5, 0));
 
         // Labels para hora e data
         Label horaLabel = new Label();
@@ -146,7 +145,7 @@ public class Produtos {
         // VBox para organizar hora acima da data
         VBox dataHoraBox = new VBox(5, horaLabel, dataLabel);
         dataHoraBox.setAlignment(Pos.CENTER);
-        dataHoraBox.setPadding(new Insets(0, 0, 15, 0)); // Aumentado o espaço inferior
+        dataHoraBox.setPadding(new Insets(0, 0, 15, 0));
 
         // Formatadores para hora e data
         DateTimeFormatter horaFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
@@ -166,17 +165,19 @@ public class Produtos {
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.play();
 
-        // Container para o conteúdo scrollável do menu
+        // Container para o conteúdo do menu (sem ScrollPane)
         VBox menuContent = new VBox();
         menuContent.setAlignment(Pos.TOP_CENTER);
         menuContent.setSpacing(10);
         menuContent.setPadding(new Insets(10, 0, 20, 0));
 
         // Botões do menu
+        btnAdmin = criarBotaoLateral("Administrativo", "/img/icon/pasta.png");
         Button btnVoltar = criarBotaoLateral("Home", "/img/icon/casa.png");
         Button btnSair = criarBotaoLateral("Sair do Sistema", "/img/icon/fechar.png");
 
         // Ações dos botões
+        btnAdmin.setOnAction(e -> toggleModoAdmin());
         btnVoltar.setOnAction(e -> voltarParaHome(stage));
         btnSair.setOnAction(e -> {
             CustomConfirmationAlert alert = new CustomConfirmationAlert(stage, "Confirmação", "Deseja sair?", "Isso fechará o sistema.");
@@ -187,85 +188,74 @@ public class Produtos {
             });
         });
 
-        // Adiciona botões ao container scrollável
-        menuContent.getChildren().addAll(btnVoltar, btnSair);
-
-        // Cria ScrollPane para o menu
-        ScrollPane menuScroll = new ScrollPane(menuContent);
-        menuScroll.setFitToWidth(true);
-        menuScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        menuScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        menuScroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
-        menuScroll.setPrefViewportHeight(200); // Altura mínima visível
+        // Adiciona botões ao container
+        menuContent.getChildren().addAll(btnAdmin, btnVoltar, btnSair);
 
         // Espaço flexível para empurrar o menu para baixo
         Region espacoFlexivel = new Region();
         VBox.setVgrow(espacoFlexivel, Priority.ALWAYS);
 
-        // Monta o menu lateral final
-        leftMenu.getChildren().addAll(logoBox, dataHoraBox, espacoFlexivel, menuScroll);
+        // Monta o menu lateral final (sem ScrollPane)
+        leftMenu.getChildren().addAll(logoBox, dataHoraBox, espacoFlexivel, menuContent);
 
         // Configuração da área central (conteúdo principal)
-        // GridPane organiza os elementos em uma grade
         GridPane contentGrid = new GridPane();
-        contentGrid.setHgap(20); // Espaçamento horizontal entre colunas
-        contentGrid.setVgap(10); // Espaçamento vertical entre linhas
-        contentGrid.setPadding(new Insets(15)); // Padding externo
-        contentGrid.setAlignment(Pos.TOP_CENTER); // Alinha ao topo e centro
+        contentGrid.setHgap(20);
+        contentGrid.setVgap(10);
+        contentGrid.setPadding(new Insets(15));
+        contentGrid.setAlignment(Pos.TOP_CENTER);
 
         // Configuração da label de mensagem de sucesso
         lblMensagemSucesso = new Label();
-        lblMensagemSucesso.getStyleClass().add("mensagem-sucesso"); // Aplica estilo CSS
-        lblMensagemSucesso.setVisible(false); // Inicialmente invisível
+        lblMensagemSucesso.getStyleClass().add("mensagem-sucesso");
+        lblMensagemSucesso.setVisible(false);
 
         // Configuração do campo de pesquisa
         campoPesquisa = new TextField();
-        campoPesquisa.setPromptText("Pesquisar produto..."); // Texto de dica
-        campoPesquisa.setPrefWidth(400); // Largura preferida
-        // Listener para filtrar produtos conforme o texto é digitado
+        campoPesquisa.setPromptText("Pesquisar produto...");
+        campoPesquisa.setPrefWidth(400);
         campoPesquisa.textProperty().addListener((obs, oldVal, newVal) -> filtrarProdutos(newVal));
 
         // Configuração dos botões de ação
         btnAdd = criarBotaoAcao("/img/icon/lista.png", "Adicionar Produto");
         btnEdit = criarBotaoAcao("/img/icon/lapis.png", "Editar Produto");
-        btnDelete = criarBotaoAcao("/img/icon/lixeira.png", "Apagar Produto");
-        btnAdmin = criarBotaoAcao("/img/icon/pasta.png", "Dashboard Administrativo");
+        btnDelete = criarBotaoAcao("/img/icon/lixeira.png", "Apagar Produto"); // Mudança no tooltip
 
-        btnEdit.setDisable(true); // Desabilita até que um produto seja selecionado
-        btnDelete.setDisable(true); // Desabilita até que um produto seja selecionado
+        btnEdit.setDisable(true);
+        btnDelete.setDisable(true);
 
         // Organização da área superior (mensagem e campo de pesquisa com botões)
         HBox tituloMensagemBox = new HBox(10, lblMensagemSucesso);
-        tituloMensagemBox.setAlignment(Pos.TOP_LEFT); // Alinha à esquerda
+        tituloMensagemBox.setAlignment(Pos.TOP_LEFT);
 
-        HBox pesquisaAcoesBox = new HBox(12, campoPesquisa, btnAdd, btnEdit, btnDelete, btnAdmin);
-        pesquisaAcoesBox.setAlignment(Pos.CENTER_LEFT); // Alinha à esquerda com centralização vertical
-        pesquisaAcoesBox.setPadding(new Insets(5, 0, 15, 10)); // Padding
+        HBox pesquisaAcoesBox = new HBox(12, campoPesquisa, btnAdd, btnEdit, btnDelete);
+        pesquisaAcoesBox.setAlignment(Pos.CENTER_LEFT);
+        pesquisaAcoesBox.setPadding(new Insets(5, 0, 15, 10));
 
         VBox topoBox = new VBox(5, tituloMensagemBox, pesquisaAcoesBox);
-        contentGrid.add(topoBox, 0, 0, 2, 1); // Adiciona ao GridPane na linha 0, colunas 0-1
+        contentGrid.add(topoBox, 0, 0, 2, 1);
 
         // Configuração da tabela de produtos
         table = new TableView<>();
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY); // Ajusta colunas automaticamente
-        table.getStyleClass().add("table-view"); // Aplica estilo CSS
-        table.setStyle("-fx-padding: 0;"); // Remove padding extra
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.getStyleClass().add("table-view");
+        table.setStyle("-fx-padding: 0;");
 
         TableColumn<Produto, String> colNome = new TableColumn<>("Nome");
-        colNome.setCellValueFactory(new PropertyValueFactory<>("nome")); // Mapeia o campo "nome"
-        colNome.setPrefWidth(950); // Define a largura preferida
+        colNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
+        colNome.setPrefWidth(950);
 
         TableColumn<Produto, String> colCodBarras = new TableColumn<>("Código de Barras");
-        colCodBarras.setCellValueFactory(new PropertyValueFactory<>("codBarras")); // Mapeia o campo "codBarras"
-        colCodBarras.setPrefWidth(300); // Define a largura preferida
+        colCodBarras.setCellValueFactory(new PropertyValueFactory<>("codBarras"));
+        colCodBarras.setPrefWidth(300);
 
         TableColumn<Produto, String> colPreco = new TableColumn<>("Preço (R$)");
         colPreco.setCellValueFactory(cell -> {
-            Double preco = cell.getValue().getPreco(); // Obtém o preço do produto
-            DecimalFormat df = new DecimalFormat("R$ #,##0.00"); // Formata como moeda
-            return new SimpleStringProperty(df.format(preco)); // Retorna como string formatada
+            Double preco = cell.getValue().getPreco();
+            DecimalFormat df = new DecimalFormat("R$ #,##0.00");
+            return new SimpleStringProperty(df.format(preco));
         });
-        colPreco.setPrefWidth(150); // Define a largura preferida
+        colPreco.setPrefWidth(150);
 
         table.getColumns().addAll(colNome, colCodBarras, colPreco);
 
@@ -273,9 +263,9 @@ public class Produtos {
         table.setRowFactory(tv -> {
             TableRow<Produto> row = new TableRow<>();
             row.setOnMouseClicked(event -> {
-                if (event.getClickCount() == 2 && (!row.isEmpty())) { // Verifica duplo clique
-                    produtoSelecionado = row.getItem(); // Define o produto selecionado
-                    abrirFormularioProduto(produtoSelecionado); // Abre o formulário de edição
+                if (event.getClickCount() == 2 && (!row.isEmpty())) {
+                    produtoSelecionado = row.getItem();
+                    abrirFormularioProduto(produtoSelecionado);
                 }
             });
             return row;
@@ -287,72 +277,62 @@ public class Produtos {
 
         // Listener para menu de contexto com botão direito
         table.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
-            if (event.getButton() == MouseButton.SECONDARY) { // Verifica clique direito
+            if (event.getButton() == MouseButton.SECONDARY) {
                 Produto selected = table.getSelectionModel().getSelectedItem();
                 if (selected != null) {
-                    contextMenu.show(table, event.getScreenX(), event.getScreenY()); // Exibe o menu
+                    contextMenu.show(table, event.getScreenX(), event.getScreenY());
                 } else {
-                    contextMenu.hide(); // Oculta se nada estiver selecionado
+                    contextMenu.hide();
                 }
             } else {
-                contextMenu.hide(); // Oculta em outros cliques
+                contextMenu.hide();
             }
         });
 
         // Ajuste do tamanho da tabela
-        table.setPrefHeight(1650); // Define a altura preferida
-        table.setPrefWidth(1200);  // Define a largura preferida
+        table.setPrefHeight(1650);
+        table.setPrefWidth(1200);
 
         scrollTable = new ScrollPane(table);
-        scrollTable.setFitToWidth(true); // Ajusta a largura ao container
-        scrollTable.setFitToHeight(true); // Ajusta a altura ao container
-        scrollTable.setPrefViewportHeight(1650); // Define a altura da área visível
-        scrollTable.setStyle("-fx-padding: 0;"); // Remove padding extra
-        
+        scrollTable.setFitToWidth(true);
+        scrollTable.setFitToHeight(true);
+        scrollTable.setPrefViewportHeight(1650);
+        scrollTable.setStyle("-fx-padding: 0;");
+
         // Inicializa o container do dashboard (inicialmente vazio)
         dashboardContainer = new VBox();
         dashboardContainer.setVisible(false);
-        
+
         // Adiciona ambos ao GridPane
-        contentGrid.add(scrollTable, 0, 1, 2, 1); // Adiciona ao GridPane na linha 1, colunas 0-1
-        contentGrid.add(dashboardContainer, 0, 1, 2, 1); // Sobreposto, mas visibility controla
+        contentGrid.add(scrollTable, 0, 1, 2, 1);
+        contentGrid.add(dashboardContainer, 0, 1, 2, 1);
 
         // Configuração do layout principal
-        layout.setLeft(leftMenu); // Define o menu lateral à esquerda
-        layout.setCenter(contentGrid); // Define o conteúdo central
+        layout.setLeft(leftMenu);
+        layout.setCenter(contentGrid);
 
         // Associa ações aos botões
-        btnAdd.setOnAction(e -> abrirFormularioProduto(null)); // Abre formulário para adicionar
+        btnAdd.setOnAction(e -> abrirFormularioProduto(null));
         btnEdit.setOnAction(e -> {
             if (produtoSelecionado != null) {
-                abrirFormularioProduto(produtoSelecionado); // Abre formulário para editar
+                abrirFormularioProduto(produtoSelecionado);
+            } else {
+                mostrarAlertaErro("Nenhum produto selecionado", "Por favor, selecione um produto para editar.");
             }
         });
         btnDelete.setOnAction(e -> {
             if (produtoSelecionado != null) {
-                apagarProduto(produtoSelecionado); // Apaga o produto selecionado
+                desativarProduto(produtoSelecionado);
+            } else {
+                mostrarAlertaErro("Nenhum produto selecionado", "Por favor, selecione um produto para Apagar.");
             }
         });
-        
-        // Ação do botão de administração
-        btnAdmin.setOnAction(e -> toggleModoAdmin());
-
-        btnVoltar.setOnAction(e -> voltarParaHome(stage)); // Volta para a tela inicial
-                
-        btnSair.setOnAction(e -> {
-            CustomConfirmationAlert alert = new CustomConfirmationAlert(stage, "Confirmação", "Deseja sair?", "Isso fechará o sistema.");
-            alert.showAndWait().ifPresent(response -> {
-                if (response == ButtonType.OK) {
-                    stage.close();
-                }
-            });
-        }); // Confirma saída do sistema
 
         // Listener para seleção na tabela
         table.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            produtoSelecionado = newVal; // Atualiza o produto selecionado
-            btnEdit.setDisable(newVal == null || modoAdminAtivo); // Habilita/desabilita botão Editar
-            btnDelete.setDisable(newVal == null || modoAdminAtivo); // Habilita/desabilita botão Apagar
+            produtoSelecionado = newVal;
+            btnEdit.setDisable(newVal == null || modoAdminAtivo);
+            btnDelete.setDisable(newVal == null || modoAdminAtivo);
         });
 
         // Carrega os produtos do banco de dados
@@ -378,10 +358,10 @@ public class Produtos {
         stage.setFullScreenExitHint("");
         stage.setFullScreenExitKeyCombination(javafx.scene.input.KeyCombination.NO_MATCH);
         stage.setScene(scene);
-        stage.setTitle("Gerenciamento de Produtos"); // Define o título da janela
-        stage.setFullScreen(true); // Ativa tela cheia
-        stage.setResizable(true); // Permite redimensionamento
-        stage.show(); // Exibe a janela
+        stage.setTitle("Gerenciamento de Produtos");
+        stage.setFullScreen(true);
+        stage.setResizable(true);
+        stage.show();
     }
 
     /**
@@ -391,30 +371,24 @@ public class Produtos {
         modoAdminAtivo = !modoAdminAtivo;
         
         if (modoAdminAtivo) {
-            // Entrar no modo admin - mostrar dashboard
-            btnAdmin.setText("Voltar para Produtos");
-            btnAdmin.setTooltip(new Tooltip("Voltar para lista de produtos"));
+            atualizarBotaoLateral(btnAdmin, "Produtos", "/img/icon/lista.png");
+            btnAdmin.setTooltip(new Tooltip("Produtos"));
             
-            // Esconder tabela e mostrar dashboard
             scrollTable.setVisible(false);
             criarDashboard();
             dashboardContainer.setVisible(true);
             
-            // Desabilitar botões de interação com produtos
             btnAdd.setDisable(true);
             btnEdit.setDisable(true);
             btnDelete.setDisable(true);
             campoPesquisa.setDisable(true);
         } else {
-            // Sair do modo admin - mostrar produtos
-            btnAdmin.setText("Dashboard Administrativo");
+            atualizarBotaoLateral(btnAdmin, "Administrativo", "/img/icon/pasta.png");
             btnAdmin.setTooltip(new Tooltip("Acessar dashboard administrativo"));
             
-            // Esconder dashboard e mostrar tabela
             dashboardContainer.setVisible(false);
             scrollTable.setVisible(true);
             
-            // Habilitar botões de interação com produtos
             btnAdd.setDisable(false);
             btnEdit.setDisable(produtoSelecionado == null);
             btnDelete.setDisable(produtoSelecionado == null);
@@ -423,7 +397,57 @@ public class Produtos {
     }
 
     /**
-     * Cria o dashboard administrativo com gráficos e scroll
+     * Atualiza o estilo do botão lateral para alternar entre ícones e textos
+     */
+    private void atualizarBotaoLateral(Button botao, String texto, String caminhoIcone) {
+        try {
+            Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
+            if (img.isError()) {
+                throw new Exception("Erro ao carregar imagem: " + caminhoIcone);
+            }
+
+            ImageView icon = new ImageView(img);
+            icon.setFitWidth(20);
+            icon.setFitHeight(20);
+
+            Label textLabel = new Label(texto);
+            textLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-weight: bold;");
+
+            StackPane indicatorContainer = new StackPane();
+            indicatorContainer.setPrefWidth(4);
+            indicatorContainer.setPrefHeight(60);
+            indicatorContainer.setStyle("-fx-background-color: transparent;");
+
+            HBox leftContent = new HBox(10, icon, textLabel);
+            leftContent.setAlignment(Pos.CENTER_LEFT);
+
+            HBox content = new HBox(leftContent, new Region(), indicatorContainer);
+            content.setAlignment(Pos.CENTER_LEFT);
+            HBox.setHgrow(content.getChildren().get(1), Priority.ALWAYS);
+
+            botao.setGraphic(content);
+            botao.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+            botao.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
+            botao.setPrefWidth(280);
+            botao.setPrefHeight(42);
+
+            botao.setOnMouseEntered(e -> {
+                botao.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4;");
+                indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
+            });
+            botao.setOnMouseExited(e -> {
+                botao.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
+                indicatorContainer.setStyle("-fx-background-color: transparent;");
+            });
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar ícone: " + caminhoIcone);
+            botao.setText(texto);
+            botao.setStyle("-fx-text-fill: #a9cce3; -fx-font-weight: bold; -fx-background-color: transparent;");
+        }
+    }
+
+    /**
+     * Cria o dashboard administrativo com gráficos
      */
     private void criarDashboard() {
         dashboardContainer.getChildren().clear();
@@ -431,23 +455,19 @@ public class Produtos {
         dashboardContainer.setPadding(new Insets(20));
         dashboardContainer.setStyle("-fx-background-color: transparent;");
         
-        // Container principal com scroll
         VBox dashboardContent = new VBox();
         dashboardContent.setSpacing(20);
         dashboardContent.setPadding(new Insets(10));
         
-        // Título do dashboard
         Label tituloDashboard = new Label("Dashboard Administrativo");
         tituloDashboard.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #a9cce3;");
         dashboardContent.getChildren().add(tituloDashboard);
         
         try {
-            // Gráfico combinado com os 3 dados principais
             BarChart<String, Number> combinedChart = criarGraficoColuna("Dashboard de Vendas", null);
             carregarDadosCombinados(combinedChart);
             dashboardContent.getChildren().add(combinedChart);
 
-            // Adicionar label do funcionário do mês atual
             LocalDate current = LocalDate.now();
             int year = current.getYear();
             int month = current.getMonthValue();
@@ -458,56 +478,42 @@ public class Produtos {
                 dashboardContent.getChildren().add(employeeLabel);
             }
             
-            // Gráficos mensais dos últimos 12 meses
             LocalDate currentDate = LocalDate.now();
-            
             for (int i = 11; i >= 0; i--) {
                 LocalDate monthDate = currentDate.minusMonths(i);
                 int yearMonthly = monthDate.getYear();
                 int monthMonthly = monthDate.getMonthValue();
                 String monthName = monthDate.getMonth().getDisplayName(TextStyle.FULL, new Locale("pt", "BR")) + " " + yearMonthly;
                 
-                // Verifica se há dados para o mês
                 boolean hasData = hasDataForMonth(yearMonthly, monthMonthly);
                 
                 if (hasData) {
-                    // Get top employee for this month
                     String employeeInfoMonthly = getTopEmployee(yearMonthly, monthMonthly);
-                    
-                    // Create chart
                     BarChart<String, Number> monthlyChart = criarGraficoColuna(
                         "Top 10 Produtos - " + monthName, 
                         "#3498db"
                     );
-                    
-                    // Load data
                     carregarTopProdutosMonthly(monthlyChart, yearMonthly, monthMonthly, 10);
-                    
-                    // If has employee data, add label
                     if (employeeInfoMonthly != null) {
                         Label employeeLabelMonthly = new Label(employeeInfoMonthly);
                         employeeLabelMonthly.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #a9cce3; -fx-padding: 10 0 5 0;");
                         dashboardContent.getChildren().add(employeeLabelMonthly);
                     }
-                    
                     dashboardContent.getChildren().add(monthlyChart);
                 }
             }
-            
         } catch (SQLException e) {
             Label erroLabel = new Label("Erro ao carregar dados do dashboard: " + e.getMessage());
             erroLabel.setStyle("-fx-text-fill: #a9cce3;");
             dashboardContent.getChildren().add(erroLabel);
         }
         
-        // Cria ScrollPane para o dashboard
         ScrollPane dashboardScroll = new ScrollPane(dashboardContent);
         dashboardScroll.setFitToWidth(true);
         dashboardScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         dashboardScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        dashboardScroll.setStyle("-fx-background: transparent; -fx-background-color: transparent,;");
+        dashboardScroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
         
-        // Limpa e adiciona o scroll ao container
         dashboardContainer.getChildren().clear();
         dashboardContainer.getChildren().add(dashboardScroll);
     }
@@ -520,18 +526,14 @@ public class Produtos {
         NumberAxis yAxis = new NumberAxis();
         BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
         
-        // Configurações de estilo para corresponder à imagem
         barChart.setTitle(titulo);
         barChart.setLegendVisible(false);
         barChart.setPrefHeight(400);
         barChart.setMinHeight(400);
-        barChart.setStyle("-fx-background-color:  linear-gradient(to bottom right, #025a74ff, #0b5167ff, #17353fff); -fx-padding: 15; -fx-border-color: linear-gradient(to bottom right, #0280a6ff, #0f7392ff, #255565ff); -fx-border-width: 1;");
+        barChart.setStyle("-fx-background-color: linear-gradient(to bottom right, #025a74ff, #0b5167ff, #17353fff); -fx-padding: 15; -fx-border-color: linear-gradient(to bottom right, #0280a6ff, #0f7392ff, #255565ff); -fx-border-width: 1;");
         
-        // Estilo do título
-        barChart.setTitle(titulo);
         barChart.lookup(".chart-title").setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 16px; -fx-font-weight: bold;");
         
-        // Configurações dos eixos
         xAxis.setTickLabelRotation(0);
         xAxis.setTickLabelFont(javafx.scene.text.Font.font(12));
         xAxis.setTickLabelFill(javafx.scene.paint.Color.BLACK);
@@ -546,9 +548,6 @@ public class Produtos {
 
     /**
      * Verifica se há dados de vendas para um mês específico
-     * @param year Ano
-     * @param month Mês
-     * @return true se houver dados, false caso contrário
      */
     private boolean hasDataForMonth(int year, int month) throws SQLException {
         String sql = "SELECT COUNT(*) as total FROM vendas v " +
@@ -571,20 +570,19 @@ public class Produtos {
      * Carrega dados combinados para o gráfico principal
      */
     private void carregarDadosCombinados(BarChart<String, Number> chart) throws SQLException {
-        // Limpa qualquer dado existente
         chart.getData().clear();
         
         XYChart.Series<String, Number> seriesReceita = new XYChart.Series<>();
         seriesReceita.setName("Receita");
-        String colorReceita = "#FFD700"; // yellow
+        String colorReceita = "#FFD700";
         
         XYChart.Series<String, Number> seriesQuantidade = new XYChart.Series<>();
         seriesQuantidade.setName("Quantidade Vendida");
-        String colorQuantidade = "#FF0000"; // red
+        String colorQuantidade = "#FF0000";
         
         XYChart.Series<String, Number> seriesVendas = new XYChart.Series<>();
         seriesVendas.setName("Número de Vendas");
-        String colorVendas = "#0000FF"; // blue
+        String colorVendas = "#0000FF";
         
         String[] months = {"janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"};
         int year = LocalDate.now().getYear();
@@ -592,39 +590,29 @@ public class Produtos {
         for (int m = 1; m <= 12; m++) {
             String monthName = months[m - 1];
             
-            // Receita
             double receita = getMonthlyValue("SUM(v.Subtotal)", year, m);
             XYChart.Data<String, Number> dataReceita = new XYChart.Data<>(monthName, receita);
             addHoverAndStyle(dataReceita, colorReceita, "Receita em " + monthName + ": R$ " + String.format("%.2f", receita));
             seriesReceita.getData().add(dataReceita);
             
-            // Quantidade vendida
             double quantidade = getMonthlyValue("SUM(ci.Quantidade)", year, m);
             XYChart.Data<String, Number> dataQuantidade = new XYChart.Data<>(monthName, quantidade);
             addHoverAndStyle(dataQuantidade, colorQuantidade, "Quantidade vendida em " + monthName + ": " + (int) quantidade);
             seriesQuantidade.getData().add(dataQuantidade);
             
-            // Número de vendas
             double vendas = getMonthlyValue("COUNT(v.ID_Vendas)", year, m);
             XYChart.Data<String, Number> dataVendas = new XYChart.Data<>(monthName, vendas);
             addHoverAndStyle(dataVendas, colorVendas, "Número de vendas em " + monthName + ": " + (int) vendas);
             seriesVendas.getData().add(dataVendas);
         }
         
-        // Adiciona as séries ao gráfico
         chart.getData().addAll(seriesReceita, seriesQuantidade, seriesVendas);
-        
-        // Adiciona legendas
         chart.setLegendVisible(true);
         chart.lookup(".chart-legend").setStyle("-fx-background-color: transparent;");
     }
 
     /**
      * Obtém o valor agregado para um mês específico
-     * @param aggregate Expressão de agregação (ex: SUM(v.Valor_Total))
-     * @param year Ano
-     * @param month Mês
-     * @return Valor agregado
      */
     private double getMonthlyValue(String aggregate, int year, int month) throws SQLException {
         String join = aggregate.contains("ci.") ? "JOIN carrinho_itens ci ON v.ID_Carrinho = ci.ID_Carrinho " : "";
@@ -656,7 +644,6 @@ public class Produtos {
                 tooltip.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
                 Tooltip.install(newNode, tooltip);
                 
-                // Efeito de hover
                 newNode.setOnMouseEntered(e -> {
                     newNode.setStyle("-fx-bar-fill: derive(" + color + ", -20%); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 5, 0, 0, 1);");
                 });
@@ -668,30 +655,6 @@ public class Produtos {
     }
 
     /**
-     * Carrega dados para uma série específica
-     */
-    private void carregarDadosSerie(XYChart.Series<String, Number> series, String sql, String color) throws SQLException {
-        try (Connection con = getConnection();
-            PreparedStatement ps = con.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery()) {
-            
-            while (rs.next()) {
-                String name = rs.getString("Nome");
-                Number total = rs.getInt("TotalVendas");
-                
-                // Limita o nome muito longo para melhor visualização
-                String displayName = name.length() > 15 ? name.substring(0, 12) + "..." : name;
-                
-                XYChart.Data<String, Number> data = new XYChart.Data<>(displayName, total);
-                
-                // Adiciona tooltip para mostrar informações detalhadas
-                addHoverAndStyle(data, color, name + ": " + total + " vendas");
-                series.getData().add(data);
-            }
-        }
-    }
-
-    /**
      * Carrega top produtos para um mês específico
      */
     private void carregarTopProdutosMonthly(BarChart<String, Number> chart, int year, int month, int topN) throws SQLException {
@@ -699,7 +662,7 @@ public class Produtos {
                     "FROM carrinho_itens ci " +
                     "JOIN produtos p ON ci.ID_Produto = p.ID_Produto " +
                     "JOIN vendas v ON ci.ID_Carrinho = v.ID_Carrinho " +
-                    "WHERE YEAR(v.Data_Venda) = ? AND MONTH(v.Data_Venda) = ? " +
+                    "WHERE YEAR(v.Data_Venda) = ? AND MONTH(v.Data_Venda) = ? AND p.Ativo = 1 " +
                     "GROUP BY p.Nome " +
                     "ORDER BY TotalVendas DESC";
         
@@ -716,7 +679,6 @@ public class Produtos {
                     String name = rs.getString("Nome");
                     Number total = rs.getInt("TotalVendas");
                     
-                    // Limita o nome muito longo para melhor visualização
                     String displayName = name.length() > 20 ? name.substring(0, 17) + "..." : name;
                     
                     XYChart.Data<String, Number> data = new XYChart.Data<>(displayName, total);
@@ -726,7 +688,6 @@ public class Produtos {
                     series.getData().add(data);
                 }
                 
-                // Só adiciona a série se houver dados
                 if (hasData) {
                     chart.getData().add(series);
                 }
@@ -736,7 +697,6 @@ public class Produtos {
 
     /**
      * Obtém o top funcionário para um mês específico
-     * @return String com info ou null se sem dados
      */
     private String getTopEmployee(int year, int month) throws SQLException {
         String sql = "SELECT TOP 1 ls.Nome, COUNT(v.ID_Vendas) as TotalVendas " +
@@ -764,7 +724,6 @@ public class Produtos {
 
     /**
      * Cria um menu de contexto para a tabela de produtos.
-     * @return ContextMenu com opções de edição e exclusão
      */
     private ContextMenu criarMenuContexto() {
         ContextMenu contextMenu = new ContextMenu();
@@ -772,26 +731,27 @@ public class Produtos {
         MenuItem editarItem = new MenuItem("Editar");
         editarItem.setOnAction(e -> {
             if (produtoSelecionado != null) {
-                abrirFormularioProduto(produtoSelecionado); // Abre formulário para editar
+                abrirFormularioProduto(produtoSelecionado);
+            } else {
+                mostrarAlertaErro("Nenhum produto selecionado", "Por favor, selecione um produto para editar.");
             }
         });
 
-        MenuItem apagarItem = new MenuItem("Apagar");
-        apagarItem.setOnAction(e -> {
+        MenuItem desativarItem = new MenuItem("Apagar");
+        desativarItem.setOnAction(e -> {
             if (produtoSelecionado != null) {
-                apagarProduto(produtoSelecionado); // Apaga o produto selecionado
-                        }
+                desativarProduto(produtoSelecionado);
+            } else {
+                mostrarAlertaErro("Nenhum produto selecionado", "Por favor, selecione um produto para Apagar.");
+            }
         });
 
-        contextMenu.getItems().addAll(editarItem, apagarItem); // Adiciona itens ao menu
+        contextMenu.getItems().addAll(editarItem, desativarItem);
         return contextMenu;
     }
 
     /**
      * Cria um botão de ação com ícone e tooltip.
-     * @param caminhoIcone Caminho do arquivo de imagem do ícone
-     * @param tooltip Texto do tooltip a ser exibido
-     * @return Button configurado com ícone e estilo
      */
     private Button criarBotaoAcao(String caminhoIcone, String tooltip) {
         try {
@@ -806,11 +766,11 @@ public class Produtos {
 
             Button btn = new Button();
             btn.setGraphic(icon);
-            btn.setAlignment(Pos.CENTER); // Centraliza o ícone dentro do botão
+            btn.setAlignment(Pos.CENTER);
             btn.getStyleClass().add("acao");
 
-            if (tooltip.toLowerCase().contains("apagar")) {
-                btn.getStyleClass().add("delete");
+            if (tooltip.toLowerCase().contains("Apagar")) {
+                btn.getStyleClass().add("delete"); // Mantém o estilo visual de "apagar"
             }
 
             btn.setTooltip(new Tooltip(tooltip));
@@ -826,9 +786,6 @@ public class Produtos {
 
     /**
      * Cria um botão lateral com ícone, texto e efeito de hover.
-     * @param texto Texto a ser exibido no botão
-     * @param caminhoIcone Caminho do arquivo de imagem do ícone
-     * @return Button configurado para o menu lateral
      */
     private Button criarBotaoLateral(String texto, String caminhoIcone) {
         try {
@@ -845,7 +802,6 @@ public class Produtos {
             Label textLabel = new Label(texto);
             textLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-weight: bold;");
 
-            // Container para a barra indicadora amarela (agora à direita)
             StackPane indicatorContainer = new StackPane();
             indicatorContainer.setMinWidth(3);
             indicatorContainer.setMaxWidth(3);
@@ -853,11 +809,9 @@ public class Produtos {
             indicatorContainer.setMaxHeight(30);
             indicatorContainer.setStyle("-fx-background-color: transparent;");
 
-            // HBox para organizar ícone e texto à esquerda
             HBox leftContent = new HBox(10, icon, textLabel);
             leftContent.setAlignment(Pos.CENTER_LEFT);
 
-            // HBox principal que empurra o indicador para a direita
             HBox content = new HBox(leftContent, new Region(), indicatorContainer);
             content.setAlignment(Pos.CENTER_LEFT);
             HBox.setHgrow(content.getChildren().get(1), Priority.ALWAYS);
@@ -866,16 +820,15 @@ public class Produtos {
             btn.setGraphic(content);
             btn.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
             btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
-            btn.setPrefWidth(280); // Ajustado para a largura do menu
+            btn.setPrefWidth(280);
             btn.setPrefHeight(42);
 
-            // Efeito de hover com a barra amarela à direita
             btn.setOnMouseEntered(e -> {
-                btn.setStyle("-fx-background-color: linear-gradient(to left,rgba(192, 151, 39, 0.39),rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4;");
-                indicatorContainer.setStyle("-fx-background-color:rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
+                btn.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4;");
+                indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
             });
             btn.setOnMouseExited(e -> {
-                btn.setStyle("-fx-background-color: transparent; -fx-background-radius: 4;");
+                btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
                 indicatorContainer.setStyle("-fx-background-color: transparent;");
             });
 
@@ -891,11 +844,11 @@ public class Produtos {
     }
 
     /**
-     * Carrega os produtos do banco de dados e popula a tabela.
+     * Carrega os produtos do banco de dados e popula a tabela (apenas ativos).
      */
     private void carregarProdutos() {
         listaProdutos = FXCollections.observableArrayList();
-        String sql = "SELECT ID_Produto, Nome, Cod_Barras, Preco FROM produtos ORDER BY Nome";
+        String sql = "SELECT ID_Produto, Nome, Cod_Barras, Preco, Ativo FROM produtos WHERE Ativo = 1 ORDER BY Nome";
 
         try (Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
@@ -917,7 +870,6 @@ public class Produtos {
 
     /**
      * Filtra os produtos na tabela com base no texto digitado no campo de pesquisa.
-     * @param filtro Texto digitado para filtragem
      */
     private void filtrarProdutos(String filtro) {
         if (listaProdutos == null || filtro == null || filtro.isEmpty()) {
@@ -935,11 +887,10 @@ public class Produtos {
 
     /**
      * Abre um formulário para adicionar ou editar um produto.
-     * @param produto Produto a ser editado (null para adicionar novo)
      */
     private void abrirFormularioProduto(Produto produto) {
         Stage dialog = new Stage();
-        dialog.initModality(Modality.NONE); // Alterado para não bloquear a janela pai
+        dialog.initModality(Modality.NONE);
         dialog.initOwner(stage);
         dialog.setTitle(produto == null ? "Adicionar Produto" : "Editar Produto");
 
@@ -987,13 +938,9 @@ public class Produtos {
         dialog.setScene(scene);
         dialog.showAndWait();
     }
+
     /**
      * Salva ou atualiza um produto no banco de dados.
-     * @param produto Produto a ser salvo ou atualizado
-     * @param txtNome Campo de texto para o nome
-     * @param txtCodBarras Campo de texto para o código de barras
-     * @param txtPreco Campo de texto para o preço
-     * @param dialog Janela de diálogo a ser fechada após salvar
      */
     private void salvarProduto(Produto produto, TextField txtNome, TextField txtCodBarras, 
                             TextField txtPreco, Stage dialog) {
@@ -1036,13 +983,9 @@ public class Produtos {
 
     /**
      * Valida se já existe um produto com o mesmo nome ou código de barras.
-     * @param nome Nome do produto a ser validado
-     * @param codBarras Código de barras a ser validado
-     * @param idProduto ID do produto (para ignorar o próprio produto em edição)
-     * @return true if já existe, false caso contrário
      */
     private boolean validarProdutoExistente(String nome, String codBarras, int idProduto) {
-        String sql = "SELECT ID_Produto, Nome, Cod_Barras FROM produtos WHERE (Nome = ? OR Cod_Barras = ?) AND ID_Produto != ?";
+        String sql = "SELECT ID_Produto, Nome, Cod_Barras FROM produtos WHERE (Nome = ? OR Cod_Barras = ?) AND ID_Produto != ? AND Ativo = 1";
 
         try (Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement(sql)) {
@@ -1059,11 +1002,11 @@ public class Produtos {
 
                     String mensagem;
                     if (nomeExistente.equalsIgnoreCase(nome) && codBarrasExistente.equalsIgnoreCase(codBarras)) {
-                        mensagem = "Já existe um produto com este nome e código de barras!";
+                        mensagem = "Já existe um produto ativo com este nome e código de barras!";
                     } else if (nomeExistente.equalsIgnoreCase(nome)) {
-                        mensagem = "Já existe um produto com este nome!";
+                        mensagem = "Já existe um produto ativo com este nome!";
                     } else {
-                        mensagem = "Já existe um produto com este código de barras!";
+                        mensagem = "Já existe um produto ativo com este código de barras!";
                     }
 
                     Alert alert = new Alert(AlertType.WARNING);
@@ -1094,7 +1037,6 @@ public class Produtos {
 
     /**
      * Seleciona um produto na tabela com base no ID.
-     * @param idProduto ID do produto a ser selecionado
      */
     private void selecionarProdutoNaTabela(int idProduto) {
         for (Produto p : listaProdutos) {
@@ -1108,10 +1050,9 @@ public class Produtos {
 
     /**
      * Insere um novo produto no banco de dados.
-     * @param produto Produto a ser inserido
      */
     private void inserirProduto(Produto produto) {
-        String sql = "INSERT INTO produtos (Nome, Cod_Barras, Preco) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO produtos (Nome, Cod_Barras, Preco, Ativo) VALUES (?, ?, ?, 1)";
         try (Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -1138,7 +1079,6 @@ public class Produtos {
 
     /**
      * Atualiza um produto existente no banco de dados.
-     * @param produto Produto a ser atualizado
      */
     private void atualizarProduto(Produto produto) {
         String sql = "UPDATE produtos SET Nome=?, Cod_Barras=?, Preco=? WHERE ID_Produto=?";
@@ -1166,45 +1106,50 @@ public class Produtos {
     }
 
     /**
-     * Apaga um produto do banco de dados após confirmação.
-     * @param produto Produto a ser apagado
+     * Desativa um produto no banco de dados após confirmação.
      */
-    private void apagarProduto(Produto produto) {
-        Alert confirm = new Alert(AlertType.CONFIRMATION);
-        confirm.setTitle("Confirmação");
-        confirm.setHeaderText("Deseja apagar o produto: " + produto.getNome() + "?");
-        confirm.setContentText("Esta ação não pode ser desfeita.");
-        try {
-            confirm.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
-        } catch (Exception e) {
-            System.err.println("Erro ao carregar CSS: " + e.getMessage());
+    private void desativarProduto(Produto produto) {
+        if (produto == null) {
+            System.err.println("Erro: Tentativa de Apagar um produto nulo.");
+            mostrarAlertaErro("Erro", "Nenhum produto selecionado para Apagar.");
+            return;
         }
-        confirm.initModality(Modality.NONE); // Não bloqueia a janela pai
-        confirm.initOwner(stage);
+
+        System.out.println("Tentando desativar produto: ID=" + produto.getId() + ", Nome=" + produto.getNome());
+
+        // Diálogo de confirmação
+        CustomConfirmationAlert confirm = new CustomConfirmationAlert(stage, "Confirmação", 
+            "Deseja apagar o produto: " + produto.getNome() + "?", "O produto será oculto da lista");
+        confirm.initModality(Modality.WINDOW_MODAL);
 
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            String sql = "DELETE FROM produtos WHERE ID_Produto = ?";
+            String sql = "UPDATE produtos SET Ativo = 0 WHERE ID_Produto = ?";
             try (Connection con = getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)) {
-
+                 PreparedStatement ps = con.prepareStatement(sql)) {
                 ps.setInt(1, produto.getId());
                 int rows = ps.executeUpdate();
                 if (rows > 0) {
+                    System.out.println("Produto ID=" + produto.getId() + " desativado com sucesso.");
                     listaProdutos.remove(produto);
-                    mostrarMensagemSucesso("Produto apagado com sucesso!");
+                    table.refresh();
+                    mostrarMensagemSucesso("Produto desativado com sucesso!");
+                    produtoSelecionado = null;
+                    btnEdit.setDisable(true);
+                    btnDelete.setDisable(true);
                 } else {
-                    mostrarAlertaErro("Erro ao apagar", "Erro ao apagar produto.");
+                    System.err.println("Erro: Nenhum produto desativado para ID=" + produto.getId());
+                    mostrarAlertaErro("Erro ao Apagar", "Nenhum produto foi Apagar. Verifique se o produto ainda existe.");
                 }
             } catch (SQLException e) {
-                mostrarAlertaErro("Erro no banco de dados", "Erro ao apagar produto: " + e.getMessage());
+                System.err.println("SQLException ao desativar produto: " + e.getMessage());
+                mostrarAlertaErro("Erro no banco de dados", "Erro ao Apagar produto: " + e.getMessage());
             }
         }
     }
 
     /**
      * Volta para a tela inicial com base no cargo do usuário.
-     * @param stage Palco atual a ser substituído
      */
     private void voltarParaHome(Stage stage) {
         try {
@@ -1228,20 +1173,7 @@ public class Produtos {
     }
 
     /**
-     * Confirma a saída do sistema.
-     * @param stage Palco a ser fechado
-     */
-    private void confirmarSaida(Stage stage) {
-        CustomConfirmationAlert alert = new CustomConfirmationAlert(stage, "Confirmação de Saída", "Deseja realmente sair do sistema?", null);
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            stage.close();
-        }
-    }
-
-    /**
      * Exibe uma mensagem de sucesso temporária na interface.
-     * @param texto Texto da mensagem a ser exibida
      */
     private void mostrarMensagemSucesso(String texto) {
         lblMensagemSucesso.setText(texto);
@@ -1254,14 +1186,12 @@ public class Produtos {
 
     /**
      * Exibe um alerta de erro na interface.
-     * @param titulo Título do alerta
-     * @param mensagem Mensagem a ser exibida
      */
     private void mostrarAlertaErro(String titulo, String mensagem) {
         Alert alert = new Alert(AlertType.ERROR);
         alert.setTitle(titulo);
         alert.setHeaderText(null);
-        alert.initModality(Modality.NONE); // Adicionar esta linha
+        alert.initModality(Modality.WINDOW_MODAL);
         alert.initOwner(stage);
         alert.setContentText(mensagem);
         try {
@@ -1270,4 +1200,5 @@ public class Produtos {
             System.err.println("Erro ao carregar CSS: " + e.getMessage());
         }
         alert.showAndWait();
-    }}
+    }
+}
