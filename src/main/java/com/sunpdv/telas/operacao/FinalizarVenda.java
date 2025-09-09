@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-
+import javafx.application.Platform;
 import javafx.scene.control.Alert.AlertType;
 
 import com.sunpdv.model.AutenticarUser;
@@ -412,15 +412,13 @@ public class FinalizarVenda {
                 double totalPago = pagamentos.stream().mapToDouble(p -> p.valor).sum();
                 double restante = Math.max(totalVenda - totalPago, 0);
                 
-                if (forma.equals("Cartão de Débito") || forma.equals("Cartão de Crédito") || forma.equals("Pix") || forma.equals("Voucher")) {
-                    valorField.setText(String.format("%.2f", restante).replace(".", ","));
-                    valorField.setEditable(false);
-                } else {
-                    valorField.setEditable(true);
-                    valorField.clear();
-                }
-            } else {
-                valorField.setEditable(true);
+                // Preencher automaticamente com o valor restante, mas deixar editável
+                valorField.setText(String.format("%.2f", restante).replace(".", ","));
+                valorField.setEditable(true); // Sempre editável
+                
+                // Selecionar o texto para facilitar a edição
+                valorField.selectAll();
+                valorField.requestFocus();
             }
         });
 
@@ -692,22 +690,38 @@ public class FinalizarVenda {
             }
 
             conn.commit();
-            
+
             // Gerar cupom fiscal se a opção estiver marcada
             if (imprimirCupomCheck.isSelected()) {
                 gerarCupomFiscal(troco);
             }
-            
+
             caixa.limparVendaAtual();
             mostrarAlerta("Sucesso", "Venda finalizada com sucesso! Troco: R$ " + String.format("%.2f", troco), Alert.AlertType.INFORMATION);
-            
-            // Forçar a tela de Caixa a voltar em tela cheia antes de fechar o diálogo
-            if (caixa != null && caixa.stage != null) {
-                caixa.stage.setIconified(false); // Garante que a janela não esteja minimizada
-                caixa.stage.setFullScreen(true); // Define tela cheia
-            }
+
+            // Fechar esta janela primeiro
             stage.close();
-            
+
+            // Garantir que a janela do caixa volte em tela cheia
+            Platform.runLater(() -> {
+                if (caixa != null && caixa.stage != null) {
+                    // Restaurar a janela se estiver minimizada
+                    if (caixa.stage.isIconified()) {
+                        caixa.stage.setIconified(false);
+                    }
+                    
+                    // Trazer para frente
+                    caixa.stage.toFront();
+                    caixa.stage.requestFocus();
+                    
+                    // Forçar tela cheia com um pequeno delay
+                    Timeline timeline = new Timeline(new KeyFrame(Duration.millis(100), e -> {
+                        caixa.stage.setFullScreen(true);
+                    }));
+                    timeline.play();
+                }
+            });
+                
         } catch (SQLException e) {
             if (conn != null) {
                 try {
