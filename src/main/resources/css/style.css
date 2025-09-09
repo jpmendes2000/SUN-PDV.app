@@ -354,3 +354,30 @@
     -fx-background-color: rgba(255, 204, 0, 0.64);
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);
 }
+
+.botao-admin {
+    -fx-background-color: transparent;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.botao-admin:hover {
+    -fx-background-color: linear-gradient(to left,
+        rgba(192, 151, 39, 0.39),
+        rgba(232, 186, 35, 0.18));
+}
+
+.botao-admin .label {
+    -fx-text-fill: #a9cce3;
+    -fx-font-weight: bold;
+}
+
+.indicador-lateral {
+    -fx-background-color: transparent;
+}
+
+.botao-admin:hover .indicador-lateral {
+    -fx-background-color: rgba(255, 204, 0, 0.64);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);
+}

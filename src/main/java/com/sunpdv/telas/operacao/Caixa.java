@@ -501,13 +501,6 @@ private double buscarTrocoVenda(Connection conn, int idVenda) {
             Label lblNenhumaVenda = new Label("Nenhuma venda encontrada.");
             lblNenhumaVenda.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-padding: 20;");
             listaVendas.getChildren().add(lblNenhumaVenda);
-            
-            // Se não há vendas, mostrar instruções
-            if (vendas.isEmpty()) {
-                Label lblInstrucao = new Label("Execute o script SQL de dados de teste para criar vendas de exemplo.");
-                lblInstrucao.setStyle("-fx-text-fill: #c7eefaff; -fx-font-size: 12px; -fx-padding: 10;");
-                listaVendas.getChildren().add(lblInstrucao);
-            }
         }
         
         System.out.println("Filtros aplicados - Painéis criados: " + (achou ? listaVendas.getChildren().size() : 0));
