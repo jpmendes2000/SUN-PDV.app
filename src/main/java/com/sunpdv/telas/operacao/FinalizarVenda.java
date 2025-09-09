@@ -60,54 +60,85 @@ public class FinalizarVenda {
     private static final String COR_VERMELHO = "#e74c3c";
 
     public FinalizarVenda(String documento, String tipoDocumento, List<Caixa.ItemVenda> itens, double totalVenda, Caixa caixa) {
-        this.documento = documento;
-        this.tipoDocumento = tipoDocumento;
-        this.itens = new ArrayList<>(itens);
-        this.totalVenda = totalVenda;
-        this.caixa = caixa;
-        this.cupomFiscal = new CupomFiscal(); // Inicializar a instância
+        try {
+            this.documento = documento;
+            this.tipoDocumento = tipoDocumento;
+            this.itens = new ArrayList<>(itens);
+            this.totalVenda = totalVenda;
+            this.caixa = caixa;
+            this.cupomFiscal = new CupomFiscal(); // Inicializar a instância
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Adicione log ou throw pra ver
+        }
     }
 
     public void mostrar(Stage owner, Caixa caixa) {
         this.caixa = caixa;
-        stage = new Stage();
-        stage.initModality(Modality.WINDOW_MODAL);
-        stage.initOwner(owner);
-        stage.setTitle("SUN PDV - Finalizar Venda");
-
-        // Layout principal com gradiente
-        BorderPane layout = new BorderPane();
-        aplicarGradienteFundo(layout);
-
-        // Header superior
-        HBox header = criarHeader();
-
-        // Menu lateral esquerdo (estilo da tela de Caixa)
-        VBox menuLateral = criarMenuLateralEstiloCaixa();
-
-        // Área central - Itens e formas de pagamento
-        VBox areaCentral = criarAreaCentral();
-
-        // Painel direito - Lista de pagamentos
-        VBox painelDireito = criarPainelDireito();
-
-        layout.setTop(header);
-        layout.setLeft(menuLateral);
-        layout.setCenter(areaCentral);
-        layout.setRight(painelDireito);
-
-        Scene scene = new Scene(layout, 1720, 780);
-        aplicarAnimacaoEntrada(layout);
-
         try {
-            scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
-        } catch (NullPointerException e) {
-            System.err.println("Erro ao carregar CSS: " + e.getMessage());
-        }
+            System.out.println("Iniciando mostrar FinalizarVenda..."); // Debug: início
 
-        stage.setScene(scene);
-        stage.setFullScreen(true);
-        stage.showAndWait();
+            stage = new Stage();
+            stage.initModality(Modality.WINDOW_MODAL);
+            stage.initOwner(owner);
+            stage.setTitle("SUN PDV - Finalizar Venda");
+
+            // Layout principal com gradiente
+            BorderPane layout = new BorderPane();
+            aplicarGradienteFundo(layout);
+
+            System.out.println("Header sendo criado..."); // Debug
+            // Header superior
+            HBox header = criarHeader();
+
+            System.out.println("Menu lateral sendo criado..."); // Debug
+            // Menu lateral esquerdo (estilo da tela de Caixa)
+            VBox menuLateral = criarMenuLateralEstiloCaixa();
+
+            System.out.println("Area central sendo criada..."); // Debug
+            // Área central - Itens e formas de pagamento
+            VBox areaCentral = criarAreaCentral();
+
+            System.out.println("Painel direito sendo criado..."); // Debug
+            // Painel direito - Lista de pagamentos
+            VBox painelDireito = criarPainelDireito();
+
+            layout.setTop(header);
+            layout.setLeft(menuLateral);
+            layout.setCenter(areaCentral);
+            layout.setRight(painelDireito);
+
+            Scene scene = new Scene(layout, 1720, 780);
+            aplicarAnimacaoEntrada(layout);
+
+            try {
+                scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+                System.out.println("CSS carregado com sucesso."); // Debug
+            } catch (NullPointerException e) {
+                System.err.println("Erro ao carregar CSS: " + e.getMessage());
+                // Adicione um Alert para ver na tela
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Erro de Recursos");
+                alert.setContentText("Falha ao carregar o CSS. Verifique se /css/style.css existe no classpath.");
+                alert.showAndWait();
+            }
+
+            stage.setScene(scene);
+            stage.setFullScreen(true);
+            System.out.println("Stage pronta para show..."); // Debug: antes de show
+            stage.showAndWait();
+            System.out.println("Stage fechada."); // Debug: após close
+
+        } catch (Exception e) {
+            e.printStackTrace(); // Printa o stack trace no console
+            Alert alert = new Alert(AlertType.ERROR);
+            alert.setTitle("Erro ao Abrir Tela");
+            alert.setContentText("Falha ao criar a tela de Finalizar Venda: " + e.getMessage());
+            if (owner != null) {
+                alert.initOwner(owner);
+            }
+            alert.showAndWait();
+        }
     }
 
     private void aplicarGradienteFundo(BorderPane layout) {
@@ -217,7 +248,29 @@ public class FinalizarVenda {
 
         // Botão Voltar
         Button btnVoltar = criarBotaoLateral("Voltar", "/img/icon/voltar.png");
-        btnVoltar.setOnAction(e -> stage.close());
+        btnVoltar.setOnAction(e -> {
+            stage.close();
+            
+            // Restaurar a stage do Caixa de forma assíncrona para evitar problemas de thread UI
+            Platform.runLater(() -> {
+                if (caixa != null && caixa.stage != null) {
+                    // Se estiver minimizada, restaurar
+                    if (caixa.stage.isIconified()) {
+                        caixa.stage.setIconified(false);
+                    }
+                    
+                    // Trazer para frente e focar
+                    caixa.stage.toFront();
+                    caixa.stage.requestFocus();
+                    
+                    // Forçar full screen com um pequeno delay (evita glitches em alguns SOs)
+                    Timeline timelineVoltar = new Timeline(new KeyFrame(Duration.millis(100), ev -> {
+                        caixa.stage.setFullScreen(true);
+                    }));
+                    timelineVoltar.play();
+                }
+            });
+        });
 
         // Espaço para centralizar verticalmente
         Region espaco = new Region();
