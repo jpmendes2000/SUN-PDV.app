@@ -63,6 +63,8 @@ public class Produtos {
     private Button btnAdd;
     private Button btnEdit;
     private Button btnDelete;
+    private VBox topoBox;
+    private GridPane contentGrid; // Adicionado como atributo de classe
 
     // Constantes para conexão com o banco de dados
     private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=false;trustServerCertificate=true;";
@@ -144,7 +146,7 @@ public class Produtos {
         dataLabel.setMaxWidth(Double.MAX_VALUE);
 
         // VBox para organizar hora acima da data
-        VBox dataHoraBox = new VBox(5, horaLabel, dataLabel);
+        VBox dataHoraBox = new VBox(5, horaLabel);
         dataHoraBox.setAlignment(Pos.CENTER);
         dataHoraBox.setPadding(new Insets(0, 0, 15, 0));
 
@@ -201,7 +203,7 @@ public class Produtos {
         leftMenu.getChildren().addAll(logoBox, dataHoraBox, espacoFlexivel, menuContent);
 
         // Configuração da área central (conteúdo principal)
-        GridPane contentGrid = new GridPane();
+        contentGrid = new GridPane(); // Inicialização como atributo
         contentGrid.setHgap(20);
         contentGrid.setVgap(10);
         contentGrid.setPadding(new Insets(15));
@@ -221,7 +223,7 @@ public class Produtos {
         // Configuração dos botões de ação
         btnAdd = criarBotaoAcao("/img/icon/lista.png", "Adicionar Produto");
         btnEdit = criarBotaoAcao("/img/icon/lapis.png", "Editar Produto");
-        btnDelete = criarBotaoAcao("/img/icon/lixeira.png", "Apagar Produto"); // Mudança no tooltip
+        btnDelete = criarBotaoAcao("/img/icon/lixeira.png", "Apagar Produto");
 
         btnEdit.setDisable(true);
         btnDelete.setDisable(true);
@@ -234,7 +236,7 @@ public class Produtos {
         pesquisaAcoesBox.setAlignment(Pos.CENTER_LEFT);
         pesquisaAcoesBox.setPadding(new Insets(5, 0, 15, 10));
 
-        VBox topoBox = new VBox(5, tituloMensagemBox, pesquisaAcoesBox);
+        topoBox = new VBox(5, tituloMensagemBox, pesquisaAcoesBox);
         contentGrid.add(topoBox, 0, 0, 2, 1);
 
         // Configuração da tabela de produtos
@@ -369,27 +371,63 @@ public class Produtos {
     /**
      * Alterna entre o modo de visualização de produtos e o dashboard administrativo
      */
+    /**
+ * Alterna entre o modo de visualização de produtos e o dashboard administrativo
+ */
     private void toggleModoAdmin() {
         modoAdminAtivo = !modoAdminAtivo;
         
         if (modoAdminAtivo) {
-            atualizarBotaoLateral(btnAdmin, "Produtos", "/img/icon/lista.png");
+            // Atualiza apenas o texto, ícone e tooltip sem recriar o botão
+            HBox content = (HBox) btnAdmin.getGraphic();
+            if (content != null && content.getChildren().size() >= 2) {
+                HBox leftContent = (HBox) content.getChildren().get(0);
+                if (leftContent != null && leftContent.getChildren().size() >= 2) {
+                    ((Label) leftContent.getChildren().get(1)).setText("Produtos");
+                    try {
+                        Image img = new Image(getClass().getResourceAsStream("/img/icon/lista.png"));
+                        ((ImageView) leftContent.getChildren().get(0)).setImage(img);
+                    } catch (Exception e) {
+                        System.err.println("Erro ao carregar ícone: /img/icon/lista.png");
+                    }
+                }
+            }
             btnAdmin.setTooltip(new Tooltip("Produtos"));
             
-            scrollTable.setVisible(false);
+            topoBox.setVisible(false); // Esconde a barra de pesquisa e botões
+            scrollTable.setVisible(false); // Esconde a tabela
             criarDashboard();
             dashboardContainer.setVisible(true);
+            contentGrid.getChildren().remove(dashboardContainer); // Remove para reposicionar
+            contentGrid.add(dashboardContainer, 0, 0, 2, 2); // Posiciona o dashboard na linha 0, ocupando 2 colunas e 2 linhas
             
             btnAdd.setDisable(true);
             btnEdit.setDisable(true);
             btnDelete.setDisable(true);
             campoPesquisa.setDisable(true);
         } else {
-            atualizarBotaoLateral(btnAdmin, "Administrativo", "/img/icon/pasta.png");
+            // Atualiza apenas o texto, ícone e tooltip sem recriar o botão
+            HBox content = (HBox) btnAdmin.getGraphic();
+            if (content != null && content.getChildren().size() >= 2) {
+                HBox leftContent = (HBox) content.getChildren().get(0);
+                if (leftContent != null && leftContent.getChildren().size() >= 2) {
+                    ((Label) leftContent.getChildren().get(1)).setText("Administrativo");
+                    try {
+                        Image img = new Image(getClass().getResourceAsStream("/img/icon/pasta.png"));
+                        ((ImageView) leftContent.getChildren().get(0)).setImage(img);
+                    } catch (Exception e) {
+                        System.err.println("Erro ao carregar ícone: /img/icon/pasta.png");
+                    }
+                }
+            }
             btnAdmin.setTooltip(new Tooltip("Acessar dashboard administrativo"));
             
-            dashboardContainer.setVisible(false);
-            scrollTable.setVisible(true);
+            dashboardContainer.setVisible(false); // Esconde o dashboard
+            scrollTable.setVisible(true); // Mostra a tabela
+            topoBox.setVisible(true); // Mostra a barra de pesquisa e botões
+            contentGrid.getChildren().remove(dashboardContainer); // Remove para reposicionar
+            contentGrid.add(dashboardContainer, 0, 1, 2, 1); // Restaura o dashboard à linha 1
+            contentGrid.add(scrollTable, 0, 1, 2, 1); // Restaura a tabela à linha 1
             
             btnAdd.setDisable(false);
             btnEdit.setDisable(produtoSelecionado == null);
@@ -397,18 +435,18 @@ public class Produtos {
             campoPesquisa.setDisable(false);
         }
         
-        // Reaplica o estilo de hover se o mouse ainda estiver sobre o botão após a atualização
-        Platform.runLater(() -> {
-            
+        // Sincroniza o estilo imediatamente com o estado do mouse
+        HBox content = (HBox) btnAdmin.getGraphic();
+        if (content != null && content.getChildren().size() >= 3) {
+            StackPane indicatorContainer = (StackPane) content.getChildren().get(2);
             if (btnAdmin.isHover()) {
-                btnAdmin.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4;");
-                HBox content = (HBox) btnAdmin.getGraphic();
-                if (content != null && content.getChildren().size() >= 3) {
-                    StackPane indicatorContainer = (StackPane) content.getChildren().get(2);
-                    indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
-                }
+                btnAdmin.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4; -fx-min-width: 55; -fx-min-height: 55;");
+                indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
+            } else {
+                btnAdmin.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
+                indicatorContainer.setStyle("-fx-background-color: transparent;");
             }
-        });
+        }
     }
 
     /**
@@ -429,8 +467,10 @@ public class Produtos {
             textLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-weight: bold;");
 
             StackPane indicatorContainer = new StackPane();
-            indicatorContainer.setPrefWidth(4);
-            indicatorContainer.setPrefHeight(60);
+            indicatorContainer.setMinWidth(3);
+            indicatorContainer.setMaxWidth(3);
+            indicatorContainer.setMinHeight(30);
+            indicatorContainer.setMaxHeight(30);
             indicatorContainer.setStyle("-fx-background-color: transparent;");
 
             HBox leftContent = new HBox(10, icon, textLabel);
@@ -445,8 +485,8 @@ public class Produtos {
             botao.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
             botao.setPrefWidth(280);
             botao.setPrefHeight(42);
-            botao.setMaxHeight(42);  // Garante consistência no tamanho
-            botao.setMinHeight(42);  // Garante consistência no tamanho
+            botao.setMaxHeight(55);
+            botao.setMinHeight(55);
 
             botao.setOnMouseEntered(e -> {
                 botao.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4;");
@@ -578,7 +618,8 @@ public class Produtos {
             btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
             btn.setPrefWidth(280);
             btn.setPrefHeight(42);
-            
+            btn.setMaxHeight(55);
+            btn.setMinHeight(55);
 
             btn.setOnMouseEntered(e -> {
                 btn.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4;");
@@ -595,7 +636,9 @@ public class Produtos {
             Button btn = new Button(texto);
             btn.setStyle("-fx-text-fill: #a9cce3; -fx-font-weight: bold; -fx-background-color: transparent;");
             btn.setPrefWidth(280);
-            btn.setPrefHeight(42); // Corrigido para 42
+            btn.setPrefHeight(42);
+            btn.setMaxHeight(42);
+            btn.setMinHeight(42);
             return btn;
         }
     }
