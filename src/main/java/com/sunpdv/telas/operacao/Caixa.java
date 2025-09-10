@@ -860,39 +860,10 @@ private double buscarTrocoVenda(Connection conn, int idVenda) {
                 
                 infoBox.getChildren().addAll(nomeLabel, detalhesLabel);
                 
-                // Botões para modificar quantidade com "-", "+", "×"
-                Button btnDiminuir = new Button("-");
-                btnDiminuir.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;");
-                btnDiminuir.setPrefSize(30, 30);
-                btnDiminuir.setOnAction(e -> {
-                    if (item.quantidade > 1) {
-                        item.quantidade--;
-                        updateItem(item, false); // Re-renderiza a célula
-                        atualizarTotal();
-                    }
-                });
-                
-                Button btnAumentar = new Button("+");
-                btnAumentar.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;");
-                btnAumentar.setPrefSize(30, 30);
-                btnAumentar.setOnAction(e -> {
-                    item.quantidade++;
-                    updateItem(item, false); // Re-renderiza a célula
-                    atualizarTotal();
-                });
-                
-                Button btnApagar = new Button("×");
-                btnApagar.setStyle("-fx-background-color: #6c757d; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;");
-                btnApagar.setPrefSize(30, 30);
-                btnApagar.setOnAction(e -> removerItem(item));
-                
-                HBox botoesBox = new HBox(5, btnDiminuir, btnAumentar, btnApagar);
-                botoesBox.setAlignment(Pos.CENTER);
-                
                 Region spacer = new Region();
                 HBox.setHgrow(spacer, Priority.ALWAYS);
                 
-                mainBox.getChildren().addAll(infoBox, spacer, botoesBox);
+                mainBox.getChildren().addAll(infoBox, spacer);
                 setGraphic(mainBox);
             }
         }
@@ -1326,7 +1297,7 @@ private double buscarTrocoVenda(Connection conn, int idVenda) {
             System.err.println("Erro ao carregar CSS: " + e.getMessage());
         }
 
-        stage.setScene(scene);
+        stage.setScene(scene); 
 
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
         stage.setX((screenBounds.getWidth() - 1280) / 2);
