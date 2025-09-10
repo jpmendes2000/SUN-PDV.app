@@ -117,3 +117,7 @@ mvnw.cmd
 *.idx
 *.pack
 *.gitkeep
+
+# Arquivos referentes a cupom fiscal
+
+/notasfiscais/*
