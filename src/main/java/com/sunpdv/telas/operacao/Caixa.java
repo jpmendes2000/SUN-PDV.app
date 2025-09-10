@@ -554,12 +554,34 @@ private double buscarTrocoVenda(Connection conn, int idVenda) {
             }
         });
 
+        rbCNPJ.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal) {
+                documentoField.setPromptText("Digite o CNPJ (somente números)");
+            }
+        });
+
+        rbRG.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal) {
+                documentoField.setPromptText("Digite o RG (somente números)");
+            }
+        });
+
         documentoField.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (rbCPF.isSelected() && !newVal.isEmpty()) {
-                if (!validarCPF(newVal)) {
-                    documentoField.setStyle("-fx-border-color: red;");
-                } else {
+            RadioButton selected = (RadioButton) clienteGroup.getSelectedToggle();
+            if (selected != null && !newVal.isEmpty()) {
+                String tipo = selected.getText();
+                boolean valido = false;
+                if (tipo.equals("CPF")) {
+                    valido = validarCPF(newVal);
+                } else if (tipo.equals("CNPJ")) {
+                    valido = validarCNPJ(newVal);
+                } else if (tipo.equals("RG")) {
+                    valido = validarRG(newVal);
+                }
+                if (valido) {
                     documentoField.setStyle("-fx-border-color: green;");
+                } else {
+                    documentoField.setStyle("-fx-border-color: red;");
                 }
             } else {
                 documentoField.setStyle("");
@@ -736,8 +758,25 @@ private double buscarTrocoVenda(Connection conn, int idVenda) {
                 return;
             }
 
-            if (selectedToggle.getText().equals("CPF") && !validarCPF(documento)) {
-                mostrarAlerta("CPF inválido", "O CPF digitado não é válido.", AlertType.ERROR);
+            String tipo = selectedToggle.getText();
+            boolean valido = false;
+            if (tipo.equals("CPF")) {
+                valido = validarCPF(documento);
+                if (!valido) {
+                    mostrarAlerta("CPF inválido", "O CPF digitado não é válido.", AlertType.ERROR);
+                }
+            } else if (tipo.equals("CNPJ")) {
+                valido = validarCNPJ(documento);
+                if (!valido) {
+                    mostrarAlerta("CNPJ inválido", "O CNPJ digitado não é válido.", AlertType.ERROR);
+                }
+            } else if (tipo.equals("RG")) {
+                valido = validarRG(documento);
+                if (!valido) {
+                    mostrarAlerta("RG inválido", "O RG digitado não é válido (deve ter entre 7 e 10 dígitos numéricos).", AlertType.ERROR);
+                }
+            }
+            if (!valido) {
                 documentoField.selectAll();
                 documentoField.requestFocus();
                 return;
@@ -821,11 +860,11 @@ private double buscarTrocoVenda(Connection conn, int idVenda) {
                 
                 infoBox.getChildren().addAll(nomeLabel, detalhesLabel);
                 
-                // Botões para modificar quantidade
-                Button btnMenos = new Button("-");
-                btnMenos.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white; -fx-font-weight: bold;");
-                btnMenos.setPrefSize(30, 25);
-                btnMenos.setOnAction(e -> {
+                // Botões para modificar quantidade com "-", "+", "×"
+                Button btnDiminuir = new Button("-");
+                btnDiminuir.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;");
+                btnDiminuir.setPrefSize(30, 30);
+                btnDiminuir.setOnAction(e -> {
                     if (item.quantidade > 1) {
                         item.quantidade--;
                         updateItem(item, false); // Re-renderiza a célula
@@ -833,21 +872,21 @@ private double buscarTrocoVenda(Connection conn, int idVenda) {
                     }
                 });
                 
-                Button btnMais = new Button("+");
-                btnMais.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-weight: bold;");
-                btnMais.setPrefSize(30, 25);
-                btnMais.setOnAction(e -> {
+                Button btnAumentar = new Button("+");
+                btnAumentar.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;");
+                btnAumentar.setPrefSize(30, 30);
+                btnAumentar.setOnAction(e -> {
                     item.quantidade++;
                     updateItem(item, false); // Re-renderiza a célula
                     atualizarTotal();
                 });
                 
-                Button btnRemover = new Button("×");
-                btnRemover.setStyle("-fx-background-color: #6c757d; -fx-text-fill: white; -fx-font-weight: bold;");
-                btnRemover.setPrefSize(30, 25);
-                btnRemover.setOnAction(e -> removerItem(item));
+                Button btnApagar = new Button("×");
+                btnApagar.setStyle("-fx-background-color: #6c757d; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;");
+                btnApagar.setPrefSize(30, 30);
+                btnApagar.setOnAction(e -> removerItem(item));
                 
-                HBox botoesBox = new HBox(5, btnMenos, btnMais, btnRemover);
+                HBox botoesBox = new HBox(5, btnDiminuir, btnAumentar, btnApagar);
                 botoesBox.setAlignment(Pos.CENTER);
                 
                 Region spacer = new Region();
@@ -886,6 +925,51 @@ private double buscarTrocoVenda(Connection conn, int idVenda) {
         
         return (Character.getNumericValue(cpf.charAt(9)) == digito1 && 
                Character.getNumericValue(cpf.charAt(10)) == digito2);
+    }
+
+    private boolean validarCNPJ(String cnpj) {
+        cnpj = cnpj.replaceAll("[^0-9]", "");
+        
+        if (cnpj.length() != 14) {
+            return false;
+        }
+        
+        if (cnpj.matches("(\\d)\\1{13}")) {
+            return false;
+        }
+        
+        int soma = 0;
+        int[] pesos1 = {5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2};
+        for (int i = 0; i < 12; i++) {
+            soma += pesos1[i] * Character.getNumericValue(cnpj.charAt(i));
+        }
+        int resto = soma % 11;
+        int digito1 = (resto < 2) ? 0 : (11 - resto);
+        
+        soma = 0;
+        int[] pesos2 = {6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2};
+        for (int i = 0; i < 13; i++) {
+            soma += pesos2[i] * Character.getNumericValue(cnpj.charAt(i));
+        }
+        resto = soma % 11;
+        int digito2 = (resto < 2) ? 0 : (11 - resto);
+        
+        return (Character.getNumericValue(cnpj.charAt(12)) == digito1 && 
+                Character.getNumericValue(cnpj.charAt(13)) == digito2);
+    }
+
+    private boolean validarRG(String rg) {
+        rg = rg.replaceAll("[^0-9]", "");
+        
+        if (rg.length() < 7 || rg.length() > 10) {
+            return false;
+        }
+        
+        if (rg.matches("(\\d)\\1{" + (rg.length() - 1) + "}")) {
+            return false;
+        }
+        
+        return true;
     }
 
     private String buscarProdutoPorCodigo(String codigo) throws SQLException {
