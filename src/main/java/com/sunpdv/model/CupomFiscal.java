@@ -110,7 +110,7 @@ public class CupomFiscal {
                                    String documento, String tipoDocumento, List<PagamentoInfo> pagamentos) {
         try {
             // Criar diretório se não existir
-            String diretorio = System.getProperty("user.home") + File.separator + "Documents" + File.separator + "notasfiscais" + File.separator;
+            String diretorio = "C:\\Users\\User\\OneDrive\\Documentos\\TCC\\TCCsystem\\SUN-PDV.app\\NotasFiscais\\";
             File dir = new File(diretorio);
             if (!dir.exists()) {
                 if (!dir.mkdirs()) {
