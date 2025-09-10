@@ -106,13 +106,13 @@ public class Produtos {
     public void show(Stage stage) {
         this.stage = stage;
         BorderPane layout = new BorderPane();
-        layout.setStyle("-fx-background-color: #00435a;");
+        layout.setStyle("-fx-background-color: #00536d;");
 
         // Configuração da área esquerda (menu lateral)
         VBox leftMenu = new VBox();
         leftMenu.setPrefWidth(280);
         leftMenu.setMinWidth(280);
-        leftMenu.setStyle("-fx-background-color: #00536d;");
+        leftMenu.setStyle("-fx-background-color: #00435a;");
 
         // Logo SUN PDV
         Image logo = null;
@@ -605,7 +605,7 @@ public class Produtos {
             icon.setStyle("-fx-fill: white;");
 
             Label textLabel = new Label(texto);
-            textLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-weight: bold;");
+            textLabel.setStyle("-fx-text-fill: #ffffff; -fx-font-weight: bold;");
 
             StackPane indicatorContainer = new StackPane();
             indicatorContainer.setMinWidth(3);

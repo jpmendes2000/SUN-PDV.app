@@ -53,7 +53,7 @@ public class FinalizarVenda {
     // Constantes de cores inspiradas no segundo design
     private static final String COR_FUNDO_PRINCIPAL = "#00435a";
     private static final String COR_FUNDO_SECUNDARIO = "#686de0";
-    private static final String COR_AZUL_CLARO = "#00a8cc";
+    private static final String COR_AZUL_CLARO = "#00536d";
     private static final String COR_AZUL_ESCURO = "#00536d";
     private static final String COR_AMARELO = "#f39c12";
     private static final String COR_VERDE = "#27ae60";
@@ -87,10 +87,6 @@ public class FinalizarVenda {
             BorderPane layout = new BorderPane();
             aplicarGradienteFundo(layout);
 
-            System.out.println("Header sendo criado..."); // Debug
-            // Header superior
-            HBox header = criarHeader();
-
             System.out.println("Menu lateral sendo criado..."); // Debug
             // Menu lateral esquerdo (estilo da tela de Caixa)
             VBox menuLateral = criarMenuLateralEstiloCaixa();
@@ -103,7 +99,6 @@ public class FinalizarVenda {
             // Painel direito - Lista de pagamentos
             VBox painelDireito = criarPainelDireito();
 
-            layout.setTop(header);
             layout.setLeft(menuLateral);
             layout.setCenter(areaCentral);
             layout.setRight(painelDireito);
@@ -151,40 +146,6 @@ public class FinalizarVenda {
         layout.setBackground(background);
     }
 
-    private HBox criarHeader() {
-        HBox header = new HBox();
-        header.setPrefHeight(50);
-        header.setAlignment(Pos.CENTER_LEFT);
-        header.setPadding(new Insets(0, 15, 0, 15));
-
-        Background headerBg = new Background(new BackgroundFill(
-                Color.web(COR_AZUL_CLARO),
-                new CornerRadii(0, 0, 10, 10, false),
-                null
-        ));
-        header.setBackground(headerBg);
-
-        DropShadow shadow = new DropShadow();
-        shadow.setColor(Color.web("#000000", 0.2));
-        shadow.setOffsetY(4);
-        shadow.setRadius(10);
-        header.setEffect(shadow);
-
-        Label titulo = new Label("Finalizar Venda");
-        titulo.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;");
-
-        Label valorTotal = new Label("R$ " + String.format("%.2f", totalVenda));
-        valorTotal.setStyle(
-                "-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; " +
-                        "-fx-background-color: rgba(255,255,255,0.2); -fx-background-radius: 15; -fx-padding: 6 15 6 15;"
-        );
-
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        header.getChildren().addAll(titulo, spacer, valorTotal);
-        return header;
-    }
 
     private VBox criarMenuLateralEstiloCaixa() {
         VBox menuLateral = new VBox();

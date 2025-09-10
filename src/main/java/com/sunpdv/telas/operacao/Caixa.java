@@ -1161,12 +1161,12 @@ private double buscarTrocoVenda(Connection conn, int idVenda) {
         
 
         BorderPane root = new BorderPane();
-        root.setStyle("-fx-background-color: #00435a;");
+        root.setStyle("-fx-background-color: #00536d;");
 
         // ===== MENU LATERAL ESTILIZADO =====
         VBox menuLateral = new VBox();
         menuLateral.setPrefWidth(280);
-        menuLateral.setStyle("-fx-background-color: #00536d;");
+        menuLateral.setStyle("-fx-background-color: #00435a;");
 
         // Logo SUN PDV
         try {

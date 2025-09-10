@@ -520,6 +520,7 @@ public class DashboardAdministrativo {
                     "AND v.Status = 'Concluida' " +
                     "GROUP BY ls.Nome " +
                     "ORDER BY TotalVendas DESC";
+        
         try (Connection con = getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, current.getYear());

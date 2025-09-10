@@ -141,7 +141,7 @@ public class TelaHomeFUN {
         logoBox.setAlignment(Pos.CENTER);
         logoBox.setPadding(new Insets(20, 0, 5, 0));
 
-// Labels para hora e data
+        // Labels para hora e data
         Label horaLabel = new Label();
         horaLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 16px; -fx-font-weight: bold;");
         horaLabel.setAlignment(Pos.CENTER);
