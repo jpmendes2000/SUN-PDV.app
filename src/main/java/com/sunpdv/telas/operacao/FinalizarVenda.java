@@ -899,7 +899,7 @@ public class FinalizarVenda {
 
     private int inserirPagamento(Connection conn, String formaPagamento, double valor, double troco) throws SQLException {
         String sql = "INSERT INTO pagamentos (ID_Forma_Pagamento, Troco, Valor_Recebido) " +
-                "VALUES ((SELECT ID_Forma_Pagamento FROM forma_pagamento WHERE Forma_Pagamento = ?), ?, ?)";
+        "VALUES ((SELECT TOP 1 ID_Forma_Pagamento FROM forma_pagamento WHERE Forma_Pagamento = ? ORDER BY ID_Forma_Pagamento ASC), ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, formaPagamento);
             stmt.setDouble(2, troco);
@@ -923,7 +923,7 @@ public class FinalizarVenda {
 
     private void inserirItensCarrinho(Connection conn, int idCarrinho) throws SQLException {
         String sql = "INSERT INTO carrinho_itens (ID_Carrinho, ID_Produto, Quantidade, Preco_Unitario) " +
-                "VALUES (?, (SELECT ID_Produto FROM produtos WHERE Cod_Barras = ?), ?, ?)";
+        "VALUES (?, (SELECT TOP 1 ID_Produto FROM produtos WHERE Cod_Barras = ? AND Ativo = 1 ORDER BY ID_Produto DESC), ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             for (Caixa.ItemVenda item : itens) {
                 stmt.setInt(1, idCarrinho);

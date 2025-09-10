@@ -345,7 +345,7 @@
     -fx-font-weight: bold;
 }
 
-/* Barra indicadora lateral */
+/* Barra indicadora lateral
 .indicador-lateral {
     -fx-background-color: transparent;
 }
@@ -380,4 +380,4 @@
 .botao-admin:hover .indicador-lateral {
     -fx-background-color: rgba(255, 204, 0, 0.64);
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);
-}
+} */
