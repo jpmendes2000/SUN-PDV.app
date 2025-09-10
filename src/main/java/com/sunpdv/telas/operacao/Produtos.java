@@ -374,137 +374,137 @@ public class Produtos {
     /**
  * Alterna entre o modo de visualização de produtos e o dashboard administrativo
  */
+    /**
+ * Alterna entre o modo de visualização de produtos e o dashboard administrativo
+ */
     private void toggleModoAdmin() {
         modoAdminAtivo = !modoAdminAtivo;
         
         if (modoAdminAtivo) {
-            // Atualiza apenas o texto, ícone e tooltip sem recriar o botão
-            HBox content = (HBox) btnAdmin.getGraphic();
-            if (content != null && content.getChildren().size() >= 2) {
-                HBox leftContent = (HBox) content.getChildren().get(0);
-                if (leftContent != null && leftContent.getChildren().size() >= 2) {
-                    ((Label) leftContent.getChildren().get(1)).setText("Produtos");
-                    try {
-                        Image img = new Image(getClass().getResourceAsStream("/img/icon/lista.png"));
-                        ((ImageView) leftContent.getChildren().get(0)).setImage(img);
-                    } catch (Exception e) {
-                        System.err.println("Erro ao carregar ícone: /img/icon/lista.png");
-                    }
-                }
-            }
-            btnAdmin.setTooltip(new Tooltip("Produtos"));
+            // ENTRANDO NO MODO DASHBOARD
+            System.out.println("Entrando no modo Dashboard");
             
-            topoBox.setVisible(false); // Esconde a barra de pesquisa e botões
-            scrollTable.setVisible(false); // Esconde a tabela
+            // Atualiza o botão
+            atualizarBotaoAdmin("Produtos", "/img/icon/lista.png", "Produtos");
+            
+            // Esconde elementos do modo produtos
+            topoBox.setVisible(false);
+            topoBox.setManaged(false);
+            scrollTable.setVisible(false);
+            scrollTable.setManaged(false);
+            
+            // Remove elementos do grid
+            contentGrid.getChildren().removeAll(topoBox, scrollTable, dashboardContainer);
+            
+            // Cria e adiciona o dashboard
             criarDashboard();
             dashboardContainer.setVisible(true);
-            contentGrid.getChildren().remove(dashboardContainer); // Remove para reposicionar
-            contentGrid.add(dashboardContainer, 0, 0, 2, 2); // Posiciona o dashboard na linha 0, ocupando 2 colunas e 2 linhas
+            dashboardContainer.setManaged(true);
+            contentGrid.add(dashboardContainer, 0, 0, 2, 2);
             
-            btnAdd.setDisable(true);
-            btnEdit.setDisable(true);
-            btnDelete.setDisable(true);
-            campoPesquisa.setDisable(true);
+            // Desativa controles do modo produtos
+            desativarControlesProdutos();
+            
         } else {
-            // Atualiza apenas o texto, ícone e tooltip sem recriar o botão
-            HBox content = (HBox) btnAdmin.getGraphic();
-            if (content != null && content.getChildren().size() >= 2) {
-                HBox leftContent = (HBox) content.getChildren().get(0);
-                if (leftContent != null && leftContent.getChildren().size() >= 2) {
-                    ((Label) leftContent.getChildren().get(1)).setText("Administrativo");
-                    try {
-                        Image img = new Image(getClass().getResourceAsStream("/img/icon/pasta.png"));
-                        ((ImageView) leftContent.getChildren().get(0)).setImage(img);
-                    } catch (Exception e) {
-                        System.err.println("Erro ao carregar ícone: /img/icon/pasta.png");
-                    }
-                }
-            }
-            btnAdmin.setTooltip(new Tooltip("Acessar dashboard administrativo"));
+            // SAINDO DO MODO DASHBOARD (VOLTANDO PARA PRODUTOS)
+            System.out.println("Voltando para modo Produtos");
             
-            dashboardContainer.setVisible(false); // Esconde o dashboard
-            scrollTable.setVisible(true); // Mostra a tabela
-            topoBox.setVisible(true); // Mostra a barra de pesquisa e botões
-            contentGrid.getChildren().remove(dashboardContainer); // Remove para reposicionar
-            contentGrid.add(dashboardContainer, 0, 1, 2, 1); // Restaura o dashboard à linha 1
-            contentGrid.add(scrollTable, 0, 1, 2, 1); // Restaura a tabela à linha 1
+            // Atualiza o botão
+            atualizarBotaoAdmin("Administrativo", "/img/icon/pasta.png", "Acessar dashboard administrativo");
             
-            btnAdd.setDisable(false);
-            btnEdit.setDisable(produtoSelecionado == null);
-            btnDelete.setDisable(produtoSelecionado == null);
-            campoPesquisa.setDisable(false);
+            // Remove o dashboard
+            contentGrid.getChildren().remove(dashboardContainer);
+            dashboardContainer.setVisible(false);
+            dashboardContainer.setManaged(false);
+            
+            // Reativa e reposiciona elementos do modo produtos
+            topoBox.setVisible(true);
+            topoBox.setManaged(true);
+            scrollTable.setVisible(true);
+            scrollTable.setManaged(true);
+            
+            // Adiciona elementos na ordem correta
+            contentGrid.add(topoBox, 0, 0, 2, 1);
+            contentGrid.add(scrollTable, 0, 1, 2, 1);
+            
+            // REATIVA OS CONTROLES
+            reativarControlesProdutos();
         }
         
-        // Sincroniza o estilo imediatamente com o estado do mouse
-        HBox content = (HBox) btnAdmin.getGraphic();
-        if (content != null && content.getChildren().size() >= 3) {
-            StackPane indicatorContainer = (StackPane) content.getChildren().get(2);
-            if (btnAdmin.isHover()) {
-                btnAdmin.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4; -fx-min-width: 55; -fx-min-height: 55;");
-                indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
-            } else {
-                btnAdmin.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
-                indicatorContainer.setStyle("-fx-background-color: transparent;");
+        // Força atualização da interface
+        Platform.runLater(() -> {
+            contentGrid.requestLayout();
+            if (!modoAdminAtivo) {
+                // Garante que os controles estão ativos no modo produtos
+                btnAdd.setDisable(false);
+                campoPesquisa.setDisable(false);
+                campoPesquisa.setEditable(true);
+                
+                // Debug
+                System.out.println("Estado dos controles após Platform.runLater:");
+                System.out.println("btnAdd.isDisabled(): " + btnAdd.isDisabled());
+                System.out.println("campoPesquisa.isDisabled(): " + campoPesquisa.isDisabled());
             }
-        }
+        });
     }
 
     /**
-     * Atualiza o estilo do botão lateral para alternar entre ícones e textos
+     * Atualiza o botão administrativo com novo texto, ícone e tooltip
      */
-    private void atualizarBotaoLateral(Button botao, String texto, String caminhoIcone) {
-        try {
-            Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
-            if (img.isError()) {
-                throw new Exception("Erro ao carregar imagem: " + caminhoIcone);
+    private void atualizarBotaoAdmin(String texto, String caminhoIcone, String tooltip) {
+        HBox content = (HBox) btnAdmin.getGraphic();
+        if (content != null && content.getChildren().size() >= 1) {
+            HBox leftContent = (HBox) content.getChildren().get(0);
+            if (leftContent != null && leftContent.getChildren().size() >= 2) {
+                // Atualiza o texto
+                ((Label) leftContent.getChildren().get(1)).setText(texto);
+                
+                // Atualiza o ícone
+                try {
+                    Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
+                    ((ImageView) leftContent.getChildren().get(0)).setImage(img);
+                } catch (Exception e) {
+                    System.err.println("Erro ao carregar ícone: " + caminhoIcone);
+                }
             }
-
-            ImageView icon = new ImageView(img);
-            icon.setFitWidth(20);
-            icon.setFitHeight(20);
-
-            Label textLabel = new Label(texto);
-            textLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-weight: bold;");
-
-            StackPane indicatorContainer = new StackPane();
-            indicatorContainer.setMinWidth(3);
-            indicatorContainer.setMaxWidth(3);
-            indicatorContainer.setMinHeight(30);
-            indicatorContainer.setMaxHeight(30);
-            indicatorContainer.setStyle("-fx-background-color: transparent;");
-
-            HBox leftContent = new HBox(10, icon, textLabel);
-            leftContent.setAlignment(Pos.CENTER_LEFT);
-
-            HBox content = new HBox(leftContent, new Region(), indicatorContainer);
-            content.setAlignment(Pos.CENTER_LEFT);
-            HBox.setHgrow(content.getChildren().get(1), Priority.ALWAYS);
-
-            botao.setGraphic(content);
-            botao.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-            botao.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
-            botao.setPrefWidth(280);
-            botao.setPrefHeight(42);
-            botao.setMaxHeight(55);
-            botao.setMinHeight(55);
-
-            botao.setOnMouseEntered(e -> {
-                botao.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4;");
-                indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
-            });
-            botao.setOnMouseExited(e -> {
-                botao.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
-                indicatorContainer.setStyle("-fx-background-color: transparent;");
-            });
-        } catch (Exception e) {
-            System.err.println("Erro ao carregar ícone: " + caminhoIcone);
-            botao.setText(texto);
-            botao.setStyle("-fx-text-fill: #a9cce3; -fx-font-weight: bold; -fx-background-color: transparent;");
-            botao.setPrefWidth(280);
-            botao.setPrefHeight(42);
-            botao.setMaxHeight(42);
-            botao.setMinHeight(42);
         }
+        btnAdmin.setTooltip(new Tooltip(tooltip));
+    }
+
+    /**
+     * Desativa todos os controles do modo produtos
+     */
+    private void desativarControlesProdutos() {
+        btnAdd.setDisable(true);
+        btnEdit.setDisable(true);
+        btnDelete.setDisable(true);
+        campoPesquisa.setDisable(true);
+        campoPesquisa.setEditable(false);
+        
+        System.out.println("Controles desativados - Dashboard ativo");
+    }
+
+    /**
+     * Reativa todos os controles do modo produtos
+     */
+    private void reativarControlesProdutos() {
+        // Força a reativação
+        btnAdd.setDisable(false);
+        campoPesquisa.setDisable(false);
+        campoPesquisa.setEditable(true);
+        
+        // Para os botões de edição, verifica seleção
+        Produto selected = table.getSelectionModel().getSelectedItem();
+        btnEdit.setDisable(selected == null);
+        btnDelete.setDisable(selected == null);
+        
+        // Atualiza a referência do produto selecionado
+        produtoSelecionado = selected;
+        
+        System.out.println("Controles reativados - Modo produtos ativo");
+        System.out.println("btnAdd.isDisabled(): " + btnAdd.isDisabled());
+        System.out.println("campoPesquisa.isDisabled(): " + campoPesquisa.isDisabled());
+        System.out.println("Produto selecionado: " + (selected != null ? selected.getNome() : "nenhum"));
     }
 
     /**
@@ -516,6 +516,15 @@ public class Produtos {
         
         dashboardContainer.getChildren().clear();
         dashboardContainer.getChildren().add(dashboardScroll);
+
+        // Faz o scroll ocupar todo o espaço
+        dashboardScroll.setFitToWidth(true);
+        dashboardScroll.setFitToHeight(true);
+
+        // Opcional: força tamanho mínimo e máximo
+        dashboardScroll.setPrefWidth(4000);
+        dashboardScroll.setPrefHeight(4000);
+
     }
 
     /**
@@ -857,8 +866,9 @@ public class Produtos {
             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setString(1, produto.getNome());
-            ps.setDouble(3, produto.getPreco());
             ps.setString(2, produto.getCodBarras());
+            ps.setDouble(3, produto.getPreco());
+
 
             int rows = ps.executeUpdate();
             if (rows > 0) {
