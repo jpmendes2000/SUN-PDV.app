@@ -22,11 +22,6 @@ import com.sunpdv.connection.ConexaoDB;
 
 import java.util.ArrayList;
 import java.util.List;
-
-/**
- * Classe responsável por gerar e gerenciar o dashboard administrativo
- * do sistema SUN PDV.
- */
 public class DashboardAdministrativo {
     
     private static class ProdutoVenda {
@@ -40,7 +35,6 @@ public class DashboardAdministrativo {
     }
     
     // Cria o container principal do dashboard
-    
     public ScrollPane criarDashboard() {
         VBox dashboardContent = new VBox();
         dashboardContent.setSpacing(20);

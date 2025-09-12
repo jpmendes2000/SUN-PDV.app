@@ -203,23 +203,18 @@ public class LoginApp extends Application {
 
             loginTask.setOnSucceeded(event -> {
                 String resultado = loginTask.getValue();
-                System.out.println("Resultado da autenticação: " + resultado);
                 if ("sucesso".equalsIgnoreCase(resultado)) {
                     tentativas = 0;
                     try {
                         String cargo = AutenticarUser.getCargo();
-                        System.out.println("Cargo do usuário: " + cargo);
                         switch (cargo != null ? cargo : "") {
                             case "Administrador":
-                                System.out.println("Abrindo TelaHomeADM para: " + AutenticarUser.getNome());
                                 new TelaHomeADM(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar(stage);
                                 break;
                             case "Moderador":
-                                System.out.println("Abrindo TelaHomeMOD para: " + AutenticarUser.getNome());
                                 new TelaHomeMOD(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar(stage);
                                 break;
                             case "Funcionario":
-                                System.out.println("Abrindo TelaHomeFUN para: " + AutenticarUser.getNome());
                                 new TelaHomeFUN(AutenticarUser.getNome(), AutenticarUser.getCargo()).mostrar(stage);
                                 break;
                             default:

@@ -1,18 +1,18 @@
-/* ESTILOS GERAIS */
+/* === ESTILOS GERAIS === */
 .root {
     -fx-font-family: 'Segoe UI', Arial, sans-serif;
     -fx-base: #006989;
-    -fx-background-color: linear-gradient(to bottom right, #006989, #0c5b74, #1c414d); /* Fundo com gradiente suave */
+    -fx-background-color: linear-gradient(to bottom right, #006989, #0c5b74, #1c414d);
 }
 
-/* ESTILOS PARA TABELA */
+/* === ESTILOS PARA TABELA === */
 .table-view {
     -fx-background-radius: 15;
     -fx-border-radius: 15 15 0 0;
     -fx-border-color: #006989;
     -fx-background-insets: 0;
     -fx-background-color: transparent;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0); /* Sombra sutil */
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);
 }
 
 .table-view .column-header-background {
@@ -54,7 +54,7 @@
     -fx-text-fill: inherit;
 }
 
-/* ESTILOS PARA BARRA DE ROLAGEM */
+/* === ESTILOS PARA BARRA DE ROLAGEM === */
 .scroll-bar:horizontal,
 .scroll-bar:vertical {
     -fx-background-color: transparent;
@@ -66,7 +66,7 @@
     -fx-background-radius: 5em;
 }
 
-/* ESTILOS PARA BOTÕES */
+/* === ESTILOS PARA BOTÕES === */
 .button {
     -fx-background-radius: 5;
     -fx-alignment: CENTER_LEFT;
@@ -87,7 +87,6 @@
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 2);
 }
 
-/* ESTILO ESPECÍFICO PARA BOTÕES DE AÇÃO (ÍCONES) */
 .button.acao {
     -fx-background-color: linear-gradient(to bottom, #c09727, #e8b923);
     -fx-padding: 8;
@@ -106,7 +105,6 @@
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 5, 0, 0, 2);
 }
 
-/* Estilo específico para o botão de deletar */
 .button.acao.delete {
     -fx-background-color: #d32f2f;
 }
@@ -115,7 +113,7 @@
     -fx-background-color: #f44336;
 }
 
-/* ESTILOS PARA CAMPOS DE TEXTO */
+/* === ESTILOS PARA CAMPOS DE TEXTO === */
 .text-field {
     -fx-background-radius: 10;
     -fx-padding: 12;
@@ -135,7 +133,7 @@
     -fx-effect: innershadow(three-pass-box, rgba(0,105,137,0.2), 5, 0, 0, 0);
 }
 
-/* ESTILOS PARA MENSAGENS */
+/* === ESTILOS PARA MENSAGENS === */
 .mensagem-sucesso {
     -fx-text-fill: #d0d315;
     -fx-font-weight: bold;
@@ -143,7 +141,7 @@
     -fx-effect: dropshadow(one-pass-box, rgba(46,125,50,0.3), 0, 0, 0, 1);
 }
 
-/* ESTILOS PARA DIÁLOGOS/ALERTAS */
+/* === ESTILOS PARA DIÁLOGOS/ALERTAS === */
 .alert {
     -fx-font-size: 14px;
 }
@@ -159,27 +157,27 @@
 }
 
 .dialog-pane {
-    -fx-background-color: #00536d; /* Fundo azul escuro consistente com o menu lateral */
+    -fx-background-color: #00536d;
     -fx-border-color: #006989;
     -fx-border-width: 2;
     -fx-border-radius: 5;
 }
 
 .dialog-pane .label {
-    -fx-text-fill: #a9cce3; /* Texto claro para contraste */
+    -fx-text-fill: #a9cce3;
     -fx-font-size: 14px;
 }
 
 .dialog-pane .content {
-    -fx-background-color: #003d5b; /* Fundo mais escuro para o conteúdo */
-    -fx-padding: 15px; /* Espaçamento interno aumentado */
+    -fx-background-color: #003d5b;
+    -fx-padding: 15px;
     -fx-border-color: #012d5c;
     -fx-border-width: 1px;
     -fx-border-radius: 4px;
 }
 
 .dialog-pane .button {
-    -fx-background-color: #012d5c; /* Cor base dos botões */
+    -fx-background-color: #012d5c;
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-padding: 8px 20px;
@@ -187,39 +185,37 @@
 }
 
 .dialog-pane .button:hover {
-    -fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18)); /* Gradiente de hover */
+    -fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18));
 }
 
 .dialog-pane .button:default:hover {
-    -fx-background-color: #014781; /* Cor alternativa para botão padrão */
+    -fx-background-color: #014781;
 }
 
 .dialog-pane .button-bar {
-    -fx-background-color: #00536d; /* Fundo consistente */
+    -fx-background-color: #00536d;
     -fx-spacing: 15px;
     -fx-padding: 10px;
 }
 
-/* Estilização específica para alertas de erro */
 .dialog-pane:alert-type-error .content {
-    -fx-background-color: #4d0000; /* Fundo vermelho escuro */
-    -fx-text-fill: #ffcccc; /* Texto claro com tom avermelhado */
+    -fx-background-color: #4d0000;
+    -fx-text-fill: #ffcccc;
 }
 
-/* Estilização específica para alertas de informação */
 .dialog-pane:alert-type-information .content {
-    -fx-background-color: #003d1a; /* Fundo verde escuro */
-    -fx-text-fill: #ccffcc; /* Texto claro com tom esverdeado */
+    -fx-background-color: #003d1a;
+    -fx-text-fill: #ccffcc;
 }
 
-/* ESTILOS PARA LABELS */
+/* === ESTILOS PARA LABELS === */
 .label {
     -fx-font-size: 15px;
     -fx-text-fill: #ffffff;
     -fx-font-weight: bold;
 }
 
-/* ESTILOS PARA SCROLL PANE */
+/* === ESTILOS PARA SCROLL PANE === */
 .scroll-pane {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
@@ -229,14 +225,14 @@
     -fx-background-color: transparent;
 }
 
-/* EFEITO PARA TODOS OS PANELS */
+/* === ESTILOS PARA PANELS === */
 .pane {
     -fx-background-color: linear-gradient(to bottom right, #f5f7fa, #c3cfe2);
     -fx-border-radius: 10;
     -fx-background-radius: 10;
 }
 
-/* BARRA LATERAL */
+/* === BARRA LATERAL === */
 .side-panel {
     -fx-background-color: #2a3f54;
     -fx-border-color: #1a2a3a;
@@ -257,7 +253,7 @@
     -fx-background-color: #012d5c;
 }
 
-/* BOTÕES DE CONFIGURAÇÃO */
+/* === BOTÕES DE CONFIGURAÇÃO === */
 .BotaoConfig {
     -fx-background-color: #00536d;
     -fx-text-fill: #a9cce3;
@@ -288,6 +284,7 @@
     -fx-effect: none;
 }
 
+/* === BOTÕES ESPECÍFICOS === */
 .criar-usuario-btn {
     -fx-background-color: transparent;
     -fx-text-fill: #c8c966;
@@ -305,27 +302,22 @@
     -fx-underline: false;
 }
 
-
 .voltar-btn {
     -fx-background-color: transparent;
     -fx-text-fill: #c8c966;
     -fx-font-size: 14px;
     -fx-cursor: hand;
-    -fx-underline: false;
     -fx-padding: 0;
     -fx-alignment: center;
     -fx-transition: all 0.3s ease;
 }
 
-
 .voltar-btn:hover {
     -fx-background-color: transparent;
     -fx-text-fill: #a9cce3;
-    -fx-underline: false;
 }
 
-
-/* ===== BOTÃO TOGGLE (mesmo estilo da barra lateral) ===== */
+/* === BOTÃO TOGGLE (BARRA LATERAL) === */
 .botao-lateral {
     -fx-background-color: transparent;
     -fx-border-radius: 4;
@@ -334,50 +326,10 @@
 }
 
 .botao-lateral:hover {
-    -fx-background-color: linear-gradient(to left,
-        rgba(192, 151, 39, 0.39),
-        rgba(232, 186, 35, 0.18));
+    -fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18));
 }
 
-/* Texto interno */
 .botao-lateral .label {
     -fx-text-fill: white;
     -fx-font-weight: bold;
 }
-
-/* Barra indicadora lateral
-.indicador-lateral {
-    -fx-background-color: transparent;
-}
-
-.botao-lateral:hover .indicador-lateral {
-    -fx-background-color: rgba(255, 204, 0, 0.64);
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);
-}
-
-.botao-admin {
-    -fx-background-color: transparent;
-    -fx-border-radius: 4;
-    -fx-background-radius: 4;
-    -fx-cursor: hand;
-}
-
-.botao-admin:hover {
-    -fx-background-color: linear-gradient(to left,
-        rgba(192, 151, 39, 0.39),
-        rgba(232, 186, 35, 0.18));
-}
-
-.botao-admin .label {
-    -fx-text-fill: #a9cce3;
-    -fx-font-weight: bold;
-}
-
-.indicador-lateral {
-    -fx-background-color: transparent;
-}
-
-.botao-admin:hover .indicador-lateral {
-    -fx-background-color: rgba(255, 204, 0, 0.64);
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);
-} */

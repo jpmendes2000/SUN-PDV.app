@@ -13,6 +13,7 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.LinearGradient;
 import javafx.scene.paint.Stop;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -192,6 +193,7 @@ public class FinalizarVenda {
 
         // Botão Voltar
         Button btnVoltar = criarBotaoLateral("Voltar", "/img/icon/voltar.png");
+        btnVoltar.getStyleClass().add("voltar-finalizarVenda");
         btnVoltar.setOnAction(e -> {
             stage.close();
             
@@ -409,6 +411,9 @@ public class FinalizarVenda {
         });
 
         Button btnAdicionar = new Button("Adicionar");
+        btnAdicionar.setDefaultButton(true); // atalho com o enter
+        btnAdicionar.setTextAlignment(TextAlignment.CENTER);
+
         btnAdicionar.setStyle(
                 "-fx-background-color: linear-gradient(to bottom, #c09727, #e8b923); " +
                         "-fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 10 15 10 15; -fx-text-alignment: center;"
@@ -573,18 +578,21 @@ public class FinalizarVenda {
 
             Button btnRemover = new Button("×");
             btnRemover.setStyle(
-                    "-fx-background-color: " + 
-                    COR_VERMELHO + 
-                    "; -fx-text-fill: white; " +
-                    "-fx-font-weight: bold; " +
-                    "-fx-background-radius: 50%; " +
-                    "-fx-padding: 0 4 0 4; " +
-                    "-fx-font-size: 14px;" +
-                    "-fx-alignment: center;"
+                "-fx-background-color: " + COR_VERMELHO + ";" +
+                "-fx-text-fill: white;" +
+                "-fx-font-weight: bold;" +
+                "-fx-background-radius: 6%;" +
+                "-fx-padding: 0 2 0 2;" +   // menos espaço nas laterais
+                "-fx-font-size: 14px;" +
+                "-fx-min-width: 40px;" +    // largura mínima
+                "-fx-pref-width: 50px;" +   // largura preferida
+                "-fx-max-width: 60px;" +    // largura máxima
+                "-fx-alignment: center;"
             );
-            btnRemover.setPrefSize(20, 20);
-            btnRemover.setMinSize(20, 20);
-            btnRemover.setMaxSize(20, 20);
+
+            btnRemover.setPrefWidth(30);
+            btnRemover.setPrefHeight(10);
+
             HBox.setHgrow(btnRemover, Priority.NEVER);
 
             btnRemover.setOnAction(e -> {
