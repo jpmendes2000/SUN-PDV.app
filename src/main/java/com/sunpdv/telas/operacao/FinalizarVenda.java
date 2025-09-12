@@ -25,6 +25,7 @@ import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.scene.control.Alert.AlertType;
 
+import com.sunpdv.connection.ConexaoDB;
 import com.sunpdv.model.AutenticarUser;
 // Importar a nova classe CupomFiscal
 import com.sunpdv.model.CupomFiscal;
@@ -35,30 +36,27 @@ public class FinalizarVenda {
     private String tipoDocumento;
     private List<Caixa.ItemVenda> itens;
     private double totalVenda;
+    private double Subtotal;
     private Stage stage;
     private Caixa caixa;
     private List<Pagamento> pagamentos = new ArrayList<>();
     private Label totalRestanteLabel;
     private VBox pagamentosListaBox;
     private Button btnFinalizar;
-    private CheckBox imprimirCupomCheck;
+    private CheckBox imprimirCupomCaixa;
     
     // Instância da classe CupomFiscal
     private CupomFiscal cupomFiscal;
-    
-    private static final String DB_URL = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;trustServerCertificate=true";
-    private static final String DB_USER = "sa";
-    private static final String DB_PASSWORD = "Senha@12345!";
 
-    // Constantes de cores inspiradas no segundo design
+    // Constantes de cores
     private static final String COR_FUNDO_PRINCIPAL = "#00435a";
     private static final String COR_FUNDO_SECUNDARIO = "#686de0";
     private static final String COR_AZUL_CLARO = "#00536d";
-    private static final String COR_AZUL_ESCURO = "#00536d";
     private static final String COR_AMARELO = "#f39c12";
     private static final String COR_VERDE = "#27ae60";
     private static final String COR_VERMELHO = "#e74c3c";
 
+    // representa um pagamento adicionado
     public FinalizarVenda(String documento, String tipoDocumento, List<Caixa.ItemVenda> itens, double totalVenda, Caixa caixa) {
         try {
             this.documento = documento;
@@ -66,10 +64,9 @@ public class FinalizarVenda {
             this.itens = new ArrayList<>(itens);
             this.totalVenda = totalVenda;
             this.caixa = caixa;
-            this.cupomFiscal = new CupomFiscal(); // Inicializar a instância
+            this.cupomFiscal = new CupomFiscal();
         } catch (Exception e) {
             e.printStackTrace();
-            // Adicione log ou throw pra ver
         }
     }
 
@@ -83,20 +80,14 @@ public class FinalizarVenda {
             stage.initOwner(owner);
             stage.setTitle("SUN PDV - Finalizar Venda");
 
-            // Layout principal com gradiente
+
             BorderPane layout = new BorderPane();
             aplicarGradienteFundo(layout);
 
-            System.out.println("Menu lateral sendo criado..."); // Debug
-            // Menu lateral esquerdo (estilo da tela de Caixa)
             VBox menuLateral = criarMenuLateralEstiloCaixa();
 
-            System.out.println("Area central sendo criada..."); // Debug
-            // Área central - Itens e formas de pagamento
             VBox areaCentral = criarAreaCentral();
 
-            System.out.println("Painel direito sendo criado..."); // Debug
-            // Painel direito - Lista de pagamentos
             VBox painelDireito = criarPainelDireito();
 
             layout.setLeft(menuLateral);
@@ -108,27 +99,19 @@ public class FinalizarVenda {
 
             try {
                 scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
-                System.out.println("CSS carregado com sucesso."); // Debug
             } catch (NullPointerException e) {
-                System.err.println("Erro ao carregar CSS: " + e.getMessage());
-                // Adicione um Alert para ver na tela
                 Alert alert = new Alert(AlertType.ERROR);
-                alert.setTitle("Erro de Recursos");
-                alert.setContentText("Falha ao carregar o CSS. Verifique se /css/style.css existe no classpath.");
                 alert.showAndWait();
             }
 
             stage.setScene(scene);
             stage.setFullScreen(true);
-            System.out.println("Stage pronta para show..."); // Debug: antes de show
             stage.showAndWait();
-            System.out.println("Stage fechada."); // Debug: após close
 
         } catch (Exception e) {
             e.printStackTrace(); // Printa o stack trace no console
             Alert alert = new Alert(AlertType.ERROR);
             alert.setTitle("Erro ao Abrir Tela");
-            alert.setContentText("Falha ao criar a tela de Finalizar Venda: " + e.getMessage());
             if (owner != null) {
                 alert.initOwner(owner);
             }
@@ -215,16 +198,12 @@ public class FinalizarVenda {
             // Restaurar a stage do Caixa de forma assíncrona para evitar problemas de thread UI
             Platform.runLater(() -> {
                 if (caixa != null && caixa.stage != null) {
-                    // Se estiver minimizada, restaurar
                     if (caixa.stage.isIconified()) {
                         caixa.stage.setIconified(false);
                     }
-                    
-                    // Trazer para frente e focar
+
                     caixa.stage.toFront();
                     caixa.stage.requestFocus();
-                    
-                    // Forçar full screen com um pequeno delay (evita glitches em alguns SOs)
                     Timeline timelineVoltar = new Timeline(new KeyFrame(Duration.millis(100), ev -> {
                         caixa.stage.setFullScreen(true);
                     }));
@@ -233,7 +212,6 @@ public class FinalizarVenda {
             });
         });
 
-        // Espaço para centralizar verticalmente
         Region espaco = new Region();
         VBox.setVgrow(espaco, Priority.ALWAYS);
         
@@ -257,17 +235,17 @@ public class FinalizarVenda {
             Label textLabel = new Label(texto);
             textLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
 
-            StackPane indicatorContainer = new StackPane(); // barra amarela lateral
-            indicatorContainer.setMinWidth(3);
-            indicatorContainer.setMaxWidth(3);
-            indicatorContainer.setMinHeight(30);
-            indicatorContainer.setMaxHeight(30);
-            indicatorContainer.setStyle("-fx-background-color: transparent;");
+            StackPane BarraAmarelaBtn = new StackPane(); // barra amarela lateral
+            BarraAmarelaBtn.setMinWidth(3);
+            BarraAmarelaBtn.setMaxWidth(3);
+            BarraAmarelaBtn.setMinHeight(30);
+            BarraAmarelaBtn.setMaxHeight(30);
+            BarraAmarelaBtn.setStyle("-fx-background-color: transparent;");
 
             HBox leftContent = new HBox(10, icon, textLabel);
             leftContent.setAlignment(Pos.CENTER_LEFT);
 
-            HBox content = new HBox(leftContent, new Region(), indicatorContainer);
+            HBox content = new HBox(leftContent, new Region(), BarraAmarelaBtn);
             content.setAlignment(Pos.CENTER_LEFT);
             HBox.setHgrow(content.getChildren().get(1), Priority.ALWAYS);
 
@@ -280,11 +258,11 @@ public class FinalizarVenda {
 
             btn.setOnMouseEntered(e -> {
                 btn.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4;");
-                indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
+                BarraAmarelaBtn.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
             });
             btn.setOnMouseExited(e -> {
                 btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
-                indicatorContainer.setStyle("-fx-background-color: transparent;");
+                BarraAmarelaBtn.setStyle("-fx-background-color: transparent;");
             });
 
             return btn;
@@ -420,17 +398,11 @@ public class FinalizarVenda {
 
         pagamentoGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
             if (newToggle != null) {
-                RadioButton selected = (RadioButton) newToggle;
-                String forma = selected.getText();
-                
                 double totalPago = pagamentos.stream().mapToDouble(p -> p.valor).sum();
                 double restante = Math.max(totalVenda - totalPago, 0);
-                
-                // Preencher automaticamente com o valor restante, mas deixar editável
                 valorField.setText(String.format("%.2f", restante).replace(".", ","));
-                valorField.setEditable(true); // Sempre editável
+                valorField.setEditable(true);
                 
-                // Selecionar o texto para facilitar a edição
                 valorField.selectAll();
                 valorField.requestFocus();
             }
@@ -439,7 +411,7 @@ public class FinalizarVenda {
         Button btnAdicionar = new Button("Adicionar");
         btnAdicionar.setStyle(
                 "-fx-background-color: linear-gradient(to bottom, #c09727, #e8b923); " +
-                        "-fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 10 15 10 15;"
+                        "-fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 10 15 10 15; -fx-text-alignment: center;"
         );
         btnAdicionar.setOnMouseEntered(e -> btnAdicionar.setStyle(
                 "-fx-background-color: linear-gradient(to bottom, #ae8922, #e2b72a); " +
@@ -550,10 +522,10 @@ public class FinalizarVenda {
         totalRestanteLabel.setAlignment(Pos.CENTER);
         totalRestanteLabel.setMaxWidth(Double.MAX_VALUE);
 
-        // Checkbox para impressão do cupom
-        imprimirCupomCheck = new CheckBox("Imprimir cupom fiscal");
-        imprimirCupomCheck.setSelected(true); // Por padrão, marcado para imprimir
-        imprimirCupomCheck.setStyle("-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;");
+        // CheckBox para imprimir cupom fiscal
+        imprimirCupomCaixa = new CheckBox("Imprimir cupom fiscal");
+        imprimirCupomCaixa.setSelected(true); // Por padrão, marcado para imprimir
+        imprimirCupomCaixa.setStyle("-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;");
 
         btnFinalizar = new Button("Faltam R$ " + String.format("%.2f", totalVenda));
         btnFinalizar.setPrefWidth(230);
@@ -564,7 +536,7 @@ public class FinalizarVenda {
         );
         btnFinalizar.setOnAction(e -> finalizarVenda());
 
-        painel.getChildren().addAll(titulo, containerLista, totalRestanteLabel, imprimirCupomCheck, btnFinalizar);
+        painel.getChildren().addAll(titulo, containerLista, totalRestanteLabel, imprimirCupomCaixa, btnFinalizar);
 
         VBox.setVgrow(containerLista, Priority.ALWAYS);
         return painel;
@@ -674,12 +646,11 @@ public class FinalizarVenda {
             return;
         }
 
+        // salvar venda no banco de dados
         Connection conn = null;
         try {
-            conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            conn = ConexaoDB.getConnection();
             conn.setAutoCommit(false);
-
-            ajustarEsquema(conn);
 
             Integer idCliente = null;
             if (!documento.isEmpty()) {
@@ -706,29 +677,25 @@ public class FinalizarVenda {
             conn.commit();
 
             // Gerar cupom fiscal se a opção estiver marcada
-            if (imprimirCupomCheck.isSelected()) {
+            if (imprimirCupomCaixa.isSelected()) {
                 gerarCupomFiscal(troco);
             }
 
             caixa.limparVendaAtual();
             mostrarAlerta("Sucesso", "Venda finalizada com sucesso! Troco: R$ " + String.format("%.2f", troco), Alert.AlertType.INFORMATION);
 
-            // Fechar esta janela primeiro
             stage.close();
 
-            // Garantir que a janela do caixa volte em tela cheia
             Platform.runLater(() -> {
                 if (caixa != null && caixa.stage != null) {
                     // Restaurar a janela se estiver minimizada
                     if (caixa.stage.isIconified()) {
                         caixa.stage.setIconified(false);
                     }
-                    
-                    // Trazer para frente
+
                     caixa.stage.toFront();
                     caixa.stage.requestFocus();
-                    
-                    // Forçar tela cheia com um pequeno delay
+
                     Timeline timeline = new Timeline(new KeyFrame(Duration.millis(100), e -> {
                         caixa.stage.setFullScreen(true);
                     }));
@@ -757,9 +724,7 @@ public class FinalizarVenda {
         }
     }
 
-    /**
-     * Método para gerar cupom fiscal usando a classe CupomFiscal
-     */
+    // gerar cupom fiscal usando a classe CupomFiscal
     private void gerarCupomFiscal(double troco) {
         try {
             // Converter ItemVenda para o formato esperado pela classe CupomFiscal
@@ -796,48 +761,7 @@ public class FinalizarVenda {
             mostrarAlerta("Erro", "Erro ao gerar cupom fiscal: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
-
-    private void ajustarEsquema(Connection conn) throws SQLException {
-        try (Statement stmt = conn.createStatement()) {
-            ResultSet rs = conn.getMetaData().getColumns(null, null, "carrinho", "Data_Criacao");
-            if (!rs.next()) {
-                stmt.execute("ALTER TABLE carrinho ADD Data_Criacao DATETIME");
-            }
-
-            rs = conn.getMetaData().getTables(null, null, "carrinho_itens", null);
-            if (!rs.next()) {
-                stmt.execute("CREATE TABLE carrinho_itens (" +
-                        "ID_Login SMALLINT NOT NULL,"+
-                        "ID_Carrinho_itens INT PRIMARY KEY IDENTITY(1,1)," +
-                        "ID_Carrinho INT NOT NULL," +
-                        "ID_Produto INT NOT NULL," +
-                        "Quantidade INT NOT NULL," +
-                        "Preco_Unitario DECIMAL(10,2) NOT NULL," +
-                        "CONSTRAINT FK_carrinho_itens_carrinho FOREIGN KEY (ID_Carrinho) REFERENCES carrinho(ID_Carrinho)," +
-                        "CONSTRAINT FK_carrinho_itens_produtos FOREIGN KEY (ID_Produto) REFERENCES produtos(ID_Produto)" +
-                        ")");
-            }
-
-            // Tornar ID_Pagamentos nullable na tabela vendas para suportar múltiplos pagamentos via venda_pagamentos
-            rs = conn.getMetaData().getColumns(null, null, "vendas", "ID_Pagamentos");
-            if (rs.next() && "NO".equals(rs.getString("IS_NULLABLE"))) {
-                stmt.execute("ALTER TABLE vendas ALTER COLUMN ID_Pagamentos INT NULL");
-            }
-
-            // Garantir que a tabela venda_pagamentos existe
-            rs = conn.getMetaData().getTables(null, null, "venda_pagamentos", null);
-            if (!rs.next()) {
-                stmt.execute("CREATE TABLE venda_pagamentos (" +
-                        "ID_Venda_Pagamento INT PRIMARY KEY IDENTITY(1,1)," +
-                        "ID_Venda INT NOT NULL," +
-                        "ID_Pagamento INT NOT NULL," +
-                        "CONSTRAINT FK_venda_pagamentos_venda FOREIGN KEY (ID_Venda) REFERENCES vendas(ID_Vendas)," +
-                        "CONSTRAINT FK_venda_pagamentos_pagamento FOREIGN KEY (ID_Pagamento) REFERENCES pagamentos(ID_Pagamentos)" +
-                        ")");
-            }
-        }
-    }
-
+    
     private Integer inserirCliente(Connection conn) throws SQLException {
         String column = "";
         if ("CPF".equals(tipoDocumento)) {
@@ -897,7 +821,7 @@ public class FinalizarVenda {
     }
 
     private int inserirVenda(Connection conn, int idCarrinho, Integer idCliente) throws SQLException {
-        // Obter o ID do funcionário logado através da classe AutenticarUser
+        // Obter o ID do funcionário
         int idLogin = AutenticarUser.getIdUsuario(); 
         
         if (idLogin == 0) {
@@ -909,8 +833,8 @@ public class FinalizarVenda {
         try (PreparedStatement stmt = conn.prepareStatement(insertVenda, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, idCarrinho);
             stmt.setObject(2, idCliente, Types.INTEGER); // Aceita null
-            stmt.setDouble(3, totalVenda); // Subtotal (ajuste se houver desconto)
-            stmt.setDouble(4, totalVenda); // Total
+            stmt.setDouble(3, Subtotal);
+            stmt.setDouble(4, totalVenda);
             stmt.setInt(5, idLogin);
             stmt.executeUpdate();
             

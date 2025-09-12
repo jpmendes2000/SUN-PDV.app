@@ -3,7 +3,6 @@ package com.sunpdv.model;
 import java.awt.Desktop;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -24,7 +23,7 @@ import javafx.scene.control.Alert.AlertType;
 
 public class CupomFiscal {
     
-    // Classe interna para informações de pagamento
+    // Informações de pagamento
     public static class PagamentoInfo {
         public String formaPagamento;
         public double valor;
@@ -35,7 +34,7 @@ public class CupomFiscal {
         }
     }
     
-    // Classe interna para item de venda
+    // Item de venda
     public static class ItemVenda {
         public String produto;
         public String codigoBarras;
@@ -54,35 +53,13 @@ public class CupomFiscal {
         }
     }
     
-    /**
-     * Método para imprimir o cupom fiscal usando dados ESC/POS
-     * @param data Dados ESC/POS em byte array
-     * @param arquivoTexto Arquivo de texto para fallback
-     */
+    // Para mandar o cupom para a impressora
     public void imprimirCupom(byte[] data, File arquivoTexto) {
         try {
-            // Buscar impressora padrão
+            // Procura a impressora
             PrintService impressora = PrintServiceLookup.lookupDefaultPrintService();
             
-            if (impressora == null) {
-                mostrarAlerta("Aviso", "Nenhuma impressora padrão encontrada!\nCupom salvo em: " + arquivoTexto.getAbsolutePath(), AlertType.WARNING);
-                // Tentar abrir o arquivo de texto
-                if (Desktop.isDesktopSupported()) {
-                    Desktop.getDesktop().open(arquivoTexto);
-                }
-                return;
-            }
-            
-            // Verificar se a impressora suporta o DocFlavor
             DocFlavor flavor = DocFlavor.BYTE_ARRAY.AUTOSENSE;
-            if (!impressora.isDocFlavorSupported(flavor)) {
-                mostrarAlerta("Aviso", "Impressora não suporta o formato necessário!\nCupom salvo em: " + arquivoTexto.getAbsolutePath(), AlertType.WARNING);
-                if (Desktop.isDesktopSupported()) {
-                    Desktop.getDesktop().open(arquivoTexto);
-                }
-                return;
-            }
-            
             Doc doc = new SimpleDoc(data, flavor, null);
             DocPrintJob job = impressora.createPrintJob();
             PrintRequestAttributeSet atributos = new HashPrintRequestAttributeSet();
@@ -103,13 +80,11 @@ public class CupomFiscal {
         }
     }
     
-    /**
-     * Método principal para gerar e imprimir cupom fiscal usando ESC/POS
-     */
+    // Gera e imprime o cupom fiscal
     public void gerarEImprimirCupom(List<ItemVenda> itens, double total, double troco, 
                                    String documento, String tipoDocumento, List<PagamentoInfo> pagamentos) {
         try {
-            // Criar diretório se não existir
+            // Diretório para salvar os cupons
             String diretorio = "C:\\Users\\User\\OneDrive\\Documentos\\TCC\\TCCsystem\\SUN-PDV.app\\NotasFiscais\\";
             File dir = new File(diretorio);
             if (!dir.exists()) {
@@ -182,15 +157,6 @@ public class CupomFiscal {
             // Gerar dados ESC/POS
             byte[] data = gerarDadosEscPos(itens, total, troco, documento, tipoDocumento, pagamentos);
             
-            // Salvar em arquivo binário para impressoras (opcional)
-            String nomeArquivoBin = "cupom_fiscal_" + System.currentTimeMillis() + ".bin";
-            File arquivoBin = new File(diretorio + nomeArquivoBin);
-            try (FileOutputStream fos = new FileOutputStream(arquivoBin)) {
-                fos.write(data);
-            }
-            
-            System.out.println("Cupom fiscal (binário) gerado: " + arquivoBin.getAbsolutePath());
-            
             // Tentar imprimir cupom
             imprimirCupom(data, arquivoTexto);
             
@@ -200,9 +166,7 @@ public class CupomFiscal {
         }
     }
     
-    /**
-     * Gera os bytes ESC/POS para o cupom
-     */
+    // Gera os dados ESC/POS para o cupom fiscal
     private byte[] gerarDadosEscPos(List<ItemVenda> itens, double total, double troco, 
                                     String documento, String tipoDocumento, List<PagamentoInfo> pagamentos) throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -288,25 +252,19 @@ public class CupomFiscal {
         return bos.toByteArray();
     }
     
-    /**
-     * Escreve texto no stream usando o charset especificado
-     */
+    // Método auxiliar para escrever texto com charset específico
     private void writeText(ByteArrayOutputStream bos, String text, String charset) throws IOException {
         bos.write(text.getBytes(charset));
     }
-    
-    /**
-     * Método auxiliar para limitar o tamanho das strings
-     */
+
+    // Limita o tamanho da string para evitar quebras na impressão
     private String limitarString(String texto, int tamanhoMax) {
         if (texto == null) return "";
         if (texto.length() <= tamanhoMax) return texto;
         return texto.substring(0, tamanhoMax - 3) + "...";
     }
     
-    /**
-     * Método para mostrar alertas
-     */
+    // Mostrar alertas (JavaFX ou console)
     private void mostrarAlerta(String titulo, String mensagem, AlertType tipo) {
         try {
             Alert alert = new Alert(tipo);
@@ -317,51 +275,5 @@ public class CupomFiscal {
         } catch (Exception e) {
             System.out.println(titulo + ": " + mensagem);
         }
-    }
-    
-    /**
-     * Método para listar impressoras disponíveis
-     */
-    public void listarImpressoras() {
-        PrintService[] impressoras = PrintServiceLookup.lookupPrintServices(null, null);
-        
-        if (impressoras.length == 0) {
-            System.out.println("Nenhuma impressora encontrada no sistema.");
-        } else {
-            System.out.println("Impressoras disponíveis:");
-            for (int i = 0; i < impressoras.length; i++) {
-                System.out.println((i + 1) + ". " + impressoras[i].getName());
-            }
-        }
-        
-        PrintService impressoraPadrao = PrintServiceLookup.lookupDefaultPrintService();
-        if (impressoraPadrao != null) {
-            System.out.println("Impressora padrão: " + impressoraPadrao.getName());
-        } else {
-            System.out.println("Nenhuma impressora padrão configurada.");
-        }
-    }
-    
-    /**
-     * Método para testar a geração de cupom com dados de exemplo
-     */
-    public void testarCupom() {
-        List<ItemVenda> itens = List.of(
-            new ItemVenda("Coca-Cola 2L", "7894900011517", 2, 5.50),
-            new ItemVenda("Pão de Açúcar", "1234567890123", 1, 3.25),
-            new ItemVenda("Leite Integral 1L", "7891000100103", 3, 4.80)
-        );
-        
-        List<PagamentoInfo> pagamentos = List.of(
-            new PagamentoInfo("Dinheiro", 25.00),
-            new PagamentoInfo("Cartão Débito", 10.85)
-        );
-        
-        double total = 35.85;
-        double troco = 0.00;
-        String documento = "12345678901";
-        String tipoDocumento = "CPF";
-        
-        gerarEImprimirCupom(itens, total, troco, documento, tipoDocumento, pagamentos);
     }
 }

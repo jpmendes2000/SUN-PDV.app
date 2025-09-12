@@ -4,10 +4,6 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.awt.Desktop;
-import java.io.File;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.geometry.Insets;
@@ -18,13 +14,14 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.MouseButton;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.*;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Modality;
 import javafx.util.Duration;
+
+import com.sunpdv.connection.ConexaoDB;
 import com.sunpdv.model.AutenticarUser;
 import com.sunpdv.telas.home.TelaHomeADM;
 import com.sunpdv.telas.home.TelaHomeFUN;
@@ -36,9 +33,6 @@ import javafx.collections.ListChangeListener;
 public class Caixa {
 
     Stage stage;
-    private static final String DB_URL = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;trustServerCertificate=true";
-    private static final String DB_USER = "sa";
-    private static final String DB_PASSWORD = "Senha@12345!";
     
     private List<Venda> vendas;
     private VBox listaVendas;
@@ -89,7 +83,6 @@ public class Caixa {
     private static class Venda {
         int id;
         String formaPagamento;
-        double subtotal;
         double total;
         double troco;
         String data;
@@ -101,7 +94,6 @@ public class Caixa {
         public Venda(int id, String formaPagamento, double subtotal, double total, double troco, String data, String documento, String tipoDocumento) {
             this.id = id;
             this.formaPagamento = formaPagamento;
-            this.subtotal = subtotal;
             this.total = total;
             this.troco = troco;
             this.data = data;
@@ -256,10 +248,10 @@ public class Caixa {
     private List<Venda> carregarVendas() {
         List<Venda> vendas = new ArrayList<>();
         
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+        try (Connection conn = ConexaoDB.getConnection();) {
             System.out.println("Conectado ao banco com sucesso");
             
-            // Query simplificada - uma venda por vez
+            // Query para trazer vendas para o histórico
             String query = "SELECT v.ID_Vendas, v.Subtotal, v.Total, v.Data_Venda, " +
                         "       c.CPF, c.CNPJ, c.RG, c.Nome " +
                         "FROM vendas v " +
@@ -296,10 +288,10 @@ public class Caixa {
                         tipoDocumento = "RG";
                     }
                     
-                    // Buscar forma de pagamento (primeira encontrada)
+                    // forma de pagamento
                     String formaPagamento = buscarFormaPagamentoVenda(conn, idVenda);
                     
-                    // Buscar troco total
+                    // troco
                     double troco = buscarTrocoVenda(conn, idVenda);
                     
                     Venda venda = new Venda(
@@ -313,7 +305,7 @@ public class Caixa {
                         tipoDocumento
                     );
                     
-                    // Carregar itens e pagamentos
+                    // itens e pagamentos carregados
                     carregarItensVenda(venda);
                     carregarPagamentosVenda(venda);
                     
@@ -327,60 +319,58 @@ public class Caixa {
             System.err.println("Erro SQL detalhado: " + e.getMessage());
             mostrarAlerta("Erro ao carregar vendas", "Detalhes: " + e.getMessage(), AlertType.ERROR);
         }
-        
-        System.out.println("Total de vendas carregadas: " + vendas.size());
         return vendas;
     }
 
-    // Método auxiliar para buscar forma de pagamento
-        private String buscarFormaPagamentoVenda(Connection conn, int idVenda) {
-            try {
-                String query = "SELECT fp.Forma_Pagamento " +
-                            "FROM venda_pagamentos vp " +
-                            "JOIN pagamentos p ON vp.ID_Pagamento = p.ID_Pagamentos " +
-                            "JOIN forma_pagamento fp ON p.ID_Forma_Pagamento = fp.ID_Forma_Pagamento " +
-                            "WHERE vp.ID_Venda = ?";
+        //buscar forma de pagamento
+    private String buscarFormaPagamentoVenda(Connection conn, int idVenda) {
+        try {
+            String query = "SELECT fp.Forma_Pagamento " +
+                        "FROM venda_pagamentos vp " +
+                        "JOIN pagamentos p ON vp.ID_Pagamento = p.ID_Pagamentos " +
+                        "JOIN forma_pagamento fp ON p.ID_Forma_Pagamento = fp.ID_Forma_Pagamento " +
+                        "WHERE vp.ID_Venda = ?";
                 
-                try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                    stmt.setInt(1, idVenda);
-                    ResultSet rs = stmt.executeQuery();
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setInt(1, idVenda);
+                ResultSet rs = stmt.executeQuery();
                     
-                    StringBuilder formas = new StringBuilder();
-                    while (rs.next()) {
-                        if (formas.length() > 0) {
-                            formas.append(", ");
-                        }
-                        formas.append(rs.getString("Forma_Pagamento"));
+                StringBuilder formas = new StringBuilder();
+                while (rs.next()) {
+                    if (formas.length() > 0) {
+                        formas.append(", ");
                     }
-                    return formas.length() > 0 ? formas.toString() : "N/A";
+                    formas.append(rs.getString("Forma_Pagamento"));
                 }
-            } catch (SQLException e) {
-                System.err.println("Erro ao buscar forma de pagamento para venda " + idVenda + ": " + e.getMessage());
-                return "N/A";
+                return formas.length() > 0 ? formas.toString() : "N/A";
             }
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar forma de pagamento para venda " + idVenda + ": " + e.getMessage());
+            return "N/A";
         }
+    }
 
         // Método auxiliar para buscar troco
-private double buscarTrocoVenda(Connection conn, int idVenda) {
-    try {
-        String query = "SELECT SUM(p.Troco) as TrocoTotal " +
-                      "FROM venda_pagamentos vp " +
-                      "JOIN pagamentos p ON vp.ID_Pagamento = p.ID_Pagamentos " +
-                      "WHERE vp.ID_Venda = ?";
-        
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, idVenda);
-            ResultSet rs = stmt.executeQuery();
+    private double buscarTrocoVenda(Connection conn, int idVenda) {
+        try {
+            String query = "SELECT SUM(p.Troco) as TrocoTotal " +
+                        "FROM venda_pagamentos vp " +
+                        "JOIN pagamentos p ON vp.ID_Pagamento = p.ID_Pagamentos " +
+                        "WHERE vp.ID_Venda = ?";
             
-            if (rs.next()) {
-                return rs.getDouble("TrocoTotal");
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setInt(1, idVenda);
+                ResultSet rs = stmt.executeQuery();
+                
+                if (rs.next()) {
+                    return rs.getDouble("TrocoTotal");
+                }
             }
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar troco para venda " + idVenda + ": " + e.getMessage());
         }
-    } catch (SQLException e) {
-        System.err.println("Erro ao buscar troco para venda " + idVenda + ": " + e.getMessage());
+        return 0.0;
     }
-    return 0.0;
-}
 
     private void carregarItensVenda(Venda venda) throws SQLException {
         String query = "SELECT p.Nome, p.Cod_Barras, ci.Quantidade, ci.Preco_Unitario " +
@@ -388,7 +378,7 @@ private double buscarTrocoVenda(Connection conn, int idVenda) {
                       "JOIN produtos p ON ci.ID_Produto = p.ID_Produto " +
                       "WHERE ci.ID_Carrinho = (SELECT ID_Carrinho FROM vendas WHERE ID_Vendas = ?)";
         
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        try (Connection conn = ConexaoDB.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             
             stmt.setInt(1, venda.id);
@@ -405,7 +395,7 @@ private double buscarTrocoVenda(Connection conn, int idVenda) {
         }
     }
 
-    // Novo método para carregar múltiplas formas de pagamento
+    // varias formas de pagamento
     private void carregarPagamentosVenda(Venda venda) throws SQLException {
         String query = "SELECT fp.Forma_Pagamento, p.Valor_Recebido " +
                     "FROM venda_pagamentos vp " +
@@ -413,7 +403,7 @@ private double buscarTrocoVenda(Connection conn, int idVenda) {
                     "JOIN forma_pagamento fp ON p.ID_Forma_Pagamento = fp.ID_Forma_Pagamento " +
                     "WHERE vp.ID_Venda = ?";
         
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        try (Connection conn = ConexaoDB.getConnection();
             PreparedStatement stmt = conn.prepareStatement(query)) {
             
             stmt.setInt(1, venda.id);
@@ -425,48 +415,6 @@ private double buscarTrocoVenda(Connection conn, int idVenda) {
                     rs.getDouble("Valor_Recebido")
                 ));
             }
-        }
-    }
-    private void verificarConexaoBanco() {
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            
-            // Verificar se existem vendas
-            String queryVendas = "SELECT COUNT(*) as total FROM vendas";
-            PreparedStatement stmt = conn.prepareStatement(queryVendas);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                System.out.println("Total de vendas na tabela: " + rs.getInt("total"));
-            }
-            
-            // Verificar se existem pagamentos
-            String queryPagamentos = "SELECT COUNT(*) as total FROM pagamentos";
-            stmt = conn.prepareStatement(queryPagamentos);
-            rs = stmt.executeQuery();
-            if (rs.next()) {
-                System.out.println("Total de pagamentos na tabela: " + rs.getInt("total"));
-            }
-            
-            // Verificar se existem venda_pagamentos
-            String queryVendaPagamentos = "SELECT COUNT(*) as total FROM venda_pagamentos";
-            stmt = conn.prepareStatement(queryVendaPagamentos);
-            rs = stmt.executeQuery();
-            if (rs.next()) {
-                System.out.println("Total de venda_pagamentos na tabela: " + rs.getInt("total"));
-            }
-            
-            // Verificar se existem carrinhos
-            String queryCarrinhos = "SELECT COUNT(*) as total FROM carrinho";
-            stmt = conn.prepareStatement(queryCarrinhos);
-            rs = stmt.executeQuery();
-            if (rs.next()) {
-                System.out.println("Total de carrinhos na tabela: " + rs.getInt("total"));
-            }
-            
-            System.out.println("Conexão com banco OK!");
-            
-        } catch (SQLException e) {
-            System.err.println("Erro ao conectar com banco: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -550,22 +498,22 @@ private double buscarTrocoVenda(Connection conn, int idVenda) {
 
         rbCPF.selectedProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal) {
-                documentoField.setPromptText("Digite o CPF (somente números)");
+                documentoField.setPromptText("Digite o CPF:");
             }
         });
 
         rbCNPJ.selectedProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal) {
-                documentoField.setPromptText("Digite o CNPJ (somente números)");
+                documentoField.setPromptText("Digite o CNPJ:");
             }
         });
 
         rbRG.selectedProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal) {
-                documentoField.setPromptText("Digite o RG (somente números)");
+                documentoField.setPromptText("Digite o RG:");
             }
         });
-
+        // Validação do documento
         documentoField.textProperty().addListener((obs, oldVal, newVal) -> {
             RadioButton selected = (RadioButton) clienteGroup.getSelectedToggle();
             if (selected != null && !newVal.isEmpty()) {
@@ -715,11 +663,6 @@ private double buscarTrocoVenda(Connection conn, int idVenda) {
             ex.printStackTrace();
             mostrarAlerta("Erro ao buscar produto", "Detalhes: " + ex.getMessage(), AlertType.ERROR);
         }
-    }
-
-    private void removerItem(ItemVenda item) {
-        listaProdutos.getItems().remove(item);
-        atualizarTotal(); // Chama explicitamente após remover
     }
 
     private void cancelarVenda() {
@@ -945,7 +888,7 @@ private double buscarTrocoVenda(Connection conn, int idVenda) {
 
     private String buscarProdutoPorCodigo(String codigo) throws SQLException {
         String query = "SELECT Nome FROM produtos WHERE Cod_Barras = ?";
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        try (Connection conn = ConexaoDB.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, codigo);
             ResultSet rs = stmt.executeQuery();
@@ -955,7 +898,7 @@ private double buscarTrocoVenda(Connection conn, int idVenda) {
 
     private double buscarPrecoProduto(String codigo) throws SQLException {
         String query = "SELECT Preco FROM produtos WHERE Cod_Barras = ?";
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        try (Connection conn = ConexaoDB.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, codigo);
             ResultSet rs = stmt.executeQuery();
@@ -1134,12 +1077,7 @@ private double buscarTrocoVenda(Connection conn, int idVenda) {
         historicoContainer.getChildren().addAll(filtroBox, scrollPane);
         historicoContainer.setStyle("-fx-background-color: transparent; -fx-padding: 20;");
 
-        // Adicionar debug
-        System.out.println("setupHistoricoUI() - Iniciando carregamento de vendas...");
-        verificarConexaoBanco(); // Chamar método de debug
-        
         vendas = carregarVendas();
-        System.out.println("setupHistoricoUI() - Vendas carregadas: " + vendas.size());
         
         aplicarFiltros();
     }

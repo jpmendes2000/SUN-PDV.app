@@ -1,7 +1,6 @@
 package com.sunpdv.telas.operacao;
 
 import com.sunpdv.model.AutenticarUser;
-import com.sunpdv.model.TaxaPagamentoService;
 import com.sunpdv.telas.home.TelaHomeADM;
 import com.sunpdv.telas.home.TelaHomeFUN;
 import com.sunpdv.telas.home.TelaHomeMOD;
@@ -17,7 +16,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ContentDisplay;
-import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -27,18 +25,16 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.io.*;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class Configurar {
 
-    // Classe interna para criar alertas personalizados com estilo CSS
     private static class CustomConfirmationAlert extends Alert {
         public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
             super(AlertType.CONFIRMATION);
-            this.initOwner(owner); // IMPORTANTE: deve ser o Stage correto
-            this.initModality(Modality.WINDOW_MODAL); // ou APPLICATION_MODAL
+            this.initOwner(owner);
+            this.initModality(Modality.WINDOW_MODAL);
             this.setTitle(title);
             this.setHeaderText(header);
             this.setContentText(content);
@@ -47,37 +43,31 @@ public class Configurar {
         }
     }
 
-    // Método para criar botões laterais com ícone e efeito de hover
+    // Botao lateral
     private Button criarBotaoLateral(String texto, String caminhoIcone) {
         try {
-            // Carrega a imagem do ícone
             Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
             ImageView icon = new ImageView(img);
             icon.setFitWidth(20);
             icon.setFitHeight(20);
 
-            // Configura o texto do botão com estilo
             Label textLabel = new Label(texto);
             textLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
 
-            // Cria o contêiner para a barra indicadora amarela
-            StackPane indicatorContainer = new StackPane();
-            indicatorContainer.setMinWidth(3);
-            indicatorContainer.setMaxWidth(3);
-            indicatorContainer.setMinHeight(30);
-            indicatorContainer.setMaxHeight(30);
-            indicatorContainer.setStyle("-fx-background-color: transparent;");
+            StackPane BarraAmarelaBtn = new StackPane();
+            BarraAmarelaBtn.setMinWidth(3);
+            BarraAmarelaBtn.setMaxWidth(3);
+            BarraAmarelaBtn.setMinHeight(30);
+            BarraAmarelaBtn.setMaxHeight(30);
+            BarraAmarelaBtn.setStyle("-fx-background-color: transparent;");
 
-            // Alinha o ícone e o texto à esquerda
             HBox leftContent = new HBox(10, icon, textLabel);
             leftContent.setAlignment(Pos.CENTER_LEFT);
 
-            // Monta o conteúdo do botão com espaçamento
-            HBox content = new HBox(leftContent, new Region(), indicatorContainer);
+            HBox content = new HBox(leftContent, new Region(), BarraAmarelaBtn);
             content.setAlignment(Pos.CENTER_LEFT);
             HBox.setHgrow(content.getChildren().get(1), Priority.ALWAYS);
 
-            // Configura o botão
             Button btn = new Button();
             btn.setGraphic(content);
             btn.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
@@ -85,14 +75,13 @@ public class Configurar {
             btn.setPrefWidth(280);
             btn.setPrefHeight(42);
 
-            // Efeito de hover
             btn.setOnMouseEntered(e -> {
                 btn.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18));");
-                indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64);");
+                BarraAmarelaBtn.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64);");
             });
             btn.setOnMouseExited(e -> {
                 btn.setStyle("-fx-background-color: transparent;");
-                indicatorContainer.setStyle("-fx-background-color: transparent;");
+                BarraAmarelaBtn.setStyle("-fx-background-color: transparent;");
             });
 
             return btn;
@@ -102,12 +91,12 @@ public class Configurar {
     }
 
     public void show(Stage stage) {
-        // Cria a barra lateral (menu esquerdo)
+        // Menu lateral
         VBox leftMenu = new VBox();
         leftMenu.setPrefWidth(280);
         leftMenu.setStyle("-fx-background-color: #00536d;");
 
-        // Configura o logo SUN PDV no topo
+        // logo SUN PDV
         Image logo = new Image(getClass().getResourceAsStream("/img/logo/logo.png"));
         ImageView logoView = new ImageView(logo);
         logoView.setFitWidth(120);
@@ -306,7 +295,7 @@ public class Configurar {
                 }
             });
         });
-        btnSair.setDisable(false); // Garante que o botão está habilitado
+        btnSair.setDisable(false);
     }
 
     // Método para exibir alertas

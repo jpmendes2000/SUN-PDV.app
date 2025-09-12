@@ -15,7 +15,7 @@ import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
@@ -57,9 +57,7 @@ public class TelaHomeMOD {
         }
     }
 
-    /**
-     * Cria botão lateral com ícone, texto e barra lateral amarela no hover
-     */
+    // Botão lateral
     private Button criarBotaoLateral(String texto, String caminhoIcone) {
         try {
             Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
@@ -74,17 +72,17 @@ public class TelaHomeMOD {
             Label textLabel = new Label(texto);
             textLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
 
-            StackPane indicatorContainer = new StackPane(); // barra amarela lateral
-            indicatorContainer.setMinWidth(3);
-            indicatorContainer.setMaxWidth(3);
-            indicatorContainer.setMinHeight(30);
-            indicatorContainer.setMaxHeight(30);
-            indicatorContainer.setStyle("-fx-background-color: transparent;");
+            StackPane BarraAmarelaBtn = new StackPane(); // barra amarela lateral
+            BarraAmarelaBtn.setMinWidth(3);
+            BarraAmarelaBtn.setMaxWidth(3);
+            BarraAmarelaBtn.setMinHeight(30);
+            BarraAmarelaBtn.setMaxHeight(30);
+            BarraAmarelaBtn.setStyle("-fx-background-color: transparent;");
 
             HBox leftContent = new HBox(10, icon, textLabel);
             leftContent.setAlignment(Pos.CENTER_LEFT);
 
-            HBox content = new HBox(leftContent, new Region(), indicatorContainer);
+            HBox content = new HBox(leftContent, new Region(), BarraAmarelaBtn);
             content.setAlignment(Pos.CENTER_LEFT);
             HBox.setHgrow(content.getChildren().get(1), Priority.ALWAYS);
 
@@ -97,11 +95,11 @@ public class TelaHomeMOD {
 
             btn.setOnMouseEntered(e -> {
                 btn.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4;");
-                indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
+                BarraAmarelaBtn.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
             });
             btn.setOnMouseExited(e -> {
                 btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
-                indicatorContainer.setStyle("-fx-background-color: transparent;");
+                BarraAmarelaBtn.setStyle("-fx-background-color: transparent;");
             });
 
             return btn;
@@ -116,9 +114,9 @@ public class TelaHomeMOD {
         }
     }
 
-    /**
-     * Exibe a tela principal
-     */
+    
+    // tela principal
+     
     public void mostrar(Stage stage) {
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
         stage.setX(screenBounds.getMinX());
@@ -141,7 +139,7 @@ public class TelaHomeMOD {
         logoBox.setAlignment(Pos.CENTER);
         logoBox.setPadding(new Insets(20, 0, 5, 0));
 
-// Labels para hora e data
+        // Labels para hora e data
         Label horaLabel = new Label();
         horaLabel.setStyle("-fx-text-fill: #a9cce3; -fx-font-size: 16px; -fx-font-weight: bold;");
         horaLabel.setAlignment(Pos.CENTER);

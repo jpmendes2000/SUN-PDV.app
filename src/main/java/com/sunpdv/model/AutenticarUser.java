@@ -3,26 +3,25 @@ package com.sunpdv.model;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
+
+import com.sunpdv.connection.ConexaoDB;
 import java.util.Base64;
+
+
 
 public class AutenticarUser {
     private static String nome;
     private static String cargo;
     private static int idPermissao;
     private static int idUsuario; // ADICIONADO: Para armazenar o ID do usuário logado
-    
     private static final String AES_KEY = "MinhaChaveSuperSegura1234567890!";
-    private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=true;trustServerCertificate=true;";
-    private static final String USER = "sa";
-    private static final String PASSWORD = "Senha@12345!";
-
-    // Getters existentes
+    
+    // Getters
     public static String getNome() {
         return nome;
     }
@@ -35,12 +34,12 @@ public class AutenticarUser {
         return idPermissao;
     }
 
-    // ADICIONADO: Getter para ID do usuário
+    // ID do usuário
     public static int getIdUsuario() {
         return idUsuario;
     }
 
-    // Setters existentes
+    // Setters
     public static void setNome(String nome) {
         AutenticarUser.nome = nome;
     }
@@ -53,29 +52,24 @@ public class AutenticarUser {
         AutenticarUser.idPermissao = idPermissao;
     }
 
-    // ADICIONADO: Setter para ID do usuário
     public static void setIdUsuario(int idUsuario) {
         AutenticarUser.idUsuario = idUsuario;
     }
 
-    // MODIFICADO: Limpa os dados do usuário (para logout)
     public static void limparDados() {
         nome = null;
         cargo = null;
         idPermissao = 0;
-        idUsuario = 0; // ADICIONADO: Limpar também o ID do usuário
+        idUsuario = 0;
     }
 
-    // Verifica se há um usuário autenticado
+    // Verificação de usuarios autenticados
     public static boolean isAutenticado() {
         return nome != null && !nome.trim().isEmpty() && 
                cargo != null && !cargo.trim().isEmpty();
     }
 
-    /**
-     * MODIFICADO: Método para autenticar usuário com e-mail e senha no banco de dados.
-     * Agora também captura o ID_Login do usuário para registrar nas vendas.
-     */
+
     public static boolean autenticar(String email, String senha) {
         if (email == null || senha == null || email.trim().isEmpty() || senha.trim().isEmpty()) {
             limparDados();
@@ -86,8 +80,7 @@ public class AutenticarUser {
             String emailCriptografado = criptografarAES(email);
             String senhaHash = hashSHA256(senha);
 
-            try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD)) {
-                // MODIFICADO: Incluir ID_Login na consulta
+            try (Connection conn = ConexaoDB.getConnection();) {
                 String sql = "SELECT l.ID_Login, l.Nome, c.Cargo, p.ID_Permissao, p.permissao " +
                              "FROM login_sistema l " +
                              "INNER JOIN Cargo c ON l.ID_Cargo = c.ID_Cargo " +
@@ -106,13 +99,11 @@ public class AutenticarUser {
                                 return false;
                             }
                             
-                            // MODIFICADO: Capturar também o ID_Login
                             idUsuario = rs.getInt("ID_Login");
                             nome = rs.getString("Nome");
                             cargo = rs.getString("Cargo");
                             idPermissao = rs.getInt("ID_Permissao");
                             
-                            // ADICIONADO: Atualizar último login
                             atualizarUltimoLogin(idUsuario);
                             
                             System.out.println("Usuário autenticado: " + nome + ", Cargo: " + cargo + 
@@ -141,10 +132,9 @@ public class AutenticarUser {
         }
     }
 
-    // ADICIONADO: Método para atualizar último login
     private static void atualizarUltimoLogin(int idUsuario) {
         String sql = "UPDATE login_sistema SET Ultimo_Login = GETDATE() WHERE ID_Login = ?";
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+        try (Connection conn = ConexaoDB.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, idUsuario);
             stmt.executeUpdate();
@@ -154,16 +144,15 @@ public class AutenticarUser {
         }
     }
 
-    // ADICIONADO: Método para fazer logout completo
+    // Para fazer logout completo
     public static void logout() {
         System.out.println("Fazendo logout do usuário: " + nome);
         limparDados();
     }
 
-    /**
-     * Método para cadastrar um novo usuário no banco de dados.
-     * (Mantido sem alterações)
-     */
+    
+      // Para cadastrar um novo usuário no banco de dados.
+   
     public static boolean cadastrar(String nome, String email, String senha, String cargo) {
         if (nome == null || email == null || senha == null || cargo == null ||
             nome.trim().isEmpty() || email.trim().isEmpty() || senha.trim().isEmpty() || cargo.trim().isEmpty()) {
@@ -175,8 +164,7 @@ public class AutenticarUser {
             String emailCriptografado = criptografarAES(email);
             String senhaHash = hashSHA256(senha);
 
-            try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD)) {
-                // Obter ID do cargo
+            try (Connection conn = ConexaoDB.getConnection();) {
                 String sqlCargo = "SELECT ID_Cargo FROM Cargo WHERE Cargo = ?";
                 int idCargo = -1;
                 try (PreparedStatement stmtCargo = conn.prepareStatement(sqlCargo)) {
@@ -204,7 +192,7 @@ public class AutenticarUser {
                     }
                 }
 
-                // Inserir usuário
+                // Insere um usuario novo
                 String sql = "INSERT INTO login_sistema (Nome, Email, Senha, ID_Cargo, ID_Permissao) VALUES (?, ?, ?, ?, ?)";
                 try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                     stmt.setString(1, nome);
@@ -231,7 +219,7 @@ public class AutenticarUser {
         }
     }
 
-    // Métodos de criptografia existentes (sem alterações)
+    // Criptografia AES e Hash SHA-256
     private static String criptografarAES(String texto) throws Exception {
         SecretKeySpec chave = new SecretKeySpec(AES_KEY.getBytes(), "AES");
         Cipher cipher = Cipher.getInstance("AES");

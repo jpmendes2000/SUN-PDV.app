@@ -1,11 +1,11 @@
 package com.sunpdv.telas.operacao;
 
+import com.sunpdv.connection.ConexaoDB;
 import com.sunpdv.model.AutenticarUser;
 import com.sunpdv.model.Produto;
 import com.sunpdv.telas.home.TelaHomeADM;
 import com.sunpdv.telas.home.TelaHomeFUN;
 import com.sunpdv.telas.home.TelaHomeMOD;
-import com.sunpdv.telas.operacao.DashboardAdministrativo;
 import javafx.animation.KeyFrame;
 import javafx.animation.PauseTransition;
 import javafx.animation.Timeline;
@@ -16,10 +16,6 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.chart.BarChart;
-import javafx.scene.chart.CategoryAxis;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -34,22 +30,12 @@ import javafx.scene.input.MouseEvent;
 
 import java.sql.*;
 import java.text.DecimalFormat;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Month;
-import java.time.format.TextStyle;
 import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 import java.util.Optional;
-
-/**
- * Classe responsável por gerenciar a tela de produtos no sistema SUN PDV.
- * Esta tela permite visualizar, adicionar, editar e desativar produtos, além de oferecer
- * funcionalidades como pesquisa, navegação e dashboard administrativo.
- */
 public class Produtos {
 
-    // Atributos da classe para controle da interface e dados
+    // Atributos da classe
     private Stage stage;
     private TableView<Produto> table;
     private ObservableList<Produto> listaProdutos;
@@ -64,21 +50,7 @@ public class Produtos {
     private Button btnEdit;
     private Button btnDelete;
     private VBox topoBox;
-    private GridPane contentGrid; // Adicionado como atributo de classe
-
-    // Constantes para conexão com o banco de dados
-    private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=false;trustServerCertificate=true;";
-    private static final String USER = "sa";
-    private static final String PASSWORD = "Senha@12345!";
-
-    /**
-     * Estabelece uma conexão com o banco de dados usando as constantes definidas.
-     * @return Conexão ativa com o banco de dados
-     * @throws SQLException Se houver erro na conexão
-     */
-    private Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASSWORD);
-    }
+    private GridPane contentGrid;
     
     private static class CustomConfirmationAlert extends Alert {
         public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
@@ -99,10 +71,7 @@ public class Produtos {
         }
     }
 
-    /**
-     * Exibe a tela de gerenciamento de produtos.
-     * @param stage O palco (Stage) onde a tela será exibida
-     */
+    // tela de produtos
     public void show(Stage stage) {
         this.stage = stage;
         BorderPane layout = new BorderPane();
@@ -167,8 +136,6 @@ public class Produtos {
         }));
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.play();
-
-        // Container para o conteúdo do menu (sem ScrollPane)
         VBox menuContent = new VBox();
         menuContent.setAlignment(Pos.TOP_CENTER);
         menuContent.setSpacing(10);
@@ -198,29 +165,26 @@ public class Produtos {
         // Espaço flexível para empurrar o menu para baixo
         Region espacoFlexivel = new Region();
         VBox.setVgrow(espacoFlexivel, Priority.ALWAYS);
-
-        // Monta o menu lateral final (sem ScrollPane)
         leftMenu.getChildren().addAll(logoBox, dataHoraBox, espacoFlexivel, menuContent);
 
-        // Configuração da área central (conteúdo principal)
-        contentGrid = new GridPane(); // Inicialização como atributo
+        contentGrid = new GridPane();
         contentGrid.setHgap(20);
         contentGrid.setVgap(10);
         contentGrid.setPadding(new Insets(15));
         contentGrid.setAlignment(Pos.TOP_CENTER);
 
-        // Configuração da label de mensagem de sucesso
+        // label de mensagem de sucesso
         lblMensagemSucesso = new Label();
         lblMensagemSucesso.getStyleClass().add("mensagem-sucesso");
         lblMensagemSucesso.setVisible(false);
 
-        // Configuração do campo de pesquisa
+        // campo de pesquisa
         campoPesquisa = new TextField();
         campoPesquisa.setPromptText("Pesquisar produto...");
         campoPesquisa.setPrefWidth(400);
         campoPesquisa.textProperty().addListener((obs, oldVal, newVal) -> filtrarProdutos(newVal));
 
-        // Configuração dos botões de ação
+        // botões de ação
         btnAdd = criarBotaoAcao("/img/icon/lista.png", "Adicionar Produto");
         btnEdit = criarBotaoAcao("/img/icon/lapis.png", "Editar Produto");
         btnDelete = criarBotaoAcao("/img/icon/lixeira.png", "Apagar Produto");
@@ -228,7 +192,7 @@ public class Produtos {
         btnEdit.setDisable(true);
         btnDelete.setDisable(true);
 
-        // Organização da área superior (mensagem e campo de pesquisa com botões)
+        // Organização da área superior
         HBox tituloMensagemBox = new HBox(10, lblMensagemSucesso);
         tituloMensagemBox.setAlignment(Pos.TOP_LEFT);
 
@@ -239,7 +203,7 @@ public class Produtos {
         topoBox = new VBox(5, tituloMensagemBox, pesquisaAcoesBox);
         contentGrid.add(topoBox, 0, 0, 2, 1);
 
-        // Configuração da tabela de produtos
+        // tabela de produtos
         table = new TableView<>();
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.getStyleClass().add("table-view");
@@ -263,7 +227,7 @@ public class Produtos {
 
         table.getColumns().addAll(colNome, colCodBarras, colPreco);
 
-        // Configuração do duplo clique para editar
+        // duplo clique para editar
         table.setRowFactory(tv -> {
             TableRow<Produto> row = new TableRow<>();
             row.setOnMouseClicked(event -> {
@@ -275,7 +239,7 @@ public class Produtos {
             return row;
         });
 
-        // Configuração do menu de contexto
+        // menu de contexto
         ContextMenu contextMenu = criarMenuContexto();
         table.setContextMenu(contextMenu);
 
@@ -303,19 +267,16 @@ public class Produtos {
         scrollTable.setPrefViewportHeight(1650);
         scrollTable.setStyle("-fx-padding: 0;");
 
-        // Inicializa o container do dashboard (inicialmente vazio)
+        // Inicializa o container do dashboard
         dashboardContainer = new VBox();
         dashboardContainer.setVisible(false);
 
-        // Adiciona ambos ao GridPane
         contentGrid.add(scrollTable, 0, 1, 2, 1);
         contentGrid.add(dashboardContainer, 0, 1, 2, 1);
 
-        // Configuração do layout principal
         layout.setLeft(leftMenu);
         layout.setCenter(contentGrid);
 
-        // Associa ações aos botões
         btnAdd.setOnAction(e -> abrirFormularioProduto(null));
         btnEdit.setOnAction(e -> {
             if (produtoSelecionado != null) {
@@ -332,17 +293,15 @@ public class Produtos {
             }
         });
 
-        // Listener para seleção na tabela
         table.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             produtoSelecionado = newVal;
             btnEdit.setDisable(newVal == null || modoAdminAtivo);
             btnDelete.setDisable(newVal == null || modoAdminAtivo);
         });
 
-        // Carrega os produtos do banco de dados
+        // Carrega os produtos do DB
         carregarProdutos();
 
-        // Configuração da cena e exibição do palco
         Scene scene = new Scene(layout, 1200, 800);
         try {
             scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
@@ -368,22 +327,11 @@ public class Produtos {
         stage.show();
     }
 
-    /**
-     * Alterna entre o modo de visualização de produtos e o dashboard administrativo
-     */
-    /**
- * Alterna entre o modo de visualização de produtos e o dashboard administrativo
- */
-    /**
- * Alterna entre o modo de visualização de produtos e o dashboard administrativo
- */
+    // algternar para dashs ou produtos
     private void toggleModoAdmin() {
         modoAdminAtivo = !modoAdminAtivo;
         
         if (modoAdminAtivo) {
-            // ENTRANDO NO MODO DASHBOARD
-            System.out.println("Entrando no modo Dashboard");
-            
             // Atualiza o botão
             atualizarBotaoAdmin("Produtos", "/img/icon/lista.png", "Produtos");
             
@@ -391,24 +339,15 @@ public class Produtos {
             topoBox.setVisible(false);
             topoBox.setManaged(false);
             scrollTable.setVisible(false);
-            scrollTable.setManaged(false);
-            
-            // Remove elementos do grid
+            scrollTable.setManaged(false); 
             contentGrid.getChildren().removeAll(topoBox, scrollTable, dashboardContainer);
             
-            // Cria e adiciona o dashboard
             criarDashboard();
             dashboardContainer.setVisible(true);
             dashboardContainer.setManaged(true);
             contentGrid.add(dashboardContainer, 0, 0, 2, 2);
             
-            // Desativa controles do modo produtos
-            desativarControlesProdutos();
-            
         } else {
-            // SAINDO DO MODO DASHBOARD (VOLTANDO PARA PRODUTOS)
-            System.out.println("Voltando para modo Produtos");
-            
             // Atualiza o botão
             atualizarBotaoAdmin("Administrativo", "/img/icon/pasta.png", "Acessar dashboard administrativo");
             
@@ -423,12 +362,8 @@ public class Produtos {
             scrollTable.setVisible(true);
             scrollTable.setManaged(true);
             
-            // Adiciona elementos na ordem correta
             contentGrid.add(topoBox, 0, 0, 2, 1);
             contentGrid.add(scrollTable, 0, 1, 2, 1);
-            
-            // REATIVA OS CONTROLES
-            reativarControlesProdutos();
         }
         
         // Força atualização da interface
@@ -448,9 +383,7 @@ public class Produtos {
         });
     }
 
-    /**
-     * Atualiza o botão administrativo com novo texto, ícone e tooltip
-     */
+    // tooltip do botão administrativo
     private void atualizarBotaoAdmin(String texto, String caminhoIcone, String tooltip) {
         HBox content = (HBox) btnAdmin.getGraphic();
         if (content != null && content.getChildren().size() >= 1) {
@@ -471,45 +404,6 @@ public class Produtos {
         btnAdmin.setTooltip(new Tooltip(tooltip));
     }
 
-    /**
-     * Desativa todos os controles do modo produtos
-     */
-    private void desativarControlesProdutos() {
-        btnAdd.setDisable(true);
-        btnEdit.setDisable(true);
-        btnDelete.setDisable(true);
-        campoPesquisa.setDisable(true);
-        campoPesquisa.setEditable(false);
-        
-        System.out.println("Controles desativados - Dashboard ativo");
-    }
-
-    /**
-     * Reativa todos os controles do modo produtos
-     */
-    private void reativarControlesProdutos() {
-        // Força a reativação
-        btnAdd.setDisable(false);
-        campoPesquisa.setDisable(false);
-        campoPesquisa.setEditable(true);
-        
-        // Para os botões de edição, verifica seleção
-        Produto selected = table.getSelectionModel().getSelectedItem();
-        btnEdit.setDisable(selected == null);
-        btnDelete.setDisable(selected == null);
-        
-        // Atualiza a referência do produto selecionado
-        produtoSelecionado = selected;
-        
-        System.out.println("Controles reativados - Modo produtos ativo");
-        System.out.println("btnAdd.isDisabled(): " + btnAdd.isDisabled());
-        System.out.println("campoPesquisa.isDisabled(): " + campoPesquisa.isDisabled());
-        System.out.println("Produto selecionado: " + (selected != null ? selected.getNome() : "nenhum"));
-    }
-
-    /**
-     * Cria o dashboard administrativo com gráficos
-     */
     private void criarDashboard() {
         DashboardAdministrativo dashboard = new DashboardAdministrativo();
         ScrollPane dashboardScroll = dashboard.criarDashboard();
@@ -527,9 +421,6 @@ public class Produtos {
 
     }
 
-    /**
-     * Cria um menu de contexto para a tabela de produtos.
-     */
     private ContextMenu criarMenuContexto() {
         ContextMenu contextMenu = new ContextMenu();
 
@@ -555,9 +446,6 @@ public class Produtos {
         return contextMenu;
     }
 
-    /**
-     * Cria um botão de ação com ícone e tooltip.
-     */
     private Button criarBotaoAcao(String caminhoIcone, String tooltip) {
         try {
             Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
@@ -589,9 +477,6 @@ public class Produtos {
         }
     }
 
-    /**
-     * Cria um botão lateral com ícone, texto e efeito de hover.
-     */
     private Button criarBotaoLateral(String texto, String caminhoIcone) {
         try {
             Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
@@ -607,17 +492,17 @@ public class Produtos {
             Label textLabel = new Label(texto);
             textLabel.setStyle("-fx-text-fill: #ffffff; -fx-font-weight: bold;");
 
-            StackPane indicatorContainer = new StackPane();
-            indicatorContainer.setMinWidth(3);
-            indicatorContainer.setMaxWidth(3);
-            indicatorContainer.setMinHeight(30);
-            indicatorContainer.setMaxHeight(30);
-            indicatorContainer.setStyle("-fx-background-color: transparent;");
+            StackPane BarraAmarelaBtn = new StackPane();
+            BarraAmarelaBtn.setMinWidth(3);
+            BarraAmarelaBtn.setMaxWidth(3);
+            BarraAmarelaBtn.setMinHeight(30);
+            BarraAmarelaBtn.setMaxHeight(30);
+            BarraAmarelaBtn.setStyle("-fx-background-color: transparent;");
 
             HBox leftContent = new HBox(10, icon, textLabel);
             leftContent.setAlignment(Pos.CENTER_LEFT);
 
-            HBox content = new HBox(leftContent, new Region(), indicatorContainer);
+            HBox content = new HBox(leftContent, new Region(), BarraAmarelaBtn);
             content.setAlignment(Pos.CENTER_LEFT);
             HBox.setHgrow(content.getChildren().get(1), Priority.ALWAYS);
 
@@ -632,11 +517,11 @@ public class Produtos {
 
             btn.setOnMouseEntered(e -> {
                 btn.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4;");
-                indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
+                BarraAmarelaBtn.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
             });
             btn.setOnMouseExited(e -> {
                 btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
-                indicatorContainer.setStyle("-fx-background-color: transparent;");
+                BarraAmarelaBtn.setStyle("-fx-background-color: transparent;");
             });
 
             return btn;
@@ -652,15 +537,13 @@ public class Produtos {
         }
     }
 
-    /**
-     * Carrega os produtos do banco de dados e popula a tabela (apenas ativos).
-     */
+    // Busca produtos no banco e carrega na tabela
     private void carregarProdutos() {
         listaProdutos = FXCollections.observableArrayList();
         String sql = "SELECT ID_Produto, Nome, Cod_Barras, Preco, Ativo FROM produtos WHERE Ativo = 1 ORDER BY Nome";
 
-        try (Connection con = getConnection();
-            PreparedStatement ps = con.prepareStatement(sql);
+        try (Connection conn = ConexaoDB.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
             ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
@@ -677,9 +560,7 @@ public class Produtos {
         }
     }
 
-    /**
-     * Filtra os produtos na tabela com base no texto digitado no campo de pesquisa.
-     */
+   // filtros
     private void filtrarProdutos(String filtro) {
         if (listaProdutos == null || filtro == null || filtro.isEmpty()) {
             table.setItems(listaProdutos);
@@ -694,9 +575,7 @@ public class Produtos {
         table.setItems(filtrados);
     }
 
-    /**
-     * Abre um formulário para adicionar ou editar um produto.
-     */
+    // formulario de produtos para editar ou adicionar
     private void abrirFormularioProduto(Produto produto) {
         Stage dialog = new Stage();
         dialog.initModality(Modality.NONE);
@@ -748,9 +627,7 @@ public class Produtos {
         dialog.showAndWait();
     }
 
-    /**
-     * Salva ou atualiza um produto no banco de dados.
-     */
+    // salvar produto no banco
     private void salvarProduto(Produto produto, TextField txtNome, TextField txtCodBarras, 
                             TextField txtPreco, Stage dialog) {
         String nome = txtNome.getText().trim();
@@ -790,14 +667,12 @@ public class Produtos {
         dialog.close();
     }
 
-    /**
-     * Valida se já existe um produto com o mesmo nome ou código de barras.
-     */
+    // alerta de erro se existir produto com mesmo nome ou codigo de barras
     private boolean validarProdutoExistente(String nome, String codBarras, int idProduto) {
         String sql = "SELECT ID_Produto, Nome, Cod_Barras FROM produtos WHERE (Nome = ? OR Cod_Barras = ?) AND ID_Produto != ? AND Ativo = 1";
 
-        try (Connection con = getConnection();
-            PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection conn = ConexaoDB.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, nome);
             ps.setString(2, codBarras);
@@ -844,9 +719,6 @@ public class Produtos {
         return false;
     }
 
-    /**
-     * Seleciona um produto na tabela com base no ID.
-     */
     private void selecionarProdutoNaTabela(int idProduto) {
         for (Produto p : listaProdutos) {
             if (p.getId() == idProduto) {
@@ -857,13 +729,11 @@ public class Produtos {
         }
     }
 
-    /**
-     * Insere um novo produto no banco de dados.
-     */
+    // inserir produto no banco
     private void inserirProduto(Produto produto) {
         String sql = "INSERT INTO produtos (Nome, Cod_Barras, Preco, Ativo) VALUES (?, ?, ?, 1)";
-        try (Connection con = getConnection();
-            PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = ConexaoDB.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setString(1, produto.getNome());
             ps.setString(2, produto.getCodBarras());
@@ -887,13 +757,11 @@ public class Produtos {
         }
     }
 
-    /**
-     * Atualiza um produto existente no banco de dados.
-     */
+    // update produto no banco
     private void atualizarProduto(Produto produto) {
         String sql = "UPDATE produtos SET Nome=?, Cod_Barras=?, Preco=? WHERE ID_Produto=?";
-        try (Connection con = getConnection();
-            PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection conn = ConexaoDB.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, produto.getNome());
             ps.setString(2, produto.getCodBarras());
@@ -915,9 +783,7 @@ public class Produtos {
         }
     }
 
-    /**
-     * Desativa um produto no banco de dados após confirmação.
-     */
+    // desativar produto mas apagar no sistema
     private void desativarProduto(Produto produto) {
         if (produto == null) {
             System.err.println("Erro: Tentativa de Apagar um produto nulo.");
@@ -935,8 +801,8 @@ public class Produtos {
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
             String sql = "UPDATE produtos SET Ativo = 0 WHERE ID_Produto = ?";
-            try (Connection con = getConnection();
-                 PreparedStatement ps = con.prepareStatement(sql)) {
+            try (Connection conn = ConexaoDB.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, produto.getId());
                 int rows = ps.executeUpdate();
                 if (rows > 0) {
@@ -958,9 +824,6 @@ public class Produtos {
         }
     }
 
-    /**
-     * Volta para a tela inicial com base no cargo do usuário.
-     */
     private void voltarParaHome(Stage stage) {
         try {
             String cargo = AutenticarUser.getCargo();
@@ -982,9 +845,6 @@ public class Produtos {
         }
     }
 
-    /**
-     * Exibe uma mensagem de sucesso temporária na interface.
-     */
     private void mostrarMensagemSucesso(String texto) {
         lblMensagemSucesso.setText(texto);
         lblMensagemSucesso.setVisible(true);
@@ -994,9 +854,6 @@ public class Produtos {
         pause.play();
     }
 
-    /**
-     * Exibe um alerta de erro na interface.
-     */
     private void mostrarAlertaErro(String titulo, String mensagem) {
         Alert alert = new Alert(AlertType.ERROR);
         alert.setTitle(titulo);
