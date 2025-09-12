@@ -13,7 +13,7 @@ import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
@@ -56,10 +56,8 @@ public class TelaHomeADM {
         }
     }
 
-    /**
-     * Cria botão lateral com ícone, texto e barra lateral amarela no hover
-     */
-    private Button criarBotaoLateral(String texto, String caminhoIcone) {
+    // botão lateral
+    private Button Botaolateral(String texto, String caminhoIcone) {
         try {
             Image img = new Image(getClass().getResourceAsStream(caminhoIcone));
             if (img.isError()) {
@@ -73,17 +71,17 @@ public class TelaHomeADM {
             Label textLabel = new Label(texto);
             textLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
 
-            StackPane indicatorContainer = new StackPane(); // barra amarela lateral
-            indicatorContainer.setMinWidth(3);
-            indicatorContainer.setMaxWidth(3);
-            indicatorContainer.setMinHeight(30);
-            indicatorContainer.setMaxHeight(30);
-            indicatorContainer.setStyle("-fx-background-color: transparent;");
+            StackPane BarraAmarelaBtn = new StackPane(); // barra amarela lateral
+            BarraAmarelaBtn.setMinWidth(3);
+            BarraAmarelaBtn.setMaxWidth(3);
+            BarraAmarelaBtn.setMinHeight(30);
+            BarraAmarelaBtn.setMaxHeight(30);
+            BarraAmarelaBtn.setStyle("-fx-background-color: transparent;");
 
             HBox leftContent = new HBox(10, icon, textLabel);
             leftContent.setAlignment(Pos.CENTER_LEFT);
 
-            HBox content = new HBox(leftContent, new Region(), indicatorContainer);
+            HBox content = new HBox(leftContent, new Region(), BarraAmarelaBtn);
             content.setAlignment(Pos.CENTER_LEFT);
             HBox.setHgrow(content.getChildren().get(1), Priority.ALWAYS);
 
@@ -96,11 +94,11 @@ public class TelaHomeADM {
 
             btn.setOnMouseEntered(e -> {
                 btn.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4;");
-                indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
+                BarraAmarelaBtn.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
             });
             btn.setOnMouseExited(e -> {
                 btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
-                indicatorContainer.setStyle("-fx-background-color: transparent;");
+                BarraAmarelaBtn.setStyle("-fx-background-color: transparent;");
             });
 
             return btn;
@@ -115,9 +113,7 @@ public class TelaHomeADM {
         }
     }
 
-    /**
-     * Exibe a tela principal
-     */
+    // Mostrar tela
     public void mostrar(Stage stage) {
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
         stage.setX(screenBounds.getMinX());
@@ -178,11 +174,11 @@ public class TelaHomeADM {
         VBox.setVgrow(espaco, Priority.ALWAYS);
 
         // Botões do menu
-        Button btnVendas = criarBotaoLateral("Vendas", "/img/icon/carrinho-de-compras.png");
-        Button btnProdutos = criarBotaoLateral("Gestão", "/img/icon/lista.png");
-        Button btnUsuarios = criarBotaoLateral("Gerenciar Usuários", "/img/icon/grupo.png");
-        Button btnConfigurar = criarBotaoLateral("Configurações", "/img/icon/definicoes.png");
-        Button btnSair = criarBotaoLateral("Sair do Sistema", "/img/icon/fechar.png");
+        Button btnVendas = Botaolateral("Vendas", "/img/icon/carrinho-de-compras.png");
+        Button btnProdutos = Botaolateral("Gestão", "/img/icon/lista.png");
+        Button btnUsuarios = Botaolateral("Gerenciar Usuários", "/img/icon/grupo.png");
+        Button btnConfigurar = Botaolateral("Configurações", "/img/icon/definicoes.png");
+        Button btnSair = Botaolateral("Sair do Sistema", "/img/icon/fechar.png");
 
         // Ações dos botões
         btnVendas.setOnAction(e -> new Caixa().show(stage));

@@ -15,6 +15,6 @@ module com.sunpdv {
     // Exportações
     exports com.sunpdv;
     exports com.sunpdv.telas.home;
-    exports com.sunpdv.model;  // Adicionado para permitir reflexão
+    exports com.sunpdv.model;
     exports com.sunpdv.telas.operacao to javafx.graphics;
 }

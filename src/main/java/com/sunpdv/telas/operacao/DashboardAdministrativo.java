@@ -17,6 +17,9 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.time.format.TextStyle;
 import java.util.Locale;
+
+import com.sunpdv.connection.ConexaoDB;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,12 +29,6 @@ import java.util.List;
  */
 public class DashboardAdministrativo {
     
-    // Constantes para conexão com banco de dados
-    private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=false;trustServerCertificate=true;";
-    private static final String USER = "sa";
-    private static final String PASSWORD = "Senha@12345!";
-    
-    // Classe auxiliar para armazenar dados de produtos
     private static class ProdutoVenda {
         String nome;
         int quantidade;
@@ -42,16 +39,8 @@ public class DashboardAdministrativo {
         }
     }
     
-    /**
-     * Estabelece conexão com o banco de dados
-     */
-    private Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASSWORD);
-    }
+    // Cria o container principal do dashboard
     
-    /**
-     * Cria o container principal do dashboard
-     */
     public ScrollPane criarDashboard() {
         VBox dashboardContent = new VBox();
         dashboardContent.setSpacing(20);
@@ -63,21 +52,18 @@ public class DashboardAdministrativo {
         dashboardContent.getChildren().add(tituloDashboard);
         
         try {
-            // Cards de métricas no topo
+            // cards
             HBox metricsContainer = criarCardsMetricas();
             dashboardContent.getChildren().add(metricsContainer);
-            
-            // Gráfico principal (SOMENTE receitas - LINHA)
+            // gráfico de linha
             LineChart<String, Number> mainChart = criarGraficoLinha("Receitas Mensais");
             carregarDadosReceitasYoY(mainChart);
             dashboardContent.getChildren().add(mainChart);
-
-            // Gráfico de top 10 produtos (ORDENADO CORRETAMENTE)
+            // gráfico de barras    
             BarChart<String, Number> topProdutosChart = criarGraficoBarras("Top 10 Produtos Mais Vendidos");
             carregarTop10ProdutosOrdenado(topProdutosChart);
             dashboardContent.getChildren().add(topProdutosChart);
-
-            // Informação do funcionário do mês
+            // funcionário do mês
             String employeeInfo = getTopEmployee();
             if (employeeInfo != null) {
                 Label employeeLabel = new Label(employeeInfo);
@@ -100,9 +86,7 @@ public class DashboardAdministrativo {
         return dashboardScroll;
     }
     
-    /**
-     * Cria os cards de métricas no topo do dashboard com variação YoY
-     */
+    // cards de metricas
     private HBox criarCardsMetricas() throws SQLException {
         HBox container = new HBox(20);
         container.setAlignment(Pos.CENTER);
@@ -132,15 +116,13 @@ public class DashboardAdministrativo {
         return container;
     }
     
-    /**
-     * Cria um card individual de métrica com variação YoY
-     */
+    // cards
     private VBox criarCardMetrica(String titulo, double valor, String prefixo, double yoYVariation) {
         VBox card = new VBox(10);
         card.setAlignment(Pos.CENTER);
         card.setPadding(new Insets(20));
         card.setPrefWidth(200);
-        card.setPrefHeight(120); // Aumentado para acomodar a variação YoY
+        card.setPrefHeight(120);
         card.setStyle(
             "-fx-background-color: linear-gradient(to bottom right, #00536d, #00536d);" +
             "-fx-border-color: #6c757d;" +
@@ -181,16 +163,14 @@ public class DashboardAdministrativo {
         return card;
     }
     
-    /**
-     * Cria gráfico de LINHA para dados temporais
-     */
+    // grafico de receitas mensais com YoY
     private LineChart<String, Number> criarGraficoLinha(String titulo) {
         CategoryAxis xAxis = new CategoryAxis();
         NumberAxis yAxis = new NumberAxis();
         LineChart<String, Number> lineChart = new LineChart<>(xAxis, yAxis);
         
         lineChart.setTitle(titulo);
-        lineChart.setLegendVisible(false); // Removido legenda já que só mostra receitas
+        lineChart.setLegendVisible(false);
         lineChart.setPrefHeight(300);
         lineChart.setMinHeight(300);
         lineChart.setCreateSymbols(true);
@@ -212,9 +192,7 @@ public class DashboardAdministrativo {
         return lineChart;
     }
     
-    /**
-     * Cria gráfico de BARRAS para produtos
-     */
+   // grafico de top 10 produtos mais vendidos
     private BarChart<String, Number> criarGraficoBarras(String titulo) {
         CategoryAxis xAxis = new CategoryAxis();
         NumberAxis yAxis = new NumberAxis();
@@ -242,9 +220,7 @@ public class DashboardAdministrativo {
         return barChart;
     }
     
-    /**
-     * Carrega dados de receitas com comparação Year-over-Year (YoY)
-     */
+   // dados de receitas mensais com YoY 
     private void carregarDadosReceitasYoY(LineChart<String, Number> chart) throws SQLException {
         chart.getData().clear();
         
@@ -266,40 +242,34 @@ public class DashboardAdministrativo {
             double receitaAtual = getMonthlyValue("SUM(v.Subtotal)", anoAtual, m);
             double receitaAnterior = getMonthlyValue("SUM(v.Subtotal)", anoAnterior, m);
             
-            // Criar pontos com tooltips informativos
             XYChart.Data<String, Number> dataAtual = new XYChart.Data<>(monthName, receitaAtual);
             XYChart.Data<String, Number> dataAnterior = new XYChart.Data<>(monthName, receitaAnterior);
             
-            // Calcular variação YoY
+            // Calcular YoY
             double variacaoYoY = receitaAnterior > 0 ? ((receitaAtual - receitaAnterior) / receitaAnterior) * 100 : 0;
             String sinalVariacao = variacaoYoY >= 0 ? "+" : "";
             
-            // Configurar tooltips com informações YoY
+            // informações YoY
             configurarTooltipYoY(dataAtual, receitaAtual, variacaoYoY, sinalVariacao, anoAtual, monthName);
             configurarTooltipAnterior(dataAnterior, receitaAnterior, anoAnterior, monthName);
             
             seriesAnoAtual.getData().add(dataAtual);
             seriesAnoAnterior.getData().add(dataAnterior);
         }
-
-        // Estilizar as séries
-        chart.getData().addAll(seriesAnoAtual, seriesAnoAnterior);
         
-        // Aplicar estilos após adicionar ao gráfico
+        // Estilo das linhas
         chart.lookupAll(".chart-series-line").forEach(node -> {
             if (chart.getData().indexOf(node.getUserData()) == 0) {
-                // Linha do ano atual - verde
                 node.setStyle("-fx-stroke: #c8c966; -fx-stroke-width: 3px;");
             } else {
-                // Linha do ano anterior - azul claro
                 node.setStyle("-fx-stroke: #6c9bd1; -fx-stroke-width: 2px; -fx-stroke-dash-array: 5 5;");
             }
         });
     }
     
-    /**
-     * Configura tooltip para dados do ano atual com informações YoY
-     */
+    
+     // informações YoY
+     
     private void configurarTooltipYoY(XYChart.Data<String, Number> data, double receita, 
                                      double variacaoYoY, String sinalVariacao, int ano, String mes) {
         data.nodeProperty().addListener((obs, oldNode, newNode) -> {
@@ -360,8 +330,8 @@ public class DashboardAdministrativo {
                     "GROUP BY p.Nome " +
                     "ORDER BY SUM(ci.Quantidade) DESC";
         
-        try (Connection con = getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
+        try (Connection conn = ConexaoDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             
             // Coletamos os dados em ordem
@@ -467,8 +437,8 @@ public class DashboardAdministrativo {
         String sql = "SELECT " + aggregate + " as total FROM vendas v " + join +
                      "WHERE YEAR(v.Data_Venda) = ? AND MONTH(v.Data_Venda) = ? AND v.Status = 'Concluida'";
         
-        try (Connection con = getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection conn = ConexaoDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, year);
             ps.setInt(2, month);
             try (ResultSet rs = ps.executeQuery()) {
@@ -483,8 +453,8 @@ public class DashboardAdministrativo {
     private double getYearlyValue(String aggregate, int year) throws SQLException {
         String sql = "SELECT " + aggregate + " as total FROM vendas v WHERE YEAR(v.Data_Venda) = ? AND v.Status = 'Concluida'";
         
-        try (Connection con = getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection conn = ConexaoDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, year);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -511,6 +481,7 @@ public class DashboardAdministrativo {
         return ((currentValue - previousValue) / previousValue) * 100;
     }
     
+    @SuppressWarnings("deprecation")
     private String getTopEmployee() throws SQLException {
         LocalDate current = LocalDate.now();
         String sql = "SELECT TOP 1 ls.Nome, COUNT(v.ID_Vendas) as TotalVendas " +
@@ -521,8 +492,8 @@ public class DashboardAdministrativo {
                     "GROUP BY ls.Nome " +
                     "ORDER BY TotalVendas DESC";
         
-        try (Connection con = getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection conn = ConexaoDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, current.getYear());
             ps.setInt(2, current.getMonthValue());
             try (ResultSet rs = ps.executeQuery()) {

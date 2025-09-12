@@ -85,8 +85,7 @@ public class Cadastro {
         cadastrarBtn.setDisable(true); // Inicialmente desabilitado
         Label statusLabel = new Label();
 
-        // Modificação para alinhar ComboBox à esquerda e botão ao centro com espaçamento personalizado
-        HBox cargoECadastrarBox = new HBox(20); // Espaçamento de 20 pixels entre elementos
+        HBox cargoECadastrarBox = new HBox(20);
         cargoECadastrarBox.setAlignment(Pos.CENTER);
         Region leftSpacer = new Region();
         Region rightSpacer = new Region();
@@ -99,7 +98,7 @@ public class Cadastro {
         leftContainer.setAlignment(Pos.CENTER_LEFT);
         cargoECadastrarBox.getChildren().addAll(leftContainer, leftSpacer, cadastrarBtn, rightSpacer);
 
-        // Verificação de campos preenchidos
+        // Verificar se preenchido
         Runnable verificarCampos = () -> {
             String senha = senhaField.isVisible() ? senhaField.getText() : senhaVisivelField.getText();
             boolean preenchido = !nomeField.getText().trim().isEmpty() &&
@@ -110,7 +109,6 @@ public class Cadastro {
             cadastrarBtn.setDisable(!preenchido);
         };
 
-        // Listeners para monitorar mudanças nos campos
         nomeField.textProperty().addListener((obs, o, n) -> verificarCampos.run());
         emailField.textProperty().addListener((obs, o, n) -> verificarCampos.run());
         senhaField.textProperty().addListener((obs, o, n) -> verificarCampos.run());
@@ -129,7 +127,7 @@ public class Cadastro {
             }
         });
 
-        // Ação do botão Cadastrar
+        // botão Cadastrar
         cadastrarBtn.setOnAction(e -> {
             String nome = nomeField.getText().trim();
             String email = emailField.getText().trim();

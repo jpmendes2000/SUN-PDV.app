@@ -33,10 +33,6 @@ public class LoginApp extends Application {
     private static final int TEMPO_ESPERA = 120;
     private Timeline contagemRegressiva;
 
-    public static String url = "jdbc:sqlserver://localhost:1433;databaseName=SUN_PDVlocal;encrypt=true;trustServerCertificate=true;";
-    private static final String USER = "sa";
-    private static final String PASSWORD = "Senha@12345!";
-
     public static void main(String[] args) {
         try {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
