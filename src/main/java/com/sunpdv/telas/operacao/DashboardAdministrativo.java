@@ -255,6 +255,7 @@ public class DashboardAdministrativo {
             
             seriesAnoAtual.getData().add(dataAtual);
             seriesAnoAnterior.getData().add(dataAnterior);
+            chart.getData().addAll(seriesAnoAtual, seriesAnoAnterior);
         }
         
         // Estilo das linhas
@@ -373,9 +374,7 @@ public class DashboardAdministrativo {
         }
     }
     
-    /**
-     * Retorna cor em gradiente baseada na posição
-     */
+    // Define cores para as barras em cada posição
     private String getCorGradiente(int posicao) {
         switch (posicao) {
             case 1: return "#1e7e34";  // Verde mais escuro para 1º
@@ -392,9 +391,7 @@ public class DashboardAdministrativo {
         }
     }
     
-    /**
-     * Configura cor e tooltip para uma barra do gráfico
-     */
+    // Configura a cor e o tooltip de cada barra
     private void configurarBarraComCor(XYChart.Data<String, Number> data, String cor, String tooltipText) {
         data.nodeProperty().addListener((obs, oldNode, newNode) -> {
             if (newNode != null) {
@@ -415,8 +412,7 @@ public class DashboardAdministrativo {
         });
     }
     
-    // ===== MÉTODOS DE CONSULTA AO BANCO =====
-    
+    // Querys
     private double getReceitaMensal() throws SQLException {
         LocalDate now = LocalDate.now();
         return getMonthlyValue("SUM(v.Subtotal)", now.getYear(), now.getMonthValue());
@@ -481,7 +477,6 @@ public class DashboardAdministrativo {
         return ((currentValue - previousValue) / previousValue) * 100;
     }
     
-    @SuppressWarnings("deprecation")
     private String getTopEmployee() throws SQLException {
         LocalDate current = LocalDate.now();
         String sql = "SELECT TOP 1 ls.Nome, COUNT(v.ID_Vendas) as TotalVendas " +
