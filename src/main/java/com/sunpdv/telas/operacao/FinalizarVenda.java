@@ -13,7 +13,6 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.LinearGradient;
 import javafx.scene.paint.Stop;
-import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -193,7 +192,6 @@ public class FinalizarVenda {
 
         // Botão Voltar
         Button btnVoltar = criarBotaoLateral("Voltar", "/img/icon/voltar.png");
-        btnVoltar.getStyleClass().add("voltar-finalizarVenda");
         btnVoltar.setOnAction(e -> {
             stage.close();
             
@@ -412,20 +410,7 @@ public class FinalizarVenda {
 
         Button btnAdicionar = new Button("Adicionar");
         btnAdicionar.setDefaultButton(true); // atalho com o enter
-        btnAdicionar.setTextAlignment(TextAlignment.CENTER);
-
-        btnAdicionar.setStyle(
-                "-fx-background-color: linear-gradient(to bottom, #c09727, #e8b923); " +
-                        "-fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 10 15 10 15; -fx-text-alignment: center;"
-        );
-        btnAdicionar.setOnMouseEntered(e -> btnAdicionar.setStyle(
-                "-fx-background-color: linear-gradient(to bottom, #ae8922, #e2b72a); " +
-                        "-fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 10 15 10 15;"
-        ));
-        btnAdicionar.setOnMouseExited(e -> btnAdicionar.setStyle(
-                "-fx-background-color: linear-gradient(to bottom, #c09727, #e8b923); " +
-                        "-fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 10 15 10 15;"
-        ));
+        btnAdicionar.getStylesheets().add("button");
 
         btnAdicionar.setOnAction(e -> {
             RadioButton selected = (RadioButton) pagamentoGroup.getSelectedToggle();
