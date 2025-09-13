@@ -18,7 +18,6 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.*;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import javafx.stage.Modality;
 import javafx.util.Duration;
 
 import com.sunpdv.connection.ConexaoDB;
@@ -1007,15 +1006,16 @@ public class Caixa {
 
     private void mostrarDetalhesVenda(Venda venda) {
         Stage detalhesStage = new Stage();
-        detalhesStage.initModality(Modality.APPLICATION_MODAL);
+        detalhesStage.initOwner(stage);
         detalhesStage.setTitle("Detalhes da Venda #" + venda.id);
+        detalhesStage.setAlwaysOnTop(true);
 
         VBox detalhesBox = new VBox(10);
         detalhesBox.setPadding(new Insets(20));
-        detalhesBox.setStyle("-fx-background-color: transparent;");
+        detalhesBox.setStyle("-fx-background-color: #00536d;");
 
         Label idLabel = new Label("Venda #" + venda.id);
-        idLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #00536d;");
+        idLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #a9cce3;");
 
         // Cliente
         Label clienteLabel;
@@ -1024,27 +1024,27 @@ public class Caixa {
         } else {
             clienteLabel = new Label("Cliente: Não identificado");
         }
-        clienteLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #00536d;");
+        clienteLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #a9cce3;");
 
         // Formas de pagamento detalhadas
         Label pagamentoTituloLabel = new Label("Formas de Pagamento:");
-        pagamentoTituloLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #00536d;");
+        pagamentoTituloLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #a9cce3;");
 
         VBox pagamentosDetalhesBox = new VBox(5);
         for (PagamentoInfo pag : venda.pagamentos) {
             Label pagLabel = new Label("• " + pag.formaPagamento + ": R$ " + String.format("%.2f", pag.valor));
-            pagLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #00536d;");
+            pagLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: white;");
             pagamentosDetalhesBox.getChildren().add(pagLabel);
         }
 
         Label totalLabel = new Label("Total: R$ " + String.format("%.2f", venda.total));
-        totalLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #00536d;");
+        totalLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: white;");
 
         Label trocoLabel = new Label("Troco: R$ " + String.format("%.2f", venda.troco));
-        trocoLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #00536d;");
+        trocoLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: white;");
 
         Label dataLabel = new Label("Data: " + venda.data);
-        dataLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #00536d;");
+        dataLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: white;");
 
         ListView<ItemVenda> itensListView = new ListView<>();
         itensListView.getItems().addAll(venda.itens);
@@ -1052,7 +1052,7 @@ public class Caixa {
         itensListView.setPrefHeight(200);
 
         Button fecharButton = new Button("Fechar");
-        fecharButton.setStyle("-fx-background-color: #00536d; -fx-text-fill: white;");
+        fecharButton.getStyleClass().add("botao");
         fecharButton.setOnAction(e -> detalhesStage.close());
 
         detalhesBox.getChildren().addAll(
@@ -1063,13 +1063,12 @@ public class Caixa {
             fecharButton
         );
 
-        Scene scene = new Scene(detalhesBox, 500, 500);
+        Scene scene = new Scene(detalhesBox, 400, 500);
         try {
             scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
         } catch (Exception e) {
             System.err.println("Erro ao carregar CSS: " + e.getMessage());
         }
-
         detalhesStage.setScene(scene);
         detalhesStage.show();
     }

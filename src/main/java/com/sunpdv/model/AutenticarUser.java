@@ -12,8 +12,6 @@ import javax.crypto.spec.SecretKeySpec;
 import com.sunpdv.connection.ConexaoDB;
 import java.util.Base64;
 
-
-
 public class AutenticarUser {
     private static String nome;
     private static String cargo;
