@@ -33,7 +33,7 @@ import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
-public class Produtos {
+public class Gestao {
 
     // Atributos da classe
     private Stage stage;
@@ -142,7 +142,7 @@ public class Produtos {
         menuContent.setPadding(new Insets(10, 0, 20, 0));
 
         // Botões do menu
-        btnAdmin = criarBotaoLateral("Administrativo", "/img/icon/pasta.png");
+        btnAdmin = criarBotaoLateral("Acompanhamento", "/img/icon/dash.png");
         Button btnVoltar = criarBotaoLateral("Home", "/img/icon/casa.png");
         Button btnSair = criarBotaoLateral("Sair do Sistema", "/img/icon/fechar.png");
 
@@ -349,7 +349,7 @@ public class Produtos {
             
         } else {
             // Atualiza o botão
-            atualizarBotaoAdmin("Administrativo", "/img/icon/pasta.png", "Acessar dashboard administrativo");
+            atualizarBotaoAdmin("Administrativo", "/img/icon/dash.png", "Acessar dashboard administrativo");
             
             // Remove o dashboard
             contentGrid.getChildren().remove(dashboardContainer);
@@ -454,12 +454,15 @@ public class Produtos {
             }
 
             ImageView icon = new ImageView(img);
-            icon.setFitWidth(20);
-            icon.setFitHeight(20);
+            icon.setFitWidth(18);
+            icon.setFitHeight(18);
+            icon.setPreserveRatio(true);
 
             Button btn = new Button();
             btn.setGraphic(icon);
+            btn.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
             btn.setAlignment(Pos.CENTER);
+            btn.setStyle("-fx-padding: 0; -fx-alignment: CENTER;");
             btn.getStyleClass().add("acao");
 
             if (tooltip.toLowerCase().contains("Apagar")) {

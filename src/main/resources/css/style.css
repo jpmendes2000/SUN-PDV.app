@@ -333,3 +333,20 @@
     -fx-text-fill: white;
     -fx-font-weight: bold;
 }
+
+/* === ESTILO PRA BOTÕES AÇÃO DE GESTÃO DE PRODUTOS === */
+
+.acao {
+    -fx-alignment: CENTER;
+    -fx-content-display: GRAPHIC_ONLY;
+    -fx-padding: 0;
+    -fx-background-insets: 0;
+}
+
+.acao:hover {
+    -fx-background-color: rgba(0, 123, 255, 0.1);
+}
+
+.acao.delete:hover {
+    -fx-background-color: rgba(220, 53, 69, 0.1);
+}
