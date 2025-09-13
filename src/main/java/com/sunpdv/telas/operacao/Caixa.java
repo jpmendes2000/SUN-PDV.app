@@ -29,6 +29,7 @@ import com.sunpdv.telas.home.TelaHomeMOD;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import javafx.collections.ListChangeListener;
+import javafx.css.PseudoClass;
 
 public class Caixa {
 
@@ -50,6 +51,12 @@ public class Caixa {
     private ToggleGroup clienteGroup;
     private Button btnFinalizar;
     private Button btnCancelar;
+
+    // Estilos extraídos para reutilização
+    private static final String ENTERAGINDO_BTN = "-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4;";
+    private static final String SAINDO = "-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;";
+    private static final String BARRA_AMARELA_INTERAGINDO = "-fx-background-color: rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);";
+    private static final String BARRA_AMARELA_SAINDO = "-fx-background-color: transparent;";
 
     private static class CustomConfirmationAlert extends Alert {
         public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
@@ -168,7 +175,7 @@ public class Caixa {
             indicatorContainer.setMaxWidth(3);
             indicatorContainer.setMinHeight(30);
             indicatorContainer.setMaxHeight(30);
-            indicatorContainer.setStyle("-fx-background-color: transparent;");
+            indicatorContainer.setStyle(BARRA_AMARELA_SAINDO);
 
             HBox leftContent = new HBox(10, icon, textLabel);
             leftContent.setAlignment(Pos.CENTER_LEFT);
@@ -180,18 +187,25 @@ public class Caixa {
             Button btn = new Button();
             btn.setGraphic(content);
             btn.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-            btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
+            btn.setStyle(SAINDO);
             btn.setPrefWidth(280);
             btn.setPrefHeight(42);
 
             btn.setOnMouseEntered(e -> {
-                btn.setStyle("-fx-background-color: linear-gradient(to left, rgba(192, 151, 39, 0.39), rgba(232, 186, 35, 0.18)); -fx-border-radius: 4; -fx-background-radius: 4;");
-                indicatorContainer.setStyle("-fx-background-color: rgba(255, 204, 0, 0.64); -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 0);");
+                btn.setStyle(ENTERAGINDO_BTN);
+                indicatorContainer.setStyle(BARRA_AMARELA_INTERAGINDO);
             });
             btn.setOnMouseExited(e -> {
-                btn.setStyle("-fx-background-color: transparent; -fx-border-radius: 4; -fx-background-radius: 4;");
-                indicatorContainer.setStyle("-fx-background-color: transparent;");
+                btn.setStyle(SAINDO);
+                indicatorContainer.setStyle(BARRA_AMARELA_SAINDO);
             });
+
+            // Aplicar estilo de hover se o botão já estiver em estado hover
+            PseudoClass hoverPseudo = PseudoClass.getPseudoClass("hover");
+            if (btn.getPseudoClassStates().contains(hoverPseudo)) {
+                btn.setStyle(ENTERAGINDO_BTN);
+                indicatorContainer.setStyle(BARRA_AMARELA_INTERAGINDO);
+            }
 
             return btn;
 
@@ -223,7 +237,16 @@ public class Caixa {
             indicatorContainer.setMinWidth(3);
             indicatorContainer.setMaxWidth(3);
             indicatorContainer.setPrefHeight(40);
-            indicatorContainer.getStyleClass().add("indicador-lateral");
+            indicatorContainer.setStyle(BARRA_AMARELA_SAINDO);
+            
+            botao.setOnMouseEntered(e -> {
+                botao.setStyle(ENTERAGINDO_BTN);
+                indicatorContainer.setStyle(BARRA_AMARELA_INTERAGINDO);
+            });
+            botao.setOnMouseExited(e -> {
+                botao.setStyle(SAINDO);
+                indicatorContainer.setStyle(BARRA_AMARELA_SAINDO);
+            });
 
             HBox leftContent = new HBox(20, icon, textLabel);
             leftContent.setAlignment(Pos.CENTER_LEFT);
@@ -237,6 +260,13 @@ public class Caixa {
             botao.getStyleClass().add("botao-toggle");
             botao.setPrefWidth(280);
             botao.setPrefHeight(54);
+
+            // Aplicar estilo de hover se o botão já estiver em estado hover
+            PseudoClass hoverPseudo = PseudoClass.getPseudoClass("hover");
+            if (botao.getPseudoClassStates().contains(hoverPseudo)) {
+                botao.setStyle(ENTERAGINDO_BTN);
+                indicatorContainer.setStyle(BARRA_AMARELA_INTERAGINDO);
+            }
 
         } catch (Exception e) {
             System.err.println("Erro ao carregar ícone: " + caminhoIcone);

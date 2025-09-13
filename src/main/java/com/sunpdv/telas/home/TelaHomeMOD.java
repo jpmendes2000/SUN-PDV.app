@@ -5,7 +5,7 @@ package com.sunpdv.telas.home;
 import com.sunpdv.model.AutenticarUser;
 import com.sunpdv.telas.operacao.Caixa;
 import com.sunpdv.telas.operacao.Configurar;
-import com.sunpdv.telas.operacao.Produtos;
+import com.sunpdv.telas.operacao.Gestao;
 import com.sunpdv.telas.operacao.Usuarios;
 
 import javafx.animation.KeyFrame;
@@ -179,14 +179,14 @@ public class TelaHomeMOD {
 
         // Botões do menu
         Button btnVendas = criarBotaoLateral("Vendas", "/img/icon/carrinho-de-compras.png");
-        Button btnProdutos = criarBotaoLateral("Gestão", "/img/icon/lista.png");
+        Button btnProdutos = criarBotaoLateral("Gestão", "/img/icon/pasta.png");
         Button btnUsuarios = criarBotaoLateral("Gerenciar Usuários", "/img/icon/grupo.png");
         Button btnConfigurar = criarBotaoLateral("Configurações", "/img/icon/definicoes.png");
         Button btnSair = criarBotaoLateral("Sair do Sistema", "/img/icon/fechar.png");
 
         // Ações dos botões
         btnVendas.setOnAction(e -> new Caixa().show(stage));
-        btnProdutos.setOnAction(e -> new Produtos().show(stage));
+        btnProdutos.setOnAction(e -> new Gestao().show(stage));
         btnUsuarios.setOnAction(e -> new Usuarios().show(stage));
         btnConfigurar.setOnAction(e -> new Configurar().show(stage));
 
