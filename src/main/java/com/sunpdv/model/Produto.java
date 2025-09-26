@@ -4,6 +4,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 
+// Classe produto para definir o table view usando a funcionalidade: (SimpleDoubleProperty / SimpleIntegerProperty / SimpleStringProperty) para exibir os valores
 public class Produto {
     private final SimpleIntegerProperty id;
     private final SimpleStringProperty nome;

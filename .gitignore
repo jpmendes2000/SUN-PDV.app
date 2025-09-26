@@ -117,7 +117,11 @@ mvnw.cmd
 *.idx
 *.pack
 *.gitkeep
-
+*.jar
 # Arquivos referentes a cupom fiscal
 
 /notasfiscais/*
+
+# Arquivo do instalador
+
+*.mf
