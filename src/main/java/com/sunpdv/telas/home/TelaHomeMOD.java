@@ -3,10 +3,10 @@
 package com.sunpdv.telas.home;
 
 import com.sunpdv.model.AutenticarUser;
-import com.sunpdv.telas.operacao.Caixa;
-import com.sunpdv.telas.operacao.Configurar;
-import com.sunpdv.telas.operacao.Gestao;
-import com.sunpdv.telas.operacao.Usuarios;
+import com.sunpdv.telas.operation.Caixa;
+import com.sunpdv.telas.operation.Configurar;
+import com.sunpdv.telas.operation.Gestao;
+import com.sunpdv.telas.operation.Usuarios;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;

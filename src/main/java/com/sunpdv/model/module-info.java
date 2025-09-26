@@ -10,11 +10,11 @@ module com.sunpdv {
     opens com.sunpdv to javafx.fxml;
     opens com.sunpdv.model to javafx.base, javafx.fxml;
     opens com.sunpdv.telas.home to javafx.fxml;
-    opens com.sunpdv.telas.operacao to javafx.fxml;
+    opens com.sunpdv.telas.operation to javafx.fxml;
     
     // Exportações
     exports com.sunpdv;
     exports com.sunpdv.telas.home;
     exports com.sunpdv.model;
-    exports com.sunpdv.telas.operacao to javafx.graphics;
+    exports com.sunpdv.telas.operation to javafx.graphics;
 }

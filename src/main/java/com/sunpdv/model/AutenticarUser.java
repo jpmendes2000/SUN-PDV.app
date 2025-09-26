@@ -11,12 +11,12 @@ import javax.crypto.spec.SecretKeySpec;
 
 import com.sunpdv.connection.ConexaoDB;
 import java.util.Base64;
-
+// Método para autenticação de usuario
 public class AutenticarUser {
     private static String nome;
     private static String cargo;
     private static int idPermissao;
-    private static int idUsuario; // ADICIONADO: Para armazenar o ID do usuário logado
+    private static int idUsuario; // Para armazenar o ID do usuário logado
     private static final String AES_KEY = "MinhaChaveSuperSegura1234567890!";
     
     // Getters

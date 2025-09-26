@@ -13,11 +13,11 @@ public class App extends Application {
     // Cena principal da aplicação que será reutilizada para trocar telas
     private static Scene scene;
 
-    /**
-     * Método start é chamado automaticamente quando a aplicação inicia.
-     * Configura a janela principal (Stage), carrega a cena inicial e exibe.
-     */
-    @Override
+
+    // Método start é chamado automaticamente quando a aplicação inicia.
+    // Configura a janela principal (Stage), carrega a cena inicial e exibe.
+
+
     public void start(Stage stage) {
         try {
             // Carrega o arquivo FXML "primary.fxml" e cria a cena inicial de 640x480 px
@@ -38,10 +38,10 @@ public class App extends Application {
         }
     }
 
-    /**
-     * Método para trocar o conteúdo da cena principal, alterando a raiz para outro FXML.
-     * @param fxml nome do arquivo FXML (sem extensão) a ser carregado
-     */
+    
+    // Método para trocar o conteúdo da cena principal, alterando a raiz para outro FXML.
+    // fxml nome do arquivo FXML (sem extensão) a ser carregado
+    
     public static void setRoot(String fxml) {
         try {
             // Troca o root da cena principal para o novo carregado pelo loadFXML
@@ -53,12 +53,9 @@ public class App extends Application {
         }
     }
 
-    /**
-     * Método auxiliar para carregar arquivos FXML pelo nome.
-     * @param fxml nome do arquivo FXML (sem extensão)
-     * @return o Parent raiz do layout carregado
-     * @throws IOException se o arquivo não for encontrado ou não puder ser carregado
-     */
+    
+    // Método auxiliar para carregar arquivos FXML pelo nome.
+
     private static Parent loadFXML(String fxml) throws IOException {
         // Cria um FXMLLoader apontando para o recurso dentro do pacote da classe App
         FXMLLoader loader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
@@ -72,9 +69,9 @@ public class App extends Application {
         return loader.load();
     }
 
-    /**
-     * Método main que inicia a aplicação JavaFX
-     */
+    
+    // Método main que inicia a aplicação JavaFX
+    
     public static void main(String[] args) {
         // Chama o launch para iniciar o JavaFX e executar start()
         launch();

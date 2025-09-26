@@ -1,8 +1,20 @@
 {
     "version": "0.2.0",
     "configurations": [
-        
-
+        {
+            "type": "java",
+            "name": "LoginApp",
+            "request": "launch",
+            "mainClass": "com.sunpdv.telas.operation.LoginApp",
+            "projectName": "pdv"
+        },
+        {
+            "type": "java",
+            "name": "LoginApp",
+            "request": "launch",
+            "mainClass": "com.sunpdv/com.sunpdv.telas.operation.LoginApp",
+            "projectName": "pdv"
+        },
         {
             "version": "0.2.0",
             "configurations": [
