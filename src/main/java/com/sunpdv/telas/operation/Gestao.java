@@ -632,46 +632,47 @@ public class Gestao {
 
     // salvar produto no banco
     private void salvarProduto(Produto produto, TextField txtNome, TextField txtCodBarras, 
-                            TextField txtPreco, Stage dialog) {
-        String nome = txtNome.getText().trim();
-        String codBarras = txtCodBarras.getText().trim();
-        String precoStr = txtPreco.getText().trim();
+                        TextField txtPreco, Stage dialog) {
+    String nome = txtNome.getText().trim();
+    String codBarras = txtCodBarras.getText().trim();
+    String precoStr = txtPreco.getText().trim();
 
-        if (nome.isEmpty() || codBarras.isEmpty() || precoStr.isEmpty()) {
-            mostrarAlertaErro("Campos obrigatórios", "Preencha todos os campos.");
-            return;
-        }
-
-        double preco;
-        try {
-            preco = Double.parseDouble(precoStr.replace(",", "."));
-            if (preco <= 0) {
-                mostrarAlertaErro("Preço inválido", "O preço deve ser maior que zero.");
-                return;
-            }
-        } catch (NumberFormatException ex) {
-            mostrarAlertaErro("Preço inválido", "Use números com ponto ou vírgula decimal.");
-            return;
-        }
-
-        int idProduto = produto != null ? produto.getId() : 0;
-        if (validarProdutoExistente(nome, codBarras, idProduto)) {
-            return;
-        }
-
-        if (produto == null) {
-            inserirProduto(new Produto(0, nome, preco, codBarras));
-        } else {
-            produto.setNome(nome);
-            produto.setCodBarras(codBarras);
-            produto.setPreco(preco);
-            atualizarProduto(produto);
-        }
-        dialog.close();
+    if (nome.isEmpty() || codBarras.isEmpty() || precoStr.isEmpty()) {
+        mostrarAlertaErro("Campos obrigatórios", "Preencha todos os campos.");
+        return;
     }
 
-    // alerta de erro se existir produto com mesmo nome ou codigo de barras
-    private boolean validarProdutoExistente(String nome, String codBarras, int idProduto) {
+    double preco;
+    try {
+        preco = Double.parseDouble(precoStr.replace(",", "."));
+        if (preco <= 0) {
+            mostrarAlertaErro("Preço inválido", "O preço deve ser maior que zero.");
+            return;
+        }
+    } catch (NumberFormatException ex) {
+        mostrarAlertaErro("Preço inválido", "Use números com ponto ou vírgula decimal.");
+        return;
+    }
+
+    int idProduto = produto != null ? produto.getId() : 0;
+    
+    // MUDANÇA: Passar o dialog como parâmetro
+    if (validarProdutoExistente(nome, codBarras, idProduto, dialog)) {
+        return;
+    }
+
+    if (produto == null) {
+        inserirProduto(new Produto(0, nome, preco, codBarras));
+    } else {
+        produto.setNome(nome);
+        produto.setCodBarras(codBarras);
+        produto.setPreco(preco);
+        atualizarProduto(produto);
+    }
+    dialog.close();
+}
+
+    private boolean validarProdutoExistente(String nome, String codBarras, int idProduto, Stage dialogOwner) {
         String sql = "SELECT ID_Produto, Nome, Cod_Barras FROM produtos WHERE (Nome = ? OR Cod_Barras = ?) AND ID_Produto != ? AND Ativo = 1";
 
         try (Connection conn = ConexaoDB.getConnection();
@@ -700,6 +701,67 @@ public class Gestao {
                     alert.setTitle("Produto Existente");
                     alert.setHeaderText("Conflito ao salvar produto");
                     alert.setContentText(mensagem);
+                    
+                    // SOLUÇÃO: O alert agora tem como owner o diálogo do formulário
+                    alert.initOwner(dialogOwner);
+                    alert.initModality(Modality.WINDOW_MODAL);
+                    
+                    try {
+                        alert.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+                    } catch (Exception e) {
+                        System.err.println("Erro ao carregar CSS: " + e.getMessage());
+                    }
+
+                    ButtonType btnFechar = new ButtonType("Fechar", ButtonBar.ButtonData.CANCEL_CLOSE);
+                    alert.getButtonTypes().setAll(btnFechar);
+
+                    alert.showAndWait();
+                    
+                    // Selecionar produto existente na tabela
+                    selecionarProdutoNaTabela(idExistente);
+                    
+                    return true;
+                }
+            }
+        } catch (SQLException e) {
+            mostrarAlertaErro("Erro de validação", "Erro ao validar produto: " + e.getMessage());
+        }
+        return false;
+    }
+
+    // alerta de erro se existir produto com mesmo nome ou codigo de barras
+    private boolean validarProdutoExistente(String nome, String codBarras, int idProduto) {
+    String sql = "SELECT ID_Produto, Nome, Cod_Barras FROM produtos WHERE (Nome = ? OR Cod_Barras = ?) AND ID_Produto != ? AND Ativo = 1";
+
+        try (Connection conn = ConexaoDB.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, nome);
+            ps.setString(2, codBarras);
+            ps.setInt(3, idProduto);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int idExistente = rs.getInt("ID_Produto");
+                    String nomeExistente = rs.getString("Nome");
+                    String codBarrasExistente = rs.getString("Cod_Barras");
+
+                    String mensagem;
+                    if (nomeExistente.equalsIgnoreCase(nome) && codBarrasExistente.equalsIgnoreCase(codBarras)) {
+                        mensagem = "Já existe um produto ativo com este nome e código de barras!";
+                    } else if (nomeExistente.equalsIgnoreCase(nome)) {
+                        mensagem = "Já existe um produto ativo com este nome!";
+                    } else {
+                        mensagem = "Já existe um produto ativo com este código de barras!";
+                    }
+
+                    Alert alert = new Alert(AlertType.WARNING);
+                    alert.setTitle("Produto Existente");
+                    alert.setHeaderText("Conflito ao salvar produto");
+                    alert.setContentText(mensagem);
+                    alert.initOwner(stage);
+                    alert.initModality(Modality.APPLICATION_MODAL);
+                    
                     try {
                         alert.getDialogPane().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
                     } catch (Exception e) {
