@@ -1222,7 +1222,7 @@ public class Caixa {
                     case "Moderador":
                         new TelaHomeMOD(AutenticarUser.getNome(), cargo).mostrar(stage);
                         break;
-                    case "Funcionário":
+                    case "Funcionario":
                         new TelaHomeFUN(AutenticarUser.getNome(), cargo).mostrar(stage);
                         break;
                     default:
