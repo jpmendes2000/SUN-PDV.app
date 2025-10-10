@@ -93,7 +93,7 @@ public class DashboardAdministrativo {
         
         // Card Receita Mensal
         double receitaMensal = getReceitaMensal();
-        double receitaMensalYoY = getMonthlyYoY("SUM(v.Subtotal)", currentYear, currentMonth, previousYear, currentMonth);
+        double receitaMensalYoY = getMonthlyYoY("SUM(v.total)", currentYear, currentMonth, previousYear, currentMonth);
         VBox cardReceita = criarCardMetrica("Receita Mensal", receitaMensal, "R$", receitaMensalYoY);
         
         // Card Quantidade Vendas
@@ -103,7 +103,7 @@ public class DashboardAdministrativo {
         
         // Card Receita Anual
         double receitaAnual = getReceitaAnual();
-        double receitaAnualYoY = getYearlyYoY("SUM(v.Subtotal)", currentYear, previousYear);
+        double receitaAnualYoY = getYearlyYoY("SUM(v.total)", currentYear, previousYear);
         VBox cardReceitaAnual = criarCardMetrica("Receita Anual", receitaAnual, "R$", receitaAnualYoY);
         
         container.getChildren().addAll(cardReceita, cardQuantidade, cardReceitaAnual);
@@ -233,8 +233,8 @@ public class DashboardAdministrativo {
         for (int m = 1; m <= 12; m++) {
             String monthName = months[m - 1];
             
-            double receitaAtual = getMonthlyValue("SUM(v.Subtotal)", anoAtual, m);
-            double receitaAnterior = getMonthlyValue("SUM(v.Subtotal)", anoAnterior, m);
+            double receitaAtual = getMonthlyValue("SUM(v.total)", anoAtual, m);
+            double receitaAnterior = getMonthlyValue("SUM(v.total)", anoAnterior, m);
             
             XYChart.Data<String, Number> dataAtual = new XYChart.Data<>(monthName, receitaAtual);
             XYChart.Data<String, Number> dataAnterior = new XYChart.Data<>(monthName, receitaAnterior);
@@ -409,7 +409,7 @@ public class DashboardAdministrativo {
     // Querys
     private double getReceitaMensal() throws SQLException {
         LocalDate now = LocalDate.now();
-        return getMonthlyValue("SUM(v.Subtotal)", now.getYear(), now.getMonthValue());
+        return getMonthlyValue("SUM(v.total)", now.getYear(), now.getMonthValue());
     }
     
     private double getQuantidadeVendasMensal() throws SQLException {
@@ -419,7 +419,7 @@ public class DashboardAdministrativo {
     
     private double getReceitaAnual() throws SQLException {
         LocalDate now = LocalDate.now();
-        return getYearlyValue("SUM(v.Subtotal)", now.getYear());
+        return getYearlyValue("SUM(v.total)", now.getYear());
     }
     
     private double getMonthlyValue(String aggregate, int year, int month) throws SQLException {
