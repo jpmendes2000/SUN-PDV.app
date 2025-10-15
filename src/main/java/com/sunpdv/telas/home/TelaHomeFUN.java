@@ -41,6 +41,30 @@ public class TelaHomeFUN {
         this.cargo = cargo;
     }
 
+    // Método para obter o caminho correto do arquivo de logo (AppData do usuário)
+    private File getLogoFile() {
+        // Usar AppData do usuário em vez de Program Files
+        String appData = System.getenv("APPDATA");
+        if (appData == null || appData.isEmpty()) {
+            // Fallback para user.home se APPDATA não existir
+            appData = System.getProperty("user.home");
+        }
+        
+        // Criar pasta SunPDV no AppData
+        File sunPdvDir = new File(appData, "SunPDV");
+        if (!sunPdvDir.exists()) {
+            sunPdvDir.mkdirs();
+        }
+        
+        // Criar subpasta config
+        File configDir = new File(sunPdvDir, "config");
+        if (!configDir.exists()) {
+            configDir.mkdirs();
+        }
+        
+        return new File(configDir, "logo_empresa.png");
+    }
+
     // Alerta de confirmação com CSS customizado
     private static class CustomConfirmationAlert extends Alert {
         public CustomConfirmationAlert(Stage owner, String title, String header, String content) {
@@ -214,7 +238,7 @@ public class TelaHomeFUN {
         StackPane centro = new StackPane();
         centro.setPadding(new Insets(20));
 
-        File imagemLogo = new File("logo_empresa.png");
+        File imagemLogo = getLogoFile();
         if (imagemLogo.exists()) {
             Image imageLogo = new Image(imagemLogo.toURI().toString());
             ImageView imageView = new ImageView(imageLogo);

@@ -373,24 +373,51 @@ public class Usuarios {
 
     // Atualiza usuário no BD
     private void atualizarUsuario(int id, String nome, String cargo, String permissao, String senha) {
-        String query = "UPDATE login_sistema SET Nome = ?, ID_Cargo = (SELECT ID_Cargo FROM cargo WHERE Cargo = ?), " +
-                      "ID_Permissao = (SELECT ID_Permissao FROM permissao WHERE permissao = ?), Senha = ? WHERE ID_Login = ?";
-        try (Connection conn = ConexaoDB.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, nome);
-            stmt.setString(2, cargo);
-            stmt.setString(3, permissao);
-            stmt.setString(4, senha);
-            stmt.setInt(5, id);
-            int rowsAffected = stmt.executeUpdate();
-            if (rowsAffected > 0) {
-                System.out.println("Usuário atualizado com sucesso: ID " + id);
-            } else {
-                System.out.println("Nenhum usuário encontrado para o ID: " + id);
+        String query;
+        
+        // Se a senha estiver vazia, não atualiza ela
+        if (senha == null || senha.trim().isEmpty()) {
+            query = "UPDATE login_sistema SET Nome = ?, ID_Cargo = (SELECT ID_Cargo FROM cargo WHERE Cargo = ?), " +
+                "ID_Permissao = (SELECT ID_Permissao FROM permissao WHERE permissao = ?) WHERE ID_Login = ?";
+            
+            try (Connection conn = ConexaoDB.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setString(1, nome);
+                stmt.setString(2, cargo);
+                stmt.setString(3, permissao);
+                stmt.setInt(4, id);
+                int rowsAffected = stmt.executeUpdate();
+                if (rowsAffected > 0) {
+                    System.out.println("Usuário atualizado com sucesso: ID " + id);
+                } else {
+                    System.out.println("Nenhum usuário encontrado para o ID: " + id);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                showErrorAlert("Erro ao atualizar usuário", "Detalhes: " + e.getMessage());
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            showErrorAlert("Erro ao atualizar usuário", "Detalhes: " + e.getMessage());
+        } else {
+            // Se a senha foi fornecida, atualiza tudo incluindo a senha
+            query = "UPDATE login_sistema SET Nome = ?, ID_Cargo = (SELECT ID_Cargo FROM cargo WHERE Cargo = ?), " +
+                "ID_Permissao = (SELECT ID_Permissao FROM permissao WHERE permissao = ?), Senha = ? WHERE ID_Login = ?";
+            
+            try (Connection conn = ConexaoDB.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setString(1, nome);
+                stmt.setString(2, cargo);
+                stmt.setString(3, permissao);
+                stmt.setString(4, senha);
+                stmt.setInt(5, id);
+                int rowsAffected = stmt.executeUpdate();
+                if (rowsAffected > 0) {
+                    System.out.println("Usuário atualizado com sucesso: ID " + id);
+                } else {
+                    System.out.println("Nenhum usuário encontrado para o ID: " + id);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                showErrorAlert("Erro ao atualizar usuário", "Detalhes: " + e.getMessage());
+            }
         }
     }
 
@@ -505,8 +532,8 @@ public class Usuarios {
                 return;
             }
 
-            String senhaFinal = novaSenha.isEmpty() ? user.permissao : novaSenha;
-            atualizarUsuario(user.id, novoNome, novoCargo, novoStatus, senhaFinal);
+            // Passe a senha diretamente - se estiver vazia, o método não vai atualizá-la
+            atualizarUsuario(user.id, novoNome, novoCargo, novoStatus, novaSenha);
             usuarios = carregarUsuarios();
             aplicarFiltros();
             dialog.close();

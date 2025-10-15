@@ -43,6 +43,30 @@ public class Configurar {
         }
     }
 
+    // Método para obter o caminho correto do arquivo de logo (AppData do usuário)
+    private File getLogoFile() {
+        // Usar AppData do usuário em vez de Program Files
+        String appData = System.getenv("APPDATA");
+        if (appData == null || appData.isEmpty()) {
+            // Fallback para user.home se APPDATA não existir
+            appData = System.getProperty("user.home");
+        }
+        
+        // Criar pasta SunPDV no AppData
+        File sunPdvDir = new File(appData, "SunPDV");
+        if (!sunPdvDir.exists()) {
+            sunPdvDir.mkdirs();
+        }
+        
+        // Criar subpasta config
+        File configDir = new File(sunPdvDir, "config");
+        if (!configDir.exists()) {
+            configDir.mkdirs();
+        }
+        
+        return new File(configDir, "logo_empresa.png");
+    }
+
     // Botao lateral
     private Button criarBotaoLateral(String texto, String caminhoIcone) {
         try {
@@ -172,7 +196,7 @@ public class Configurar {
         imageContainer.setStyle("-fx-background-color: transparent; -fx-border-color: #012d5c; -fx-border-width: 2; -fx-border-radius: 4px;");
         imageContainer.setAlignment(Pos.CENTER);
 
-        File fileLogo = new File("logo_empresa.png");
+        File fileLogo = getLogoFile();
         if (fileLogo.exists()) {
             imageLogo.setImage(new Image(fileLogo.toURI().toString()));
             semLogoLabel.setVisible(false);
@@ -238,15 +262,28 @@ public class Configurar {
 
             File selectedFile = fileChooser.showOpenDialog(stage);
             if (selectedFile != null) {
-                try (FileInputStream fis = new FileInputStream(selectedFile);
-                     FileOutputStream fos = new FileOutputStream("logo_empresa.png")) {
-                    byte[] buffer = new byte[1024];
-                    int bytesRead;
-                    while ((bytesRead = fis.read(buffer)) > 0) {
-                        fos.write(buffer, 0, bytesRead);
+                try {
+                    File destino = getLogoFile();
+                    
+                    // Garante que o diretório existe
+                    if (!destino.getParentFile().exists()) {
+                        destino.getParentFile().mkdirs();
                     }
-                    imageLogo.setImage(new Image(selectedFile.toURI().toString()));
+                    
+                    // Copia o arquivo
+                    try (FileInputStream fis = new FileInputStream(selectedFile);
+                         FileOutputStream fos = new FileOutputStream(destino)) {
+                        byte[] buffer = new byte[1024];
+                        int bytesRead;
+                        while ((bytesRead = fis.read(buffer)) > 0) {
+                            fos.write(buffer, 0, bytesRead);
+                        }
+                    }
+                    
+                    // Atualiza a imagem na interface
+                    imageLogo.setImage(new Image(destino.toURI().toString()));
                     semLogoLabel.setVisible(false);
+                    
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -254,7 +291,7 @@ public class Configurar {
         });
 
         btnRemoverLogo.setOnAction(e -> {
-            File logoFile = new File("logo_empresa.png");
+            File logoFile = getLogoFile();
             if (logoFile.exists() && logoFile.delete()) {
                 imageLogo.setImage(null);
                 semLogoLabel.setVisible(true);
