@@ -19,6 +19,7 @@ com\sunpdv\telas\operation\Caixa$ItemVendaCell.class
 com\sunpdv\model\CupomFiscal$ItemVenda.class
 com\sunpdv\telas\operation\Caixa$Venda.class
 com\sunpdv\telas\operation\LoginApp.class
+com\sunpdv\Launcher.class
 com\sunpdv\model\CupomFiscal$PagamentoInfo.class
 module-info.class
 com\sunpdv\telas\operation\Gestao$CustomConfirmationAlert.class

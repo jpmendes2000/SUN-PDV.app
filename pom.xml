@@ -13,7 +13,6 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <javafx.version>17.0.2</javafx.version>
-        <javafx.runtime.version>17.0.2</javafx.runtime.version>
         <javafx.maven.plugin.version>0.0.8</javafx.maven.plugin.version>
     </properties>
     
@@ -32,6 +31,13 @@
             <version>${javafx.version}</version>
         </dependency>
 
+        <!-- JavaFX Graphics (necessário para aplicações standalone) -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+
         <!-- Dependência do JDBC (SQL Server) -->
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
@@ -46,104 +52,97 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>3.11.0</version>
                 <configuration>
                     <release>11</release>
                 </configuration>
             </plugin>
 
-            <!-- JavaFX Plugin para rodar o projeto -->
+            <!-- JavaFX Plugin para rodar o projeto durante desenvolvimento -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
-                <version>0.0.8</version>
+                <version>${javafx.maven.plugin.version}</version>
                 <configuration>
-                    <mainClass>com.sunpdv.App</mainClass>
+                    <mainClass>com.sunpdv.telas.operation.LoginApp</mainClass>
                 </configuration>
             </plugin>
 
-            <!-- Maven Dependency Plugin - Copia dependências -->
+            <!-- Maven Shade Plugin - Cria JAR executável com todas as dependências -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.2.0</version>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.1</version>
                 <executions>
                     <execution>
-                        <id>copy-dependencies</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>copy-dependencies</goal>
+                            <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.directory}/libs</outputDirectory>
-                            <overWriteReleases>false</overWriteReleases>
-                            <overWriteSnapshots>false</overWriteSnapshots>
-                            <overWriteIfNewer>true</overWriteIfNewer>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <!-- Usar Launcher em vez de App -->
+                                    <mainClass>com.sunpdv.Launcher</mainClass>
+                                </transformer>
+                            </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                        <exclude>module-info.class</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <finalName>pdv-${project.version}</finalName>
+                            <shadedArtifactAttached>false</shadedArtifactAttached>
+                            <outputFile>${project.build.directory}/installer-input/pdv-${project.version}.jar</outputFile>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
 
-            <!-- Maven Jar Plugin - Cria JAR executável -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.0</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <classpathPrefix>libs/</classpathPrefix>
-                            <mainClass>com.sunpdv.App</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
-
-            <!-- JavaFX jlink plugin -->
-            <plugin>
-                <groupId>org.openjfx</groupId>
-                <artifactId>javafx-jlink-plugin</artifactId>
-                <version>${javafx.maven.plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>default-cli</id>
-                        <configuration>
-                            <stripDebug>true</stripDebug>
-                            <compress>2</compress>
-                            <noHeaderFiles>true</noHeaderFiles>
-                            <noManPages>true</noManPages>
-                            <launcher>pdv</launcher>
-                            <jlinkImageName>pdv</jlinkImageName>
-                            <jlinkZipName>pdv</jlinkZipName>
-                            <mainClass>com.sunpdv.App</mainClass>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Plugin jpackage para criar instalador -->
+            <!-- Plugin jpackage para criar instalador Windows (.exe) -->
             <plugin>
                 <groupId>org.panteleyev</groupId>
                 <artifactId>jpackage-maven-plugin</artifactId>
                 <version>1.6.5</version>
                 <configuration>
+                    <!-- Nome da aplicação -->
                     <name>SunPDV</name>
                     <appVersion>${project.version}</appVersion>
                     <vendor>SunPDV Solutions</vendor>
-                    <destination>target/installer</destination>
-                    <input>target/libs</input>
+                    <description>Sistema de Ponto de Venda</description>
+                    
+                    <!-- Diretórios -->
+                    <destination>${project.build.directory}/installer</destination>
+                    <input>${project.build.directory}/installer-input</input>
                     <mainJar>pdv-${project.version}.jar</mainJar>
-                    <mainClass>com.sunpdv.App</mainClass>
-                    <type>APP</type>
-                    <!-- Configurações específicas do Windows -->
+                    <mainClass>com.sunpdv.Launcher</mainClass>
+                    
+                    <!-- Tipo de instalador: EXE para Windows -->
+                    <type>EXE</type>
+                    
+                    <!-- Configurações do Windows -->
                     <winMenu>true</winMenu>
                     <winDirChooser>true</winDirChooser>
                     <winShortcut>true</winShortcut>
                     <winPerUserInstall>false</winPerUserInstall>
                     <winMenuGroup>SunPDV</winMenuGroup>
-                    <!-- Ícone da aplicação (opcional) -->
-                    <!-- <icon>src/main/resources/icon.ico</icon> -->
+                    <winUpgradeUuid>12345678-1234-1234-1234-123456789012</winUpgradeUuid>
+                    
+                    <!-- JVM Options -->
+                    <javaOptions>
+                        <option>-Dfile.encoding=UTF-8</option>
+                        <option>-Xmx512m</option>
+                    </javaOptions>
+                    
+                    <!-- Ícone da aplicação (crie um arquivo icon.ico e coloque em src/main/resources) -->
+                    <icon>src\main\resources\logominuscula.ico</icon>
                 </configuration>
             </plugin>
         </plugins>
