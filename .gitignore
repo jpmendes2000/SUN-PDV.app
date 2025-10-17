@@ -125,3 +125,4 @@ mvnw.cmd
 # Arquivo do instalador
 
 *.mf
+*.xml
