@@ -432,6 +432,11 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 - GitHub: [@jpschinato](https://github.com/JP-schinato)
 - LinkedIn: [jpschinato](https://www.linkedin.com/in/jo%C3%A3o-pedro-silva-schinato-249010332/)
 - Email: jpsilvaschinato@gmail.com
+  
+**Vinicius Toshi MIzuguchi**
+- GitHub: [@Toshi](https://github.com/toshimizuguchi)
+- LinkedIn: [TOSHI](https://www.linkedin.com/in/vinicius-toshi-mizuguchi-603194294/)
+- Email: toshi0123.mizuguchi@gmail.com
 
 ---
 
